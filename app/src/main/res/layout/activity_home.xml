@@ -17,20 +17,11 @@
         android:id="@+id/top_linearLayout">
 
         <Button
-            android:id="@+id/bluetooth_discovery_button"
-            android:layout_width="match_parent"
+            android:id="@+id/start_discovery_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:text="find bluetooth devices"
-            android:onClick="bluetoothButton"/>
-
-        <Button
-            android:id="@+id/wifi_discovery_button"
-            android:layout_width="match_parent"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:text="find wifi devices"
-            android:onClick="WifiDeviceDiscovery"/>
+            android:text="start discovery" />
     </LinearLayout>
 
     <LinearLayout

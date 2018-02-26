@@ -80,6 +80,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         //peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
+    public void startDiscoveryButton(View view){
+
+    }
+
     public void bluetoothButton(View view){
         Toast.makeText(this, "running peer discovery", Toast.LENGTH_LONG).show();
         peerDiscoveryHandler.post(runPeerDiscovery);
