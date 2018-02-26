@@ -65,6 +65,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     ConnectedThread connectedThread;
     BluetoothServerThread serverThread;
     String textToSend = "";
+    int timeSlotCount;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
