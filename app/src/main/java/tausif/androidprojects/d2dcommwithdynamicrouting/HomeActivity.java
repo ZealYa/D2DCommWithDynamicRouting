@@ -66,6 +66,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     BluetoothServerThread serverThread;
     String textToSend = "";
     int timeSlotCount;
+    boolean bluetoothEnabled;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,25 +79,46 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         hasStorageWriteAccess();
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mReceiver, filter);
-        //peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
     public void startDiscoveryButton(View view){
+        timeSlotCount = 0;
 
-    }
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothEnabled = true;
+        if (bluetoothAdapter == null) {
+            showAlert("Device does not support bluetooth");
+            bluetoothEnabled = false;
+        }
+        if (!bluetoothAdapter.isEnabled()){
+            showAlert("BlueTooth disabled");
+            bluetoothEnabled = false;
+        }
 
-    public void bluetoothButton(View view){
-        Toast.makeText(this, "running peer discovery", Toast.LENGTH_LONG).show();
         peerDiscoveryHandler.post(runPeerDiscovery);
-        //BluetoothDeviceDiscovery();
     }
 
     private Runnable runPeerDiscovery = new Runnable() {
         @Override
         public void run() {
-            //Log.d("peer discovery ","peer discovery runner");
-            BluetoothDeviceDiscovery();
-            peerDiscoveryHandler.postDelayed(this, 60000);
+            if (timeSlotCount%2==0){
+                //start discovery
+                bluetoothDevices = new ArrayList<>();
+                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                if (pairedDevices.size() > 0) {
+                    // There are paired devices. Get the name and address of each paired device.
+                    for (BluetoothDevice device : pairedDevices) {
+                        Device bluetoothDevice = new Device(device.getName(), device.getAddress(), 0, device);
+                        bluetoothDevices.add(bluetoothDevice);
+                    }
+                }
+                bluetoothAdapter.startDiscovery();
+            }
+            else {
+                //cancel discovery
+                bluetoothAdapter.cancelDiscovery();
+            }
+            peerDiscoveryHandler.postDelayed(this, 30000);
         }
     };
 
@@ -280,42 +303,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 if (flag == 0){
                     bluetoothDevices.add(bluetoothDevice);
-                    deviceListAdapter.notifyDataSetChanged();
                 }
             }
         }
     };
-
-    //bluetooth device discovery
-    public void BluetoothDeviceDiscovery(){
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            showAlert("Device does not support bluetooth");
-        }
-        if (!bluetoothAdapter.isEnabled()){
-            Intent bluetoothEnableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            bluetoothEnableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-            startActivity(bluetoothEnableIntent);
-        }
-
-        serverThread = new BluetoothServerThread();
-        serverThread.start();
-
-        bluetoothDevices = new ArrayList<>();
-        configureDeviceListView(DEVICE_TYPE_BLUETOOTH);
-
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            // There are paired devices. Get the name and address of each paired device.
-            for (BluetoothDevice device : pairedDevices) {
-                Device bluetoothDevice = new Device(device.getName(), device.getAddress(), 0, device);
-                bluetoothDevices.add(bluetoothDevice);
-                deviceListAdapter.notifyDataSetChanged();
-            }
-        }
-
-        bluetoothAdapter.startDiscovery();
-    }
 
     public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type){
         if (type == TYPE_SERVER) {
