@@ -48,6 +48,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     IntentFilter intentFilter;
     ArrayList<Device> wifiDevices;
     ArrayList<Device> bluetoothDevices;
+    ArrayList<Device> combinedDeviceList;
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
     int DEVICE_TYPE_WIFI = 0;
@@ -81,23 +82,17 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         registerReceiver(mReceiver, filter);
     }
 
+    //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscoveryButton(View view){
         timeSlotCount = 0;
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothEnabled = true;
-        if (bluetoothAdapter == null) {
-            showAlert("Device does not support bluetooth");
-            bluetoothEnabled = false;
-        }
-        if (!bluetoothAdapter.isEnabled()){
-            showAlert("BlueTooth disabled");
-            bluetoothEnabled = false;
-        }
-
+        configureBluetoothDiscovery();
+        configureDeviceListView(DEVICE_TYPE_BLUETOOTH);
         peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
+    /*background process to run the device discovery.
+    it checks the value of time slot count every 30 seconds
+    and depending on the value either starts or cancels the discovery*/
     private Runnable runPeerDiscovery = new Runnable() {
         @Override
         public void run() {
@@ -117,10 +112,39 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             else {
                 //cancel discovery
                 bluetoothAdapter.cancelDiscovery();
+                mergeDeviceLists();
+                updateDeviceListUI();
             }
+            timeSlotCount++;
             peerDiscoveryHandler.postDelayed(this, 30000);
         }
     };
+
+    //configures the bluetooth device discovery options
+    public void configureBluetoothDiscovery() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothEnabled = true;
+        if (bluetoothAdapter == null) {
+            showAlert("Device does not support bluetooth");
+            bluetoothEnabled = false;
+        }
+        if (!bluetoothAdapter.isEnabled()){
+            showAlert("BlueTooth disabled");
+            bluetoothEnabled = false;
+        }
+    }
+
+    //merge bluetooth and wifi direct device lists into a combined list
+    public void mergeDeviceLists() {
+        combinedDeviceList = new ArrayList<>();
+        combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, null));
+        combinedDeviceList.addAll(bluetoothDevices);
+    }
+
+    //updates the device list user interface after merging bluetooth and wifi direct device lists
+    public void updateDeviceListUI() {
+        deviceListAdapter.notifyDataSetChanged();
+    }
 
     private boolean hasStorageWriteAccess() {
         if (ContextCompat.checkSelfPermission(this,
@@ -134,7 +158,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
-
 
     @Override
     protected void onDestroy() {
@@ -181,13 +204,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //setting up the device list view adapter and item click events
     public void configureDeviceListView(int deviceType){
         deviceListView = (ListView)findViewById(R.id.device_listView);
-        if (deviceType == DEVICE_TYPE_WIFI)
-            deviceListAdapter = new DeviceListAdapter(this, wifiDevices);
-        else
-            deviceListAdapter = new DeviceListAdapter(this, bluetoothDevices);
-        CURRENT_DEVICE_TYPE = deviceType;
+        combinedDeviceList = new ArrayList<>();
+        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
         deviceListView.setAdapter(deviceListAdapter);
         deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -303,6 +324,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 if (flag == 0){
                     bluetoothDevices.add(bluetoothDevice);
+                    deviceListAdapter.notifyDataSetChanged();
                 }
             }
         }
