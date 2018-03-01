@@ -324,7 +324,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 if (flag == 0){
                     bluetoothDevices.add(bluetoothDevice);
-                    deviceListAdapter.notifyDataSetChanged();
                 }
             }
         }
