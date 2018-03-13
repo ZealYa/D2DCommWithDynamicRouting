@@ -17,6 +17,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -83,10 +84,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
-    public void startDiscoveryButton(View view){
+    public void startDiscovery(View view){
         timeSlotCount = 0;
         configureBluetoothDiscovery();
-        configureDeviceListView(DEVICE_TYPE_BLUETOOTH);
+        configureWiFiDiscovery();
+        configureDeviceListView();
         peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
@@ -108,19 +110,23 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                 bluetoothAdapter.startDiscovery();
+
+                wifiDevices = new ArrayList<>();
+                wifiP2pManager.discoverPeers(channel, null);
             }
             else {
                 //cancel discovery
                 bluetoothAdapter.cancelDiscovery();
+                wifiP2pManager.stopPeerDiscovery(channel, null);
                 mergeDeviceLists();
-                updateDeviceListUI();
+                Log.d("no of devices",String.valueOf(combinedDeviceList.size()));
             }
             timeSlotCount++;
             peerDiscoveryHandler.postDelayed(this, 30000);
         }
     };
 
-    //configures the bluetooth device discovery options
+    //configure bluetooth device discovery options
     public void configureBluetoothDiscovery() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothEnabled = true;
@@ -134,16 +140,26 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //merge bluetooth and wifi direct device lists into a combined list
+    //configure wifi device discovery options
+    public void configureWiFiDiscovery() {
+        wifiP2pManager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
+        channel = wifiP2pManager.initialize(this, getMainLooper(), null);
+        broadcastReceiver = new WifiDirectBroadcastReceiver(wifiP2pManager, channel, this);
+        intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    //merge bluetooth and wifi device lists into a combined list
     public void mergeDeviceLists() {
         combinedDeviceList = new ArrayList<>();
         combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, null));
         combinedDeviceList.addAll(bluetoothDevices);
-    }
-
-    //updates the device list user interface after merging bluetooth and wifi direct device lists
-    public void updateDeviceListUI() {
-        deviceListAdapter.notifyDataSetChanged();
+        combinedDeviceList.add(new Device("WiFi Devices", "", 0, null));
+        combinedDeviceList.addAll(wifiDevices);
     }
 
     private boolean hasStorageWriteAccess() {
@@ -205,7 +221,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //setting up the device list view adapter and item click events
-    public void configureDeviceListView(int deviceType){
+    public void configureDeviceListView(){
         deviceListView = (ListView)findViewById(R.id.device_listView);
         combinedDeviceList = new ArrayList<>();
         deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
@@ -216,23 +232,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 showSelectedDevice(i);
             }
         });
-    }
-
-    //discovers wifi direct enabled devices nearby
-    public void WifiDeviceDiscovery(View view) {
-        wifiDevices = new ArrayList<>();
-        configureDeviceListView(DEVICE_TYPE_WIFI);
-        wifiP2pManager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = wifiP2pManager.initialize(this, getMainLooper(), null);
-        broadcastReceiver = new WifiDirectBroadcastReceiver(wifiP2pManager, channel, this);
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        registerReceiver(broadcastReceiver, intentFilter);
-        wifiP2pManager.discoverPeers(channel, null);
-        Toast.makeText(this,"Discovering peer",Toast.LENGTH_SHORT).show();
     }
 
     //shows the current selected device in green color. only one device can be selected at a time. selected = 1 means selected, selected = 0 means otherwise
