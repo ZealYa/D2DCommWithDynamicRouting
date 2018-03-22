@@ -79,17 +79,23 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         transferService = new TransferService(this);
         findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
         hasStorageWriteAccess();
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
+    }
+
+    public void peerDiscoveryFinished (ArrayList<Device> devices) {
+        combinedDeviceList = new ArrayList<>();
+        combinedDeviceList.addAll(devices);
+        deviceListAdapter.notifyDataSetChanged();
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(View view){
-        timeSlotCount = 0;
-        configureBluetoothDiscovery();
-        configureWiFiDiscovery();
         configureDeviceListView();
-        peerDiscoveryHandler.post(runPeerDiscovery);
+        PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this);
+//        timeSlotCount = 0;
+//        configureBluetoothDiscovery();
+//        configureWiFiDiscovery();
+//        configureDeviceListView();
+//        peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
     /*background process to run the device discovery.
@@ -126,19 +132,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    //configure bluetooth device discovery options
-    public void configureBluetoothDiscovery() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothEnabled = true;
-        if (bluetoothAdapter == null) {
-            showAlert("Device does not support bluetooth");
-            bluetoothEnabled = false;
-        }
-        if (!bluetoothAdapter.isEnabled()){
-            showAlert("BlueTooth disabled");
-            bluetoothEnabled = false;
-        }
-    }
+
 
     //configure wifi device discovery options
     public void configureWiFiDiscovery() {
