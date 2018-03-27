@@ -7,8 +7,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,18 +19,18 @@ import java.util.TimerTask;
  * this class contains the methods to control the peer discovery process for bluetooth and wifi
  */
 
-public class PeerDiscoveryController extends Activity{
+public class PeerDiscoveryController {
 
+    private Context context;
     private Timer timer;
     private int timeSlotCount;
     private int timeInterval;
     private BluetoothAdapter bluetoothAdapter;
     private ArrayList<Device> bluetoothDevices;
     private ArrayList<Device> combinedDeviceList;
-    private HomeActivity homeActivity;
 
-    public PeerDiscoveryController(HomeActivity homeActivity) {
-        this.homeActivity = homeActivity;
+    public PeerDiscoveryController(Context context) {
+        this.context = context;
         configureBluetoothDiscovery();
         timeSlotCount = 0;
         timeInterval = 30;
@@ -38,13 +40,8 @@ public class PeerDiscoveryController extends Activity{
 
     //configure bluetooth device discovery options
     public void configureBluetoothDiscovery() {
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(broadcastReceiver, filter);
+        context.registerReceiver(broadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-        }
-        if (!bluetoothAdapter.isEnabled()){
-        }
     }
 
     class StartStopDiscovery extends TimerTask {
@@ -52,12 +49,24 @@ public class PeerDiscoveryController extends Activity{
         public void run() {
             if (timeSlotCount%2==0) {
                 bluetoothDevices = new ArrayList<>();
-                bluetoothAdapter.startDiscovery();
+                //adding up already paired devices`
+                //Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+//                if (pairedDevices.size() > 0) {
+//                    // There are paired devices. Get the name and address of each paired device.
+//                    for (BluetoothDevice device : pairedDevices) {
+//                        Device bluetoothDevice = new Device(device.getName(), device.getAddress(), 0, device);
+//                        bluetoothDevices.add(bluetoothDevice);
+//                    }
+//                }
+                //bluetoothAdapter.startDiscovery();
             }
             else {
-                bluetoothAdapter.cancelDiscovery();
+                //bluetoothAdapter.cancelDiscovery();
                 mergeDeviceLists();
-                homeActivity.peerDiscoveryFinished(combinedDeviceList);
+                for (Device device: combinedDeviceList
+                     ) {
+                    Log.d("device name ",device.deviceName);
+                }
             }
             timeSlotCount++;
         }
@@ -65,7 +74,7 @@ public class PeerDiscoveryController extends Activity{
 
     private void mergeDeviceLists() {
         combinedDeviceList = new ArrayList<>();
-        combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, null));
+        combinedDeviceList.add(new Device("Bluetooth Devices " + String.valueOf(timeSlotCount), "", 0, null));
         combinedDeviceList.addAll(bluetoothDevices);
     }
 
