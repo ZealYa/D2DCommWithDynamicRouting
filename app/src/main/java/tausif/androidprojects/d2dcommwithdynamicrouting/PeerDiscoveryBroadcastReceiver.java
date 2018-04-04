@@ -1,5 +1,6 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,12 +14,12 @@ import android.widget.Toast;
 
 
 
-public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
+public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
     private HomeActivity sourceActivity;
 
-    public WifiDirectBroadcastReceiver(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel, HomeActivity sourceActivity) {
+    public PeerDiscoveryBroadcastReceiver(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel, HomeActivity sourceActivity) {
         super();
         this.wifiP2pManager = wifiP2pManager;
         this.channel = channel;
@@ -37,7 +38,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
                 @Override
                 public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-                    sourceActivity.deviceDiscovery(wifiP2pDeviceList);
+                    sourceActivity.wifiDeviceDiscovered(wifiP2pDeviceList);
                 }
             };
             if (wifiP2pManager != null)
@@ -52,6 +53,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 //                Toast.makeText(sourceActivity,"Connection Status: Connected",Toast.LENGTH_SHORT).show();
                 sourceActivity.onWifiP2PDeviceConnected(wifiInfo);
             }
+        }
+        else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            sourceActivity.bluetoothDeviceDiscovered(device);
         }
     }
 }
