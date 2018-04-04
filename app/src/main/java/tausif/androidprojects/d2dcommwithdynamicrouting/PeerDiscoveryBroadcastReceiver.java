@@ -18,6 +18,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
     private HomeActivity sourceActivity;
+    private PeerDiscoveryController peerDiscoveryController;
 
     public void setWifiP2pManager(WifiP2pManager wifiP2pManager) {
         this.wifiP2pManager = wifiP2pManager;
@@ -29,6 +30,10 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
 
     public void setSourceActivity(HomeActivity sourceActivity) {
         this.sourceActivity = sourceActivity;
+    }
+
+    public void setPeerDiscoveryController(PeerDiscoveryController peerDiscoveryController) {
+        this.peerDiscoveryController = peerDiscoveryController;
     }
 
     @Override
