@@ -19,10 +19,15 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager.Channel channel;
     private HomeActivity sourceActivity;
 
-    public PeerDiscoveryBroadcastReceiver(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel, HomeActivity sourceActivity) {
-        super();
+    public void setWifiP2pManager(WifiP2pManager wifiP2pManager) {
         this.wifiP2pManager = wifiP2pManager;
+    }
+
+    public void setChannel(WifiP2pManager.Channel channel) {
         this.channel = channel;
+    }
+
+    public void setSourceActivity(HomeActivity sourceActivity) {
         this.sourceActivity = sourceActivity;
     }
 
