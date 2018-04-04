@@ -45,7 +45,12 @@ public class DeviceListAdapter extends BaseAdapter {
         TextView title = (TextView)rowView.findViewById(android.R.id.text1);
         if (devices.get(i).deviceType == -1)
             title.setTextColor(Color.GREEN);
-        title.setText(devices.get(i).deviceName);
+        if (devices.get(i).deviceType == 1) {
+            String nameWithRSSI = devices.get(i).deviceName+" "+String.valueOf(devices.get(i).rssi);
+            title.setText(nameWithRSSI);
+        }
+        else
+            title.setText(devices.get(i).deviceName);
         return rowView;
     }
 }

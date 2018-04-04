@@ -83,7 +83,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         configureBluetoothDiscovery();
         registerReceiver(broadcastReceiver, intentFilter);
         timeSlotCount = 0;
-        int timeInterval = 30;
+        int timeInterval = 15;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
     }
@@ -128,9 +128,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void peerDiscoveryFinished() {
         if (combinedDeviceList.size()>0)
             combinedDeviceList.clear();
-        combinedDeviceList.add(new Device("WiFi Devices", "", 0, -1, null));
+        combinedDeviceList.add(new Device("WiFi Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(wifiDevices);
-        combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, -1, null));
+        combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(bluetoothDevices);
         for (Device device: combinedDeviceList
              ) {
@@ -240,14 +240,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
             if (flag == 0) {
-                Device device = new Device(item.deviceName, item.deviceAddress, 0, DEVICE_TYPE_WIFI,null);
+                Device device = new Device(item.deviceName, item.deviceAddress, 0, DEVICE_TYPE_WIFI,null, 0);
                 wifiDevices.add(device);
             }
         }
     }
 
-    public void bluetoothDeviceDiscovered(BluetoothDevice device) {
-        Device newDevice = new Device(device.getName(),device.getAddress(),0,1,device);
+    public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
+        Device newDevice = new Device(device.getName(),device.getAddress(),0,1,device, rssi);
         int flag = 0;
         for (Device item:bluetoothDevices) {
             if (item.deviceAddress.equalsIgnoreCase(newDevice.deviceAddress)){
