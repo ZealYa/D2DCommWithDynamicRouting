@@ -44,7 +44,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private static final int PICKFILE_REQUEST_CODE = 323;
     WifiP2pManager wifiP2pManager;
     WifiP2pManager.Channel channel;
-    BroadcastReceiver broadcastReceiver;
+    PeerDiscoveryBroadcastReceiver broadcastReceiver;
     IntentFilter intentFilter;
     ArrayList<Device> wifiDevices;
     ArrayList<Device> bluetoothDevices;
@@ -76,14 +76,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(View view){
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        configureDeviceListView();
         intentFilter = new IntentFilter();
+        broadcastReceiver = new PeerDiscoveryBroadcastReceiver();
+        configureDeviceListView();
         configureWiFiDiscovery();
         configureBluetoothDiscovery();
         registerReceiver(broadcastReceiver, intentFilter);
         timeSlotCount = 0;
-        int timeInterval = 15;
+        int timeInterval = 30;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
     }
@@ -92,7 +92,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void configureWiFiDiscovery() {
         wifiP2pManager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(this, getMainLooper(), null);
-        broadcastReceiver = new PeerDiscoveryBroadcastReceiver(wifiP2pManager, channel, this);
+        broadcastReceiver.setWifiP2pManager(wifiP2pManager);
+        broadcastReceiver.setChannel(channel);
+        broadcastReceiver.setSourceActivity(this);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
