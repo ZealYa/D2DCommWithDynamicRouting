@@ -43,10 +43,8 @@ public class DeviceListAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
         TextView title = (TextView)rowView.findViewById(android.R.id.text1);
-        if (devices.get(i).selected == 1)
+        if (devices.get(i).deviceType == -1)
             title.setTextColor(Color.GREEN);
-        else
-            title.setTextColor(Color.BLACK);
         title.setText(devices.get(i).deviceName);
         return rowView;
     }
