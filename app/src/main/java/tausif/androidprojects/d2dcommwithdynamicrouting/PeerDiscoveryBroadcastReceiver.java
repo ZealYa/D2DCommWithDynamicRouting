@@ -48,7 +48,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
                 @Override
                 public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-                    sourceActivity.wifiDeviceDiscovered(wifiP2pDeviceList);
+                    peerDiscoveryController.wifiDeviceDiscovered(wifiP2pDeviceList);
                 }
             };
             if (wifiP2pManager != null)
@@ -67,7 +67,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
-            sourceActivity.bluetoothDeviceDiscovered(device, rssi);
+            peerDiscoveryController.bluetoothDeviceDiscovered(device, rssi);
         }
     }
 }
