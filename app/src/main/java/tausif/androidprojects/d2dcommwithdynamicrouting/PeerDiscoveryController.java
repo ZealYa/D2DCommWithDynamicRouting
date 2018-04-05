@@ -1,5 +1,7 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -16,30 +18,40 @@ public class PeerDiscoveryController {
     private int timeSlotCount;
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
-    private PeerDiscoveryBroadcastReceiver broadcastReceiver;
+    private BluetoothAdapter bluetoothAdapter;
+    private PeerDiscoveryBroadcastReceiver peerDiscoveryBroadcastReceiver;
     private IntentFilter intentFilter;
     private ArrayList<Device> wifiDevices;
+    private ArrayList<Device> bluetoothDevices;
 
     public PeerDiscoveryController(Context context, HomeActivity homeActivity) {
         this.context = context;
         this.homeActivity = homeActivity;
-        broadcastReceiver = new PeerDiscoveryBroadcastReceiver();
+        peerDiscoveryBroadcastReceiver = new PeerDiscoveryBroadcastReceiver();
+        peerDiscoveryBroadcastReceiver.setPeerDiscoveryController(this);
         intentFilter = new IntentFilter();
+        configureWiFiDiscovery();
+        configureBluetoothDiscovery();
+        context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         Timer timer = new Timer();
-        int timeInterval = 10;
+        int timeInterval = 30;
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
     }
 
-    public void configureWiFiDiscovery() {
+    private void configureWiFiDiscovery() {
         wifiP2pManager = (WifiP2pManager)context.getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(context, context.getMainLooper(), null);
-        broadcastReceiver.setWifiP2pManager(wifiP2pManager);
-        broadcastReceiver.setChannel(channel);
-        broadcastReceiver.setPeerDiscoveryController(this);
+        peerDiscoveryBroadcastReceiver.setWifiP2pManager(wifiP2pManager);
+        peerDiscoveryBroadcastReceiver.setChannel(channel);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+    }
+
+    private void configureBluetoothDiscovery() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
     }
 
     public void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
@@ -52,14 +64,34 @@ public class PeerDiscoveryController {
         }
     }
 
+    public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
+        int flag = 0;
+        Device newDevice = new Device(device.getName(), device.getAddress(), 0, 1, device, rssi);
+        for (Device bluetoothDevice: bluetoothDevices
+             ) {
+            if (newDevice.deviceAddress.equalsIgnoreCase(bluetoothDevice.deviceAddress)) {
+                flag = 1;
+                break;
+            }
+        }
+        if (flag == 0)
+            bluetoothDevices.add(newDevice);
+    }
+
     private class controlPeerDiscovery extends TimerTask {
         @Override
         public void run() {
             if (timeSlotCount%2==0){
+                context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
                 wifiDevices = new ArrayList<>();
                 wifiP2pManager.discoverPeers(channel, null);
+                bluetoothDevices = new ArrayList<>();
+                bluetoothAdapter.startDiscovery();
             } else {
                 wifiP2pManager.stopPeerDiscovery(channel, null);
+                bluetoothAdapter.cancelDiscovery();
+                context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
+                homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             timeSlotCount++;
         }
