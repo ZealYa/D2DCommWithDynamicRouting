@@ -4,16 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -23,7 +16,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -33,8 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 import tausif.androidprojects.files.TransferService;
@@ -42,16 +32,9 @@ import tausif.androidprojects.files.TransferService;
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final int PICKFILE_REQUEST_CODE = 323;
-    WifiP2pManager wifiP2pManager;
-    WifiP2pManager.Channel channel;
-    PeerDiscoveryBroadcastReceiver broadcastReceiver;
-    IntentFilter intentFilter;
-    ArrayList<Device> wifiDevices;
-    ArrayList<Device> bluetoothDevices;
     ArrayList<Device> combinedDeviceList;
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
-    int DEVICE_TYPE_WIFI = 0;
     int TYPE_SERVER = 0;
     int TYPE_CLIENT = 1;
     private TransferService transferService;
@@ -62,7 +45,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     BluetoothServerThread serverThread;
     String textToSend = "";
     BluetoothAdapter bluetoothAdapter;
-    int timeSlotCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,69 +56,28 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         hasStorageWriteAccess();
     }
 
+    //setting up the device list view adapter and item click events
+    public void configureDeviceListView(){
+        deviceListView = findViewById(R.id.device_listView);
+        combinedDeviceList = new ArrayList<>();
+        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
+        deviceListView.setAdapter(deviceListAdapter);
+    }
+
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(View view){
-        intentFilter = new IntentFilter();
-        broadcastReceiver = new PeerDiscoveryBroadcastReceiver();
         configureDeviceListView();
-        configureWiFiDiscovery();
-        configureBluetoothDiscovery();
-        registerReceiver(broadcastReceiver, intentFilter);
-        timeSlotCount = 0;
-        int timeInterval = 15;
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
+        PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
-    //configure wifi device discovery options
-    public void configureWiFiDiscovery() {
-        wifiP2pManager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = wifiP2pManager.initialize(this, getMainLooper(), null);
-        broadcastReceiver.setWifiP2pManager(wifiP2pManager);
-        broadcastReceiver.setChannel(channel);
-        broadcastReceiver.setSourceActivity(this);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-    }
-
-    public void configureBluetoothDiscovery() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
-    }
-
-    public class controlPeerDiscovery extends TimerTask {
-        @Override
-        public void run() {
-            Log.d("time slot count", String.valueOf(timeSlotCount));
-            if (timeSlotCount%2==0){
-                wifiDevices = new ArrayList<>();
-                wifiP2pManager.discoverPeers(channel,null);
-                bluetoothDevices = new ArrayList<>();
-                bluetoothAdapter.startDiscovery();
-            }
-            else {
-                wifiP2pManager.stopPeerDiscovery(channel, null);
-                bluetoothAdapter.cancelDiscovery();
-                peerDiscoveryFinished();
-            }
-            timeSlotCount++;
-        }
-    }
-
-    public void peerDiscoveryFinished() {
-        if (combinedDeviceList.size()>0)
+    //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
+    public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
+        if (combinedDeviceList.size() > 0)
             combinedDeviceList.clear();
-        combinedDeviceList.add(new Device("WiFi Devices", "", 0, -1, null, 0));
+        combinedDeviceList.add(new Device("Wifi Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(wifiDevices);
         combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(bluetoothDevices);
-        for (Device device: combinedDeviceList
-             ) {
-            if (device.deviceName == null)
-                device.deviceName = "No name";
-        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -161,13 +102,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(broadcastReceiver != null){
-            unregisterReceiver(broadcastReceiver);
-        }
         transferService.shutdown();
-        if(wifiP2pManager != null && Build.VERSION.SDK_INT >= 16) {
-            wifiP2pManager.stopPeerDiscovery(channel, null);
-        }
     }
 
     //function to show an alert message
@@ -202,62 +137,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //setting up the device list view adapter and item click events
-    public void configureDeviceListView(){
-        deviceListView = (ListView)findViewById(R.id.device_listView);
-        combinedDeviceList = new ArrayList<>();
-        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
-        deviceListView.setAdapter(deviceListAdapter);
-        deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                showSelectedDevice(i);
-            }
-        });
-    }
-
-    //shows the current selected device in green color. only one device can be selected at a time. selected = 1 means selected, selected = 0 means otherwise
-    public void showSelectedDevice(int position) {
-    }
-
     //shows the wifi p2p state
     public void wifiP2PState(int state) {
         if (state == 0)
             showAlert("WiFi p2p disabled");
-    }
-
-    //callback method from wifi direct broadcast receiver
-    public void wifiDeviceDiscovered(WifiP2pDeviceList discoveredDevices) {
-        for (WifiP2pDevice item : discoveredDevices.getDeviceList()
-                ) {
-            int flag = 0;
-            for (Device previousDevice: wifiDevices
-                    ) {
-                if (previousDevice.deviceAddress.equalsIgnoreCase(item.deviceAddress))
-                {
-                    flag = 1;
-                    break;
-                }
-            }
-            if (flag == 0) {
-                Device device = new Device(item.deviceName, item.deviceAddress, 0, DEVICE_TYPE_WIFI,null, 0);
-                wifiDevices.add(device);
-            }
-        }
-    }
-
-    public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
-        Device newDevice = new Device(device.getName(),device.getAddress(),0,1,device, rssi);
-        int flag = 0;
-        for (Device item:bluetoothDevices) {
-            if (item.deviceAddress.equalsIgnoreCase(newDevice.deviceAddress)){
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 0){
-            bluetoothDevices.add(newDevice);
-        }
     }
 
     public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type){
