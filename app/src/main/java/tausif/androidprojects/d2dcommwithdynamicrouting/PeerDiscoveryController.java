@@ -60,7 +60,7 @@ public class PeerDiscoveryController {
         for (WifiP2pDevice device: deviceList.getDeviceList()
              ) {
 //            Device newDevice = new Device(device.deviceName, device.deviceAddress, 0, 0, null, 0);
-            Device newDevice = new Device(1, device, null, 0);
+            Device newDevice = new Device(Constants.WIFI_DEVICE, device, null, 0);
             wifiDevices.add(newDevice);
         }
     }
@@ -68,7 +68,7 @@ public class PeerDiscoveryController {
     public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
         int flag = 0;
 //        Device newDevice = new Device(device.getName(), device.getAddress(), 0, 1, device, rssi);
-        Device newDevice = new Device(0, null, device, rssi);
+        Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi);
         for (Device oldDevice: bluetoothDevices
              ) {
 //            if (newDevice.deviceAddress.equalsIgnoreCase(bluetoothDevice.deviceAddress)) {

@@ -52,7 +52,7 @@ public class DeviceListAdapter extends BaseAdapter {
 //        else
 //            title.setText(devices.get(i).deviceName);
         Device currentDevice = devices.get(i);
-        if (currentDevice.deviceType == 1)
+        if (currentDevice.deviceType == Constants.WIFI_DEVICE)
             title.setText(currentDevice.wifiDevice.deviceName);
         else
             title.setText(currentDevice.bluetoothDevice.getName());
