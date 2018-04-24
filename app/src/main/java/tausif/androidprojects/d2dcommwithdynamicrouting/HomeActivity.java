@@ -74,9 +74,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
         if (combinedDeviceList.size() > 0)
             combinedDeviceList.clear();
-//        combinedDeviceList.add(new Device("Wifi Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(wifiDevices);
-//        combinedDeviceList.add(new Device("Bluetooth Devices", "", 0, -1, null, 0));
         combinedDeviceList.addAll(bluetoothDevices);
         runOnUiThread(new Runnable() {
             @Override

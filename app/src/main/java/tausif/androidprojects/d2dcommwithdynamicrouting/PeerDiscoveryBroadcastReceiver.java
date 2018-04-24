@@ -12,8 +12,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 import android.widget.Toast;
 
-
-
 public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
@@ -28,9 +26,9 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         this.channel = channel;
     }
 
-    public void setSourceActivity(HomeActivity sourceActivity) {
-        this.sourceActivity = sourceActivity;
-    }
+//    public void setSourceActivity(HomeActivity sourceActivity) {
+//        this.sourceActivity = sourceActivity;
+//    }
 
     public void setPeerDiscoveryController(PeerDiscoveryController peerDiscoveryController) {
         this.peerDiscoveryController = peerDiscoveryController;
