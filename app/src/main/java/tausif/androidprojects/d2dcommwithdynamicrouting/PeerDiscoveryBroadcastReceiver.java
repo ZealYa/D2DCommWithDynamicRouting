@@ -26,10 +26,6 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         this.channel = channel;
     }
 
-//    public void setSourceActivity(HomeActivity sourceActivity) {
-//        this.sourceActivity = sourceActivity;
-//    }
-
     public void setPeerDiscoveryController(PeerDiscoveryController peerDiscoveryController) {
         this.peerDiscoveryController = peerDiscoveryController;
     }
