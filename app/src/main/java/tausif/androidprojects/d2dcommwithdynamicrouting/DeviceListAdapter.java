@@ -44,10 +44,22 @@ public class DeviceListAdapter extends BaseAdapter {
         View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
         TextView title = (TextView)rowView.findViewById(android.R.id.text1);
         Device currentDevice = devices.get(i);
-        if (currentDevice.deviceType == Constants.WIFI_DEVICE)
-            title.setText(currentDevice.wifiDevice.deviceName);
-        else
-            title.setText(currentDevice.bluetoothDevice.getName());
+        if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
+            if (currentDevice.wifiDevice == null) {
+                title.setTextColor(Color.GREEN);
+                title.setText("Wifi Devices");
+            }
+            else
+                title.setText(currentDevice.wifiDevice.deviceName);
+        }
+        else {
+            if (currentDevice.bluetoothDevice == null) {
+                title.setTextColor(Color.GREEN);
+                title.setText("Bluetooth Devices");
+            }
+            else
+                title.setText(currentDevice.bluetoothDevice.getName());
+        }
         return rowView;
     }
 }
