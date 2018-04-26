@@ -33,6 +33,8 @@ public class PeerDiscoveryController {
         configureWiFiDiscovery();
         configureBluetoothDiscovery();
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
+        wifiDevices = new ArrayList<>();
+        wifiP2pManager.discoverPeers(channel, null);
         Timer timer = new Timer();
         int timeInterval = 30;
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
@@ -82,15 +84,15 @@ public class PeerDiscoveryController {
         @Override
         public void run() {
             if (timeSlotCount%2==0){
-                context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
-                wifiDevices = new ArrayList<>();
-                wifiP2pManager.discoverPeers(channel, null);
+//                context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
+//                wifiDevices = new ArrayList<>();
+//                wifiP2pManager.discoverPeers(channel, null);
                 bluetoothDevices = new ArrayList<>();
                 bluetoothAdapter.startDiscovery();
             } else {
-                wifiP2pManager.stopPeerDiscovery(channel, null);
+//                wifiP2pManager.stopPeerDiscovery(channel, null);
                 bluetoothAdapter.cancelDiscovery();
-                context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
+//                context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             timeSlotCount++;

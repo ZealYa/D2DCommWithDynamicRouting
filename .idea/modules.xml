@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Andriod Studio-D2DCommWithDynamicRouting.iml" filepath="$PROJECT_DIR$/Andriod Studio-D2DCommWithDynamicRouting.iml" />
       <module fileurl="file://$PROJECT_DIR$/D2DCommWithDynamicRouting.iml" filepath="$PROJECT_DIR$/D2DCommWithDynamicRouting.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/D2DCommWithDynamicRouting-app.iml" filepath="$PROJECT_DIR$/app/D2DCommWithDynamicRouting-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
