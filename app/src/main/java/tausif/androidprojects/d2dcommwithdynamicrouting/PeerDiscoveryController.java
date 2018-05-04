@@ -53,6 +53,7 @@ public class PeerDiscoveryController {
 
     private void configureBluetoothDiscovery() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
     }
 

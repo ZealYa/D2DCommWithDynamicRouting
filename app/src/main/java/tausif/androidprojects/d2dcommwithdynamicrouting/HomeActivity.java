@@ -86,6 +86,21 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
+        measureRTT();
+    }
+
+    public void measureRTT() {
+        Log.d("host bluetooth address ", Constants.hostBluetoothAddress);
+        Log.d("host wifi address", Constants.hostWifiAddress);
+//        for (Device device: combinedDeviceList
+//             ) {
+//            if (device.wifiDevice != null || device.bluetoothDevice != null) {
+//                if (device.deviceType == Constants.BLUETOOTH_DEVICE) {
+//                    String packet = PacketMaker.createRTTPacket(Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+//                    Log.d("rtt packet ", packet);
+//                }
+//            }
+//        }
     }
 
     private boolean hasStorageWriteAccess() {

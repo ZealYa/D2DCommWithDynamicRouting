@@ -36,6 +36,10 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             if (state == WifiP2pManager.WIFI_P2P_STATE_DISABLED)
                 sourceActivity.wifiP2PState(0);
         }
+        else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+            WifiP2pDevice hostDevice = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
+            Constants.hostWifiAddress = hostDevice.deviceAddress;
+        }
         else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
                 @Override
