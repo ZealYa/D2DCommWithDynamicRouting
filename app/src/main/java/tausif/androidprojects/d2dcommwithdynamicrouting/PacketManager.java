@@ -1,7 +1,6 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
-public class PacketMaker {
-
+public class PacketManager {
     public static String createRTTPacket(String sourceAddress, String destinationAddress) {
         String packet = sourceAddress + " " + destinationAddress;
         return packet;

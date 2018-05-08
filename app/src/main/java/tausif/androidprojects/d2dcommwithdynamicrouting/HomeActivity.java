@@ -96,7 +96,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 //             ) {
 //            if (device.wifiDevice != null || device.bluetoothDevice != null) {
 //                if (device.deviceType == Constants.BLUETOOTH_DEVICE) {
-//                    String packet = PacketMaker.createRTTPacket(Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+//                    String packet = PacketManager.createRTTPacket(Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
 //                    Log.d("rtt packet ", packet);
 //                }
 //            }
