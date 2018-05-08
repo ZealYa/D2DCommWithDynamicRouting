@@ -15,7 +15,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 public class PeerDiscoveryController {
     private Context context;
     private HomeActivity homeActivity;
-    private int timeSlotCount;
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
     private BluetoothAdapter bluetoothAdapter;
@@ -35,6 +34,7 @@ public class PeerDiscoveryController {
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         wifiDevices = new ArrayList<>();
         wifiP2pManager.discoverPeers(channel, null);
+        Constants.timeSlotCount = 0;
         Timer timer = new Timer();
         int timeInterval = 30;
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
@@ -84,7 +84,7 @@ public class PeerDiscoveryController {
     private class controlPeerDiscovery extends TimerTask {
         @Override
         public void run() {
-            if (timeSlotCount%2==0){
+            if (Constants.timeSlotCount%2==0){
 //                context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
 //                wifiDevices = new ArrayList<>();
 //                wifiP2pManager.discoverPeers(channel, null);
@@ -96,7 +96,7 @@ public class PeerDiscoveryController {
 //                context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
-            timeSlotCount++;
+            Constants.timeSlotCount++;
         }
     }
 }
