@@ -86,17 +86,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
-        measureRTT();
+        measureBluetoothRTT();
     }
 
-    public void measureRTT() {
+    public void measureBluetoothRTT() {
         for (Device device: combinedDeviceList
              ) {
-            if (device.wifiDevice != null || device.bluetoothDevice != null) {
-                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().contains("NWSL")) {
-                    String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
-                    Log.d("rtt packet ", packet);
-                }
+            if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
+                String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
             }
         }
     }
