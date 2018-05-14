@@ -1,7 +1,5 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
-import java.security.PublicKey;
-
 public class Constants {
     public static String hostBluetoothAddress = "";
     public static String hostWifiAddress = "";
@@ -13,4 +11,5 @@ public class Constants {
     public static final int LOSS_RATIO_PACKET_SIZE = 500;
 
     public static int timeSlotCount = 0;
+    public static final int timeSlotLength = 15;    // in seconds
 }
