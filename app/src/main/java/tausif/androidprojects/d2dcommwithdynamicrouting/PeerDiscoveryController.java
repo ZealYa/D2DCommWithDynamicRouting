@@ -36,8 +36,7 @@ public class PeerDiscoveryController {
         wifiP2pManager.discoverPeers(channel, null);
         Constants.timeSlotCount = 0;
         Timer timer = new Timer();
-        int timeInterval = 30;
-        timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, timeInterval*1000);
+        timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.timeSlotLength*1000);
     }
 
     private void configureWiFiDiscovery() {
