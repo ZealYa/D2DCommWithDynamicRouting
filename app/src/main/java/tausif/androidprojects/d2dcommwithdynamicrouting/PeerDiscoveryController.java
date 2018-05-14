@@ -85,15 +85,10 @@ public class PeerDiscoveryController {
         @Override
         public void run() {
             if (Constants.timeSlotCount%2==0){
-//                context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
-//                wifiDevices = new ArrayList<>();
-//                wifiP2pManager.discoverPeers(channel, null);
                 bluetoothDevices = new ArrayList<>();
                 bluetoothAdapter.startDiscovery();
             } else {
-//                wifiP2pManager.stopPeerDiscovery(channel, null);
                 bluetoothAdapter.cancelDiscovery();
-//                context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             Constants.timeSlotCount++;
