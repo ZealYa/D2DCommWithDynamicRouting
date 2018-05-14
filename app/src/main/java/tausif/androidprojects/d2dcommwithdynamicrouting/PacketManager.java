@@ -5,6 +5,7 @@ public class PacketManager {
         int packetType = 1;
         String packet = String.valueOf(packetType) + " " + String.valueOf(timeSlotNo) + " " +sourceAddress + " " + destinationAddress;
         int remaining = Constants.RTT_PACKET_SIZE - packet.length();
+        packet = packet + " ";
         for (int i = 0; i < remaining; i++) {
             packet += "#";
         }
