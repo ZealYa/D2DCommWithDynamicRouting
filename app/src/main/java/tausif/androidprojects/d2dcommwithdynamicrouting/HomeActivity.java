@@ -94,6 +94,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
              ) {
             if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
                 String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                BluetoothClientThread sender = new BluetoothClientThread(device.bluetoothDevice);
+                sender.setPacket(packet);
+                sender.start();
             }
         }
     }
@@ -155,14 +158,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             showAlert("WiFi p2p disabled");
     }
 
-    public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type){
+    public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type, String packet){
         if (type == TYPE_SERVER) {
             connectedThread = new ConnectedThread(socket);
             connectedThread.start();
         }
         else if (type == TYPE_CLIENT) {
             connectedThread = new ConnectedThread(socket);
-            connectedThread.write(textToSend.getBytes());
+            connectedThread.write(packet.getBytes());
         }
     }
 
@@ -196,7 +199,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     try {
                         // A connection was accepted. Perform work associated with
                         // the connection in a separate thread.
-                        manageConnectedBluetoothSocket(socket, TYPE_SERVER);
+                        manageConnectedBluetoothSocket(socket, TYPE_SERVER, "");
                         mmServerSocket.close();
                         break;
                     } catch (IOException e) {
@@ -220,6 +223,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private class BluetoothClientThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
+        public String packet;
 
         public BluetoothClientThread(BluetoothDevice device) {
             // Use a temporary object that is later assigned to mmSocket
@@ -236,10 +240,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             mmSocket = tmp;
         }
 
-        public void run() {
-            // Cancel discovery because it otherwise slows down the connection.
-            bluetoothAdapter.cancelDiscovery();
+        public void setPacket(String packet) {
+            this.packet = packet;
+        }
 
+        public void run() {
             try {
                 // Connect to the remote device through the socket. This call blocks
                 // until it succeeds or throws an exception.
@@ -255,7 +260,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
             // The connection attempt succeeded. Perform work associated with
             // the connection in a separate thread.
-            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT);
+            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT, packet);
         }
 
         // Closes the client socket and causes the thread to finish.
