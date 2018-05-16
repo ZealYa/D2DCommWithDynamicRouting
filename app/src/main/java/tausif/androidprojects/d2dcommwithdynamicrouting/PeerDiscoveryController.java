@@ -8,6 +8,7 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -85,6 +86,15 @@ public class PeerDiscoveryController {
         public void run() {
             if (Constants.timeSlotCount%2==0){
                 bluetoothDevices = new ArrayList<>();
+                // adding up already paired devices
+                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                if (pairedDevices.size() > 0) {
+                    for (BluetoothDevice pairedDevice: pairedDevices
+                         ) {
+                        Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0);
+                        bluetoothDevices.add(device);
+                    }
+                }
                 bluetoothAdapter.startDiscovery();
             } else {
                 bluetoothAdapter.cancelDiscovery();
