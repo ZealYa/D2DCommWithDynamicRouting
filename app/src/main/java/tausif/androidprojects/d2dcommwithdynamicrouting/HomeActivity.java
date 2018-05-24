@@ -70,6 +70,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
+    public void configureBluetoothDataTransfer() {
+
+    }
+
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
         if (combinedDeviceList.size() > 0)
@@ -94,9 +98,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
              ) {
             if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
                 String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
-                BluetoothClientThread sender = new BluetoothClientThread(device.bluetoothDevice);
-                sender.setPacket(packet);
-                sender.start();
             }
         }
     }
@@ -136,6 +137,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 showAlert(receivedString);
             }
         });
+
     }
 
     //send over bluetooth and send over wifi button action
@@ -221,52 +223,82 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //bluetooth client thread
     private class BluetoothClientThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
-        public String packet;
+//        private final BluetoothSocket mmSocket;
+//        private final BluetoothDevice mmDevice;
+        private BluetoothSocket socket;
+        private BluetoothDevice device;
+        private String packet;
 
-        public BluetoothClientThread(BluetoothDevice device) {
-            // Use a temporary object that is later assigned to mmSocket
-            // because mmSocket is final.
-            BluetoothSocket tmp = null;
-            mmDevice = device;
+//        public BluetoothClientThread(BluetoothDevice device) {
+//            // Use a temporary object that is later assigned to mmSocket
+//            // because mmSocket is final.
+//            BluetoothSocket tmp = null;
+//            mmDevice = device;
+//
+//            try {
+//                // Get a BluetoothSocket to connect with the given BluetoothDevice.
+//                // MY_UUID is the app's UUID string, also used in the server code.
+//                tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+//            } catch (IOException e) {
+//            }
+//            mmSocket = tmp;
+//        }
 
-            try {
-                // Get a BluetoothSocket to connect with the given BluetoothDevice.
-                // MY_UUID is the app's UUID string, also used in the server code.
-                tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-            } catch (IOException e) {
-            }
-            mmSocket = tmp;
+        public void setDevice(BluetoothDevice device) {
+            this.device = device;
         }
 
         public void setPacket(String packet) {
             this.packet = packet;
         }
 
+        public void setSocket() {
+            try {
+                socket = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+            } catch (IOException createEx) {
+
+            }
+        }
+
+//        public void run() {
+//            try {
+//                // Connect to the remote device through the socket. This call blocks
+//                // until it succeeds or throws an exception.
+//                mmSocket.connect();
+//            } catch (IOException connectException) {
+//                // Unable to connect; close the socket and return.
+//                try {
+//                    mmSocket.close();
+//                } catch (IOException closeException) {
+//                }
+//                return;
+//            }
+//
+//            // The connection attempt succeeded. Perform work associated with
+//            // the connection in a separate thread.
+//            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT, packet);
+//        }
+
+
+        @Override
         public void run() {
             try {
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
-                mmSocket.connect();
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and return.
+                socket.connect();
+            } catch (IOException connectEx) {
                 try {
-                    mmSocket.close();
-                } catch (IOException closeException) {
+                    socket.close();
+                } catch (IOException closeEx) {
+
                 }
                 return;
             }
-
-            // The connection attempt succeeded. Perform work associated with
-            // the connection in a separate thread.
-            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT, packet);
+            manageConnectedBluetoothSocket(socket, TYPE_CLIENT, packet);
         }
 
         // Closes the client socket and causes the thread to finish.
         public void cancel() {
             try {
-                mmSocket.close();
+                socket.close();
             } catch (IOException e) {
             }
         }
