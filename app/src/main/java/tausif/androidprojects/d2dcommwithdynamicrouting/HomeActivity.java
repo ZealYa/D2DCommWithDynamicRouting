@@ -42,7 +42,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     String NAME = "server";
     String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
     ConnectedThread connectedThread;
-    BluetoothServerThread serverThread;
+    BluetoothServerThread bluetoothServerThread;
+    BluetoothClientThread bluetoothClientThread;
     String textToSend = "";
     BluetoothAdapter bluetoothAdapter;
 
@@ -66,12 +67,16 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(View view){
+        bluetoothClientThread = new BluetoothClientThread();
         configureDeviceListView();
+//        configureBluetoothDataTransfer();
         PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
     public void configureBluetoothDataTransfer() {
-
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothServerThread = new BluetoothServerThread();
+        bluetoothServerThread.start();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
@@ -98,6 +103,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
              ) {
             if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
                 String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                bluetoothClientThread.setDevice(device.bluetoothDevice);
+                bluetoothClientThread.setPacket(packet);
+                bluetoothClientThread.setSocket();
+                bluetoothClientThread.start();
             }
         }
     }
@@ -137,20 +146,21 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 showAlert(receivedString);
             }
         });
-
+        connectedThread.cancel();
     }
 
     //send over bluetooth and send over wifi button action
     public void sendButtonPressed(View view) {
-        EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-        textToSend = inputTextBox.getText().toString();
-        if (textToSend.length()==0){
-            inputTextBox.setError("enter any text");
-        }
+//        EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
+//        textToSend = inputTextBox.getText().toString();
+//        if (textToSend.length()==0){
+//            inputTextBox.setError("enter any text");
+//        }
         if (view.getId() == R.id.send_with_bluetooth_button) {
 //            Device bluetoothDevice = bluetoothDevices.get(currentSelection);
 //            BluetoothClientThread clientThread = new BluetoothClientThread(bluetoothDevice.bluetoothDevice);
 //            clientThread.start();
+            configureBluetoothDataTransfer();
         }
     }
 
@@ -165,10 +175,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             connectedThread = new ConnectedThread(socket);
             connectedThread.start();
         }
-        else if (type == TYPE_CLIENT) {
-            connectedThread = new ConnectedThread(socket);
-            connectedThread.write(packet.getBytes());
-        }
+//        else if (type == TYPE_CLIENT) {
+//            connectedThread = new ConnectedThread(socket);
+//            connectedThread.write(packet.getBytes());
+//        }
     }
 
     //bluetooth server thread
@@ -198,15 +208,15 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 if (socket != null) {
-                    try {
+//                    try {
                         // A connection was accepted. Perform work associated with
                         // the connection in a separate thread.
                         manageConnectedBluetoothSocket(socket, TYPE_SERVER, "");
-                        mmServerSocket.close();
-                        break;
-                    } catch (IOException e) {
-
-                    }
+//                        mmServerSocket.close();
+//                        break;
+//                    } catch (IOException e) {
+//
+//                    }
                 }
             }
         }
@@ -292,7 +302,15 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 return;
             }
-            manageConnectedBluetoothSocket(socket, TYPE_CLIENT, packet);
+//            manageConnectedBluetoothSocket(socket, TYPE_CLIENT, packet);
+            try {
+                OutputStream outputStream = socket.getOutputStream();
+                outputStream.write(packet.getBytes());
+                this.cancel();
+            } catch (IOException ex) {
+
+            }
+
         }
 
         // Closes the client socket and causes the thread to finish.
@@ -352,13 +370,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // Call this from the main activity to send data to the remote device.
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) {
-                Log.e("sending error", "Error occurred when sending data", e);
-            }
-        }
+//        public void write(byte[] bytes) {
+//            try {
+//                mmOutStream.write(bytes);
+//            } catch (IOException e) {
+//                Log.e("sending error", "Error occurred when sending data", e);
+//            }
+//        }
 
         // Call this method from the main activity to shut down the connection.
         public void cancel() {
