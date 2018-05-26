@@ -95,7 +95,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
-        measureBluetoothRTT();
+//        measureBluetoothRTT();
     }
 
     public void measureBluetoothRTT() {
@@ -306,7 +306,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 OutputStream outputStream = socket.getOutputStream();
                 outputStream.write(packet.getBytes());
-                this.cancel();
             } catch (IOException ex) {
 
             }
