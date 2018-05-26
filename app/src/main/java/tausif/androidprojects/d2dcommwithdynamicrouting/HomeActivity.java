@@ -53,8 +53,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-        findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
+//        findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
         hasStorageWriteAccess();
+    }
+
+    public void measureButtonPressed(View view) {
+        if (view.getId() == R.id.BT_RSSI_button) {
+            startDiscovery();
+        }
     }
 
     //setting up the device list view adapter and item click events
@@ -66,7 +72,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
-    public void startDiscovery(View view){
+    public void startDiscovery(){
         bluetoothClientThread = new BluetoothClientThread();
         configureDeviceListView();
 //        configureBluetoothDataTransfer();
@@ -156,12 +162,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 //        if (textToSend.length()==0){
 //            inputTextBox.setError("enter any text");
 //        }
-        if (view.getId() == R.id.send_with_bluetooth_button) {
+//        if (view.getId() == R.id.send_with_bluetooth_button) {
 //            Device bluetoothDevice = bluetoothDevices.get(currentSelection);
 //            BluetoothClientThread clientThread = new BluetoothClientThread(bluetoothDevice.bluetoothDevice);
 //            clientThread.start();
-            configureBluetoothDataTransfer();
-        }
+//            configureBluetoothDataTransfer();
+//        }
     }
 
     //shows the wifi p2p state
@@ -406,25 +412,25 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        if(view.getId() == R.id.send_with_wifi_button){
+//        if(view.getId() == R.id.send_with_wifi_button){
 //            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 //            intent.addCategory(Intent.CATEGORY_OPENABLE);
 //            intent.setType("*/*");
 //            startActivityForResult(intent, PICKFILE_REQUEST_CODE);
-            //sending hard code file
-            EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-            textToSend = inputTextBox.getText().toString();
-            String filename = textToSend + ".txt";
-            File fileToSend = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
-            try {
-                FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
-                fileOutputStream.write(textToSend.getBytes());
-                fileOutputStream.close();
-            } catch (IOException e) {
-            }
-            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(),filename);
-            Toast.makeText(this,"Sending file...",Toast.LENGTH_SHORT).show();
-        }
+//            sending hard code file
+//            EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
+//            textToSend = inputTextBox.getText().toString();
+//            String filename = textToSend + ".txt";
+//            File fileToSend = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
+//            try {
+//                FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
+//                fileOutputStream.write(textToSend.getBytes());
+//                fileOutputStream.close();
+//            } catch (IOException e) {
+//            }
+//            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(),filename);
+//            Toast.makeText(this,"Sending file...",Toast.LENGTH_SHORT).show();
+//        }
     }
 
     @Override

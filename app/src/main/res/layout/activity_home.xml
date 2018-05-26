@@ -10,62 +10,58 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:orientation="horizontal"
         android:id="@+id/top_linearLayout">
 
         <Button
-            android:id="@+id/start_discovery_button"
+            android:id="@+id/BT_RSSI_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="start discovery"
+            android:text="bt rssi"
+            android:onClick="startDiscovery"/>
+
+        <Button
+            android:id="@+id/BT_RTT_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="bt rtt"
+            android:onClick="startDiscovery"/>
+
+        <Button
+            android:id="@+id/BT_Loss_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="bt loss"
+            android:onClick="startDiscovery"/>
+
+        <Button
+            android:id="@+id/WIFI_RTT_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="wifi rtt"
+            android:onClick="startDiscovery"/>
+
+        <Button
+            android:id="@+id/WIFI_Loss_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="wifi loss"
             android:onClick="startDiscovery"/>
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:orientation="horizontal"
-        android:id="@+id/bottom_linearLayout">
-
-        <Button
-            android:id="@+id/send_with_bluetooth_button"
-            android:layout_width="match_parent"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:text="send over bluetooth"
-            android:onClick="sendButtonPressed"/>
-
-        <Button
-            android:id="@+id/send_with_wifi_button"
-            android:layout_width="match_parent"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:text="send over wifi"
-            android:onClick="sendButtonPressed"/>
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/input_editText"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_above="@+id/bottom_linearLayout"
-        android:layout_centerHorizontal="true"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:hint="type a text" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_above="@+id/input_editText"
         android:layout_below="@+id/top_linearLayout"
         android:id="@+id/device_listView"/>
 </RelativeLayout>
