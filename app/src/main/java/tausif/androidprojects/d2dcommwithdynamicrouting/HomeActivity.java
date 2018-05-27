@@ -71,15 +71,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         else {
             resultRSSI = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "resultRSSI.txt");
-//            try {
-//                FileWriter fileWriter = new FileWriter(resultRSSI);
-//                fileWriter.write("test text");
-//                fileWriter.flush();
-//                fileWriter.close();
-//            } catch (IOException ex) {
-//
-//            }
         }
+        startDiscovery();
+    }
+
+    public void bluetoothRTTButton(View view) {
+        metricToMeasure = Constants.BT_RTT;
+        configureBluetoothDataTransfer();
         startDiscovery();
     }
 
@@ -93,9 +91,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(){
-//        bluetoothClientThread = new BluetoothClientThread();
         configureDeviceListView();
-//        configureBluetoothDataTransfer();
         PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
@@ -103,6 +99,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
+        bluetoothClientThread = new BluetoothClientThread();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
@@ -123,7 +120,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         });
         if (metricToMeasure == Constants.BT_RSSI)
             measureBluetoothRSSI();
-//        measureBluetoothRTT();
+        else if (metricToMeasure == Constants.BT_RTT)
+            measureBluetoothRTT();
     }
 
     public void measureBluetoothRSSI() {
@@ -192,7 +190,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 showAlert(receivedString);
             }
         });
-        connectedThread.cancel();
     }
 
     //send over bluetooth and send over wifi button action
@@ -372,13 +369,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
+//        private final OutputStream mmOutStream;
         private byte[] mmBuffer; // mmBuffer store for the stream
 
         public ConnectedThread(BluetoothSocket socket) {
             mmSocket = socket;
             InputStream tmpIn = null;
-            OutputStream tmpOut = null;
+//            OutputStream tmpOut = null;
 
             // Get the input and output streams; using temp objects because
             // member streams are final.
@@ -387,14 +384,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             } catch (IOException e) {
                 Log.e("input stream error", "Error occurred when creating input stream", e);
             }
-            try {
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                Log.e("output stream error", "Error occurred when creating output stream", e);
-            }
+//            try {
+//                tmpOut = socket.getOutputStream();
+//            } catch (IOException e) {
+//                Log.e("output stream error", "Error occurred when creating output stream", e);
+//            }
 
             mmInStream = tmpIn;
-            mmOutStream = tmpOut;
+//            mmOutStream = tmpOut;
         }
 
         public void run() {

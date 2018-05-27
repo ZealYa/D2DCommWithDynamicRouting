@@ -29,7 +29,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="bt rtt" />
+            android:text="bt rtt"
+            android:onClick="bluetoothRTTButton"/>
 
         <Button
             android:id="@+id/BT_Loss_button"
@@ -54,10 +55,19 @@
     </LinearLayout>
 
     <ListView
+        android:id="@+id/device_listView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
+        android:layout_height="407dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/start_discovery_button" />
+
+    <Button
+        android:id="@+id/start_discovery_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/top_linearLayout"
-        android:id="@+id/device_listView"/>
+        android:layout_centerHorizontal="true"
+        android:text="start discovery"
+        android:onClick=""/>
 </RelativeLayout>
