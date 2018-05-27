@@ -22,39 +22,35 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="bt rssi"
-            android:onClick="startDiscovery"/>
+            android:onClick="bluetoothRSSIButton"/>
 
         <Button
             android:id="@+id/BT_RTT_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="bt rtt"
-            android:onClick="startDiscovery"/>
+            android:text="bt rtt" />
 
         <Button
             android:id="@+id/BT_Loss_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="bt loss"
-            android:onClick="startDiscovery"/>
+            android:text="bt loss" />
 
         <Button
             android:id="@+id/WIFI_RTT_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="wifi rtt"
-            android:onClick="startDiscovery"/>
+            android:text="wifi rtt" />
 
         <Button
             android:id="@+id/WIFI_Loss_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="wifi loss"
-            android:onClick="startDiscovery"/>
+            android:text="wifi loss" />
     </LinearLayout>
 
     <ListView

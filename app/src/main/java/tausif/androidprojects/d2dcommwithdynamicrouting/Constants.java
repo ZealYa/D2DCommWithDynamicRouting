@@ -13,4 +13,10 @@ public class Constants {
 
     public static int timeSlotCount = 0;
     public static final int timeSlotLength = 15;    // in seconds
+
+    public static final int BT_RSSI = 0;
+    public static final int BT_RTT = 1;
+    public static final int BT_PACKET_LOSS = 2;
+    public static final int WIFI_RTT = 3;
+    public static final int WIFI_PACKET_LOSS = 4;
 }

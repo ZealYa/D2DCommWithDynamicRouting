@@ -1,5 +1,7 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.Manifest;
+import android.app.usage.ExternalStorageStats;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -21,9 +23,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -46,6 +50,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     BluetoothClientThread bluetoothClientThread;
     String textToSend = "";
     BluetoothAdapter bluetoothAdapter;
+    int metricToMeasure;
+    File resultRSSI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +63,24 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         hasStorageWriteAccess();
     }
 
-    public void measureButtonPressed(View view) {
-        if (view.getId() == R.id.BT_RSSI_button) {
-            startDiscovery();
+    public void bluetoothRSSIButton(View view) {
+        metricToMeasure = Constants.BT_RSSI;
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1415);
         }
+        else {
+            resultRSSI = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "resultRSSI.txt");
+//            try {
+//                FileWriter fileWriter = new FileWriter(resultRSSI);
+//                fileWriter.write("test text");
+//                fileWriter.flush();
+//                fileWriter.close();
+//            } catch (IOException ex) {
+//
+//            }
+        }
+        startDiscovery();
     }
 
     //setting up the device list view adapter and item click events
@@ -73,7 +93,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(){
-        bluetoothClientThread = new BluetoothClientThread();
+//        bluetoothClientThread = new BluetoothClientThread();
         configureDeviceListView();
 //        configureBluetoothDataTransfer();
         PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
@@ -101,7 +121,26 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
+        if (metricToMeasure == Constants.BT_RSSI)
+            measureBluetoothRSSI();
 //        measureBluetoothRTT();
+    }
+
+    public void measureBluetoothRSSI() {
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(resultRSSI);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            for (Device device:combinedDeviceList
+                 ) {
+                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
+                    outputStreamWriter.append(device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi) + "\n");
+                }
+            }
+            outputStreamWriter.close();
+            fileOutputStream.close();
+        } catch (IOException e) {
+
+        }
     }
 
     public void measureBluetoothRTT() {
