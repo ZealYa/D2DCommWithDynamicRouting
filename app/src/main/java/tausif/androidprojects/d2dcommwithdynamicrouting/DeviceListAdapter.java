@@ -57,11 +57,8 @@ public class DeviceListAdapter extends BaseAdapter {
                 title.setTextColor(Color.GREEN);
                 title.setText("Bluetooth Devices");
             }
-            else {
-                String titleText = currentDevice.bluetoothDevice.getName() + " " + String.valueOf(currentDevice.rssi);
-                title.setText(titleText);
-            }
-//                title.setText(currentDevice.bluetoothDevice.getName());
+            else
+                title.setText(currentDevice.bluetoothDevice.getName());
         }
         return rowView;
     }

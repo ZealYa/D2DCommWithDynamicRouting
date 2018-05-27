@@ -136,6 +136,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     outputStreamWriter.append(device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi) + "\n");
                 }
             }
+            outputStreamWriter.append("\n");
             outputStreamWriter.close();
             fileOutputStream.close();
         } catch (IOException e) {
