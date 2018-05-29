@@ -8,7 +8,10 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -155,6 +158,20 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    public void measureWiFiRTT() {
+        WifiP2pManager wifiP2pManager = (WifiP2pManager)this.getSystemService(WIFI_P2P_SERVICE);
+        WifiP2pManager.Channel channel = wifiP2pManager.initialize(this, getMainLooper(), null);
+        for (Device device: combinedDeviceList) {
+            if (device.deviceType == Constants.WIFI_DEVICE && device.wifiDevice != null && device.wifiDevice.deviceName.contains("NWSL")) {
+                String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostWifiAddress, device.wifiDevice.deviceAddress);
+                WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
+                wifiP2pConfig.deviceAddress = device.wifiDevice.deviceAddress;
+                wifiP2pManager.connect(channel, wifiP2pConfig, null);
+                transferService.sendFile(packet);
+            }
+        }
+    }
+
     private boolean hasStorageWriteAccess() {
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -192,21 +209,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    //send over bluetooth and send over wifi button action
-    public void sendButtonPressed(View view) {
-//        EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-//        textToSend = inputTextBox.getText().toString();
-//        if (textToSend.length()==0){
-//            inputTextBox.setError("enter any text");
-//        }
-//        if (view.getId() == R.id.send_with_bluetooth_button) {
-//            Device bluetoothDevice = bluetoothDevices.get(currentSelection);
-//            BluetoothClientThread clientThread = new BluetoothClientThread(bluetoothDevice.bluetoothDevice);
-//            clientThread.start();
-//            configureBluetoothDataTransfer();
-//        }
-    }
-
     //shows the wifi p2p state
     public void wifiP2PState(int state) {
         if (state == 0)
@@ -218,10 +220,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             connectedThread = new ConnectedThread(socket);
             connectedThread.start();
         }
-//        else if (type == TYPE_CLIENT) {
-//            connectedThread = new ConnectedThread(socket);
-//            connectedThread.write(packet.getBytes());
-//        }
     }
 
     //bluetooth server thread
@@ -276,26 +274,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //bluetooth client thread
     private class BluetoothClientThread extends Thread {
-//        private final BluetoothSocket mmSocket;
-//        private final BluetoothDevice mmDevice;
         private BluetoothSocket socket;
         private BluetoothDevice device;
         private String packet;
-
-//        public BluetoothClientThread(BluetoothDevice device) {
-//            // Use a temporary object that is later assigned to mmSocket
-//            // because mmSocket is final.
-//            BluetoothSocket tmp = null;
-//            mmDevice = device;
-//
-//            try {
-//                // Get a BluetoothSocket to connect with the given BluetoothDevice.
-//                // MY_UUID is the app's UUID string, also used in the server code.
-//                tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-//            } catch (IOException e) {
-//            }
-//            mmSocket = tmp;
-//        }
 
         public void setDevice(BluetoothDevice device) {
             this.device = device;
@@ -313,26 +294,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-//        public void run() {
-//            try {
-//                // Connect to the remote device through the socket. This call blocks
-//                // until it succeeds or throws an exception.
-//                mmSocket.connect();
-//            } catch (IOException connectException) {
-//                // Unable to connect; close the socket and return.
-//                try {
-//                    mmSocket.close();
-//                } catch (IOException closeException) {
-//                }
-//                return;
-//            }
-//
-//            // The connection attempt succeeded. Perform work associated with
-//            // the connection in a separate thread.
-//            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT, packet);
-//        }
-
-
         @Override
         public void run() {
             try {
@@ -345,7 +306,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 return;
             }
-//            manageConnectedBluetoothSocket(socket, TYPE_CLIENT, packet);
             try {
                 OutputStream outputStream = socket.getOutputStream();
                 outputStream.write(packet.getBytes());
@@ -369,14 +329,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
-//        private final OutputStream mmOutStream;
         private byte[] mmBuffer; // mmBuffer store for the stream
 
         public ConnectedThread(BluetoothSocket socket) {
             mmSocket = socket;
             InputStream tmpIn = null;
-//            OutputStream tmpOut = null;
-
             // Get the input and output streams; using temp objects because
             // member streams are final.
             try {
@@ -384,14 +341,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             } catch (IOException e) {
                 Log.e("input stream error", "Error occurred when creating input stream", e);
             }
-//            try {
-//                tmpOut = socket.getOutputStream();
-//            } catch (IOException e) {
-//                Log.e("output stream error", "Error occurred when creating output stream", e);
-//            }
-
             mmInStream = tmpIn;
-//            mmOutStream = tmpOut;
         }
 
         public void run() {
@@ -410,15 +360,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }
-
-        // Call this from the main activity to send data to the remote device.
-//        public void write(byte[] bytes) {
-//            try {
-//                mmOutStream.write(bytes);
-//            } catch (IOException e) {
-//                Log.e("sending error", "Error occurred when sending data", e);
-//            }
-//        }
 
         // Call this method from the main activity to shut down the connection.
         public void cancel() {

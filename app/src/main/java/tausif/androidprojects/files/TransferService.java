@@ -49,7 +49,7 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"File send successfully " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"packet send successfully ", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -59,7 +59,7 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"File received successfully " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"packet received successfully", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -80,7 +80,7 @@ public class TransferService implements OnTransferFinishListener {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"Connected with server " + serverIP, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,"Connected with server" + serverIP, Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -89,7 +89,7 @@ public class TransferService implements OnTransferFinishListener {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"Failed to connect with server " + serverIP, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,"Failed to connect with server" + serverIP, Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -130,8 +130,8 @@ public class TransferService implements OnTransferFinishListener {
         }
     }
 
-    public void  sendFile(String path,String name){
-        executorService.execute(new FileSender(this, clientSocket,path,name));
+    public void  sendFile(/*String path,String name*/String packet){
+        executorService.execute(new FileSender(this, clientSocket,/*path,name*/packet));
     }
 
     public void shutdown(){
