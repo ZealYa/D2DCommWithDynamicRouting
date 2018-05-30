@@ -3,6 +3,8 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 import android.bluetooth.BluetoothDevice;
 import android.net.wifi.p2p.WifiP2pDevice;
 
+import java.util.Date;
+
 
 public class Device {
     public int deviceType;
@@ -11,8 +13,8 @@ public class Device {
     public int rssi;
     public double roundTripTime;
     public double packetLossRatio;
-    public double rttStartTime;
-    public double rttEndTime;
+    public long rttStartTime;
+    public long rttEndTime;
 
     public Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi) {
         this.deviceType = deviceType;

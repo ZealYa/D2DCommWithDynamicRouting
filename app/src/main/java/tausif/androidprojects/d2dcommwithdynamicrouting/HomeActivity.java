@@ -33,6 +33,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 import tausif.androidprojects.files.TransferService;
@@ -45,20 +47,16 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<Device> bluetoothDevices;
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
-    int TYPE_SERVER = 0;
     private TransferService transferService;
     private Handler handler;
     String NAME = "server";
     String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
     BluetoothAdapter bluetoothAdapter;
     BluetoothServerThread bluetoothServerThread;
-    BluetoothClientThread bluetoothClientThread;
     BluetoothDataSender bluetoothDataSender;
     ConnectedThread connectedThread;
     int metricToMeasure;
     File resultRSSI;
-    private PeerDiscoveryBroadcastReceiver peerDiscoveryBroadcastReceiver;
-    private int dataSent = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +118,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
-//        bluetoothClientThread = new BluetoothClientThread();
         bluetoothDataSender = new BluetoothDataSender();
     }
 
@@ -142,7 +139,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
-        if (metricToMeasure == Constants.BT_RTT)
+        if (metricToMeasure == Constants.BT_RSSI)
+            measureBluetoothRSSI();
+        else if (metricToMeasure == Constants.BT_RTT)
             measureBluetoothRTT();
     }
 
@@ -169,9 +168,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
              ) {
             String deviceName = device.bluetoothDevice.getName();
             if (deviceName != null && deviceName.contains("NWSL 2")) {
-                String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device.bluetoothDevice);
                 bluetoothDataSender.setSocket();
+                device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+                bluetoothDataSender.sendPkt(packet);
             }
         }
     }
@@ -307,59 +308,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //bluetooth client thread
-    private class BluetoothClientThread extends Thread {
-        private BluetoothSocket socket;
-        private BluetoothDevice device;
-        private String packet;
-
-        public void setDevice(BluetoothDevice device) {
-            this.device = device;
-        }
-
-        public void setPacket(String packet) {
-            this.packet = packet;
-        }
-
-        public void setSocket() {
-            try {
-                socket = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-            } catch (IOException createEx) {
-
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                socket.connect();
-            } catch (IOException connectEx) {
-                try {
-                    socket.close();
-                } catch (IOException closeEx) {
-
-                }
-                return;
-            }
-            try {
-                OutputStream outputStream = socket.getOutputStream();
-                outputStream.write(packet.getBytes());
-            } catch (IOException ex) {
-
-            }
-
-        }
-
-        // Closes the client socket and causes the thread to finish.
-        public void cancel() {
-            try {
-                socket.close();
-            } catch (IOException e) {
-            }
-        }
-    }
-    //end of bluetooth client thread
-
     //bluetooth data send/receive thread
     private class ConnectedThread extends Thread {
         private final BluetoothSocket socket;
@@ -372,7 +320,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             // Get the input and output streams; using temp objects because
             // member streams are final.
             try {
-                tmpIn = socket.getInputStream();
+                tmpIn = this.socket.getInputStream();
             } catch (IOException e) {
                 Log.e("input stream error", "Error occurred when creating input stream", e);
             }
@@ -380,7 +328,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         public void run() {
-            readBuffer = new byte[1024];
+            readBuffer = new byte[2000];
 //            int numBytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
@@ -389,7 +337,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     // Read from the InputStream.
 //                    numBytes = mmInStream.read(mmBuffer);
                     inputStream.read(readBuffer);
-                    showReceivedData(readBuffer);
+                    processReceivedBTPkt(readBuffer);
                 } catch (IOException e) {
                     Log.d("disconnection error", "Input stream was disconnected", e);
                     break;
@@ -403,6 +351,36 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 socket.close();
             } catch (IOException e) {
                 Log.e("socket closing error", "Could not close the connect socket", e);
+            }
+        }
+    }
+
+    public void processReceivedBTPkt(byte[] receivedData) {
+        String receivedPkt = new String(receivedData);
+        String splited[] = receivedPkt.split(" ");
+        int pktType = Integer.parseInt(splited[0]);
+        if (pktType == Constants.TYPE_RTT) {
+            for (Device device: bluetoothDevices
+                    ) {
+                if (device.bluetoothDevice.getAddress().equals(splited[2])) {
+                    bluetoothDataSender.setDevice(device.bluetoothDevice);
+                    break;
+                }
+            }
+            bluetoothDataSender.setSocket();
+            int timeSlotNo = Integer.parseInt(splited[1]);
+            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, timeSlotNo, splited[3], splited[2]);
+            if (bluetoothDataSender.device.getName().equals("NWSL 1"))
+                bluetoothDataSender.sendPkt(packet);
+        }
+        else if (pktType == Constants.TYPE_RTT_RET) {
+            for (final Device device: bluetoothDevices
+                 ) {
+                if (device.bluetoothDevice.getAddress().equals(splited[2])) {
+                    device.rttEndTime = Calendar.getInstance().getTimeInMillis();
+                    device.roundTripTime = device.rttEndTime - device.rttStartTime;
+                    Log.d("rtt", String.valueOf(device.roundTripTime));
+                }
             }
         }
     }
