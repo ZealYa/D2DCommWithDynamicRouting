@@ -49,7 +49,7 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"packet send successfully ", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"packet send successfully", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -59,7 +59,7 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"packet received successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"received packet " + name, Toast.LENGTH_SHORT).show();
             }
         });
     }

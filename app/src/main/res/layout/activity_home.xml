@@ -44,7 +44,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="wifi rtt" />
+            android:text="wifi rtt"
+            android:onClick="wifiRTTButton"/>
 
         <Button
             android:id="@+id/WIFI_Loss_button"
@@ -69,5 +70,5 @@
         android:layout_below="@+id/top_linearLayout"
         android:layout_centerHorizontal="true"
         android:text="start discovery"
-        android:onClick=""/>
+        android:onClick="startDiscoveryButton"/>
 </RelativeLayout>

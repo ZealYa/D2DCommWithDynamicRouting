@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -40,21 +41,24 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final int PICKFILE_REQUEST_CODE = 323;
     ArrayList<Device> combinedDeviceList;
+    ArrayList<Device> wifiDevices;
+    ArrayList<Device> bluetoothDevices;
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
     int TYPE_SERVER = 0;
-    int TYPE_CLIENT = 1;
     private TransferService transferService;
     private Handler handler;
     String NAME = "server";
     String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
-    ConnectedThread connectedThread;
+    BluetoothAdapter bluetoothAdapter;
     BluetoothServerThread bluetoothServerThread;
     BluetoothClientThread bluetoothClientThread;
-    String textToSend = "";
-    BluetoothAdapter bluetoothAdapter;
+    BluetoothDataSender bluetoothDataSender;
+    ConnectedThread connectedThread;
     int metricToMeasure;
     File resultRSSI;
+    private PeerDiscoveryBroadcastReceiver peerDiscoveryBroadcastReceiver;
+    private int dataSent = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +68,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         transferService = new TransferService(this);
 //        findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
         hasStorageWriteAccess();
+        metricToMeasure = -1;
     }
 
     public void bluetoothRSSIButton(View view) {
@@ -81,6 +86,19 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void bluetoothRTTButton(View view) {
         metricToMeasure = Constants.BT_RTT;
         configureBluetoothDataTransfer();
+        startDiscovery();
+    }
+
+    public void bluetoothPktLossButton(View view) {
+    }
+
+    public void wifiRTTButton(View view) {
+    }
+
+    public void wifiPktLossButton(View view) {
+    }
+
+    public void startDiscoveryButton(View view) {
         startDiscovery();
     }
 
@@ -102,28 +120,29 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
-        bluetoothClientThread = new BluetoothClientThread();
+//        bluetoothClientThread = new BluetoothClientThread();
+        bluetoothDataSender = new BluetoothDataSender();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
+        this.wifiDevices = wifiDevices;
+        this.bluetoothDevices = bluetoothDevices;
         if (combinedDeviceList.size() > 0)
             combinedDeviceList.clear();
         Device dummyWifiDevice = new Device(Constants.WIFI_DEVICE, null, null, 0);
         combinedDeviceList.add(dummyWifiDevice);
-        combinedDeviceList.addAll(wifiDevices);
+        combinedDeviceList.addAll(this.wifiDevices);
         Device dummyBluetoothDevice = new Device(Constants.BLUETOOTH_DEVICE, null, null, 0);
         combinedDeviceList.add(dummyBluetoothDevice);
-        combinedDeviceList.addAll(bluetoothDevices);
+        combinedDeviceList.addAll(this.bluetoothDevices);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
-        if (metricToMeasure == Constants.BT_RSSI)
-            measureBluetoothRSSI();
-        else if (metricToMeasure == Constants.BT_RTT)
+        if (metricToMeasure == Constants.BT_RTT)
             measureBluetoothRTT();
     }
 
@@ -146,28 +165,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void measureBluetoothRTT() {
-        for (Device device: combinedDeviceList
+        for (Device device: bluetoothDevices
              ) {
-            if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
+            String deviceName = device.bluetoothDevice.getName();
+            if (deviceName != null && deviceName.contains("NWSL 2")) {
                 String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
-                bluetoothClientThread.setDevice(device.bluetoothDevice);
-                bluetoothClientThread.setPacket(packet);
-                bluetoothClientThread.setSocket();
-                bluetoothClientThread.start();
-            }
-        }
-    }
-
-    public void measureWiFiRTT() {
-        WifiP2pManager wifiP2pManager = (WifiP2pManager)this.getSystemService(WIFI_P2P_SERVICE);
-        WifiP2pManager.Channel channel = wifiP2pManager.initialize(this, getMainLooper(), null);
-        for (Device device: combinedDeviceList) {
-            if (device.deviceType == Constants.WIFI_DEVICE && device.wifiDevice != null && device.wifiDevice.deviceName.contains("NWSL")) {
-                String packet = PacketManager.createRTTPacket(Constants.timeSlotCount, Constants.hostWifiAddress, device.wifiDevice.deviceAddress);
-                WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
-                wifiP2pConfig.deviceAddress = device.wifiDevice.deviceAddress;
-                wifiP2pManager.connect(channel, wifiP2pConfig, null);
-                transferService.sendFile(packet);
+                bluetoothDataSender.setDevice(device.bluetoothDevice);
+                bluetoothDataSender.setSocket();
             }
         }
     }
@@ -215,11 +219,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             showAlert("WiFi p2p disabled");
     }
 
-    public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type, String packet){
-        if (type == TYPE_SERVER) {
-            connectedThread = new ConnectedThread(socket);
-            connectedThread.start();
-        }
+    public void manageConnectedBluetoothSocket(BluetoothSocket socket){
+        connectedThread = new ConnectedThread(socket);
+        connectedThread.start();
     }
 
     //bluetooth server thread
@@ -239,7 +241,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         public void run() {
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
             // Keep listening until exception occurs or a socket is returned.
             while (true) {
                 try {
@@ -252,7 +254,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 //                    try {
                         // A connection was accepted. Perform work associated with
                         // the connection in a separate thread.
-                        manageConnectedBluetoothSocket(socket, TYPE_SERVER, "");
+                        manageConnectedBluetoothSocket(socket);
 //                        mmServerSocket.close();
 //                        break;
 //                    } catch (IOException e) {
@@ -271,6 +273,39 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
     //end of bluetooth server thread
+
+    private class BluetoothDataSender {
+        private BluetoothSocket socket;
+        private BluetoothDevice device;
+
+        public void setDevice(BluetoothDevice device) {
+            this.device = device;
+        }
+        public void setSocket() {
+            try {
+                socket = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+            } catch (IOException ex) {
+
+            }
+        }
+        public void sendPkt(String packet) {
+            try {
+                socket.connect();
+            } catch (IOException connectEx) {
+                try {
+                    socket.close();
+                } catch (IOException closeEx) {
+
+                }
+            }
+            try {
+                OutputStream outputStream = socket.getOutputStream();
+                outputStream.write(packet.getBytes());
+            } catch (IOException writeEx) {
+
+            }
+        }
+    }
 
     //bluetooth client thread
     private class BluetoothClientThread extends Thread {
@@ -327,12 +362,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //bluetooth data send/receive thread
     private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private byte[] mmBuffer; // mmBuffer store for the stream
+        private final BluetoothSocket socket;
+        private final InputStream inputStream;
+        private byte[] readBuffer; // mmBuffer store for the stream
 
         public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
+            this.socket = socket;
             InputStream tmpIn = null;
             // Get the input and output streams; using temp objects because
             // member streams are final.
@@ -341,19 +376,20 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             } catch (IOException e) {
                 Log.e("input stream error", "Error occurred when creating input stream", e);
             }
-            mmInStream = tmpIn;
+            inputStream = tmpIn;
         }
 
         public void run() {
-            mmBuffer = new byte[1024];
-            int numBytes; // bytes returned from read()
+            readBuffer = new byte[1024];
+//            int numBytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
             while (true) {
                 try {
                     // Read from the InputStream.
-                    numBytes = mmInStream.read(mmBuffer);
-                    showReceivedData(mmBuffer);
+//                    numBytes = mmInStream.read(mmBuffer);
+                    inputStream.read(readBuffer);
+                    showReceivedData(readBuffer);
                 } catch (IOException e) {
                     Log.d("disconnection error", "Input stream was disconnected", e);
                     break;
@@ -364,7 +400,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         // Call this method from the main activity to shut down the connection.
         public void cancel() {
             try {
-                mmSocket.close();
+                socket.close();
             } catch (IOException e) {
                 Log.e("socket closing error", "Could not close the connect socket", e);
             }
@@ -376,14 +412,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             transferService.startServer(8089);
         }
         else{
-            //wait 2 seconds for server
+            //wait 1/2 second for server
             Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
                 }
-            },3000);
+            },500);
 
         }
     }

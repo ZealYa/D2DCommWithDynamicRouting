@@ -28,6 +28,10 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         this.peerDiscoveryController = peerDiscoveryController;
     }
 
+    public void setSourceActivity(HomeActivity sourceActivity) {
+        this.sourceActivity = sourceActivity;
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
