@@ -57,6 +57,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     ConnectedThread connectedThread;
     int metricToMeasure;
     File resultRSSI;
+    private String hostName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +117,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     public void configureBluetoothDataTransfer() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        hostName = bluetoothAdapter.getName();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
         bluetoothDataSender = new BluetoothDataSender();
@@ -141,7 +143,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         });
         if (metricToMeasure == Constants.BT_RSSI)
             measureBluetoothRSSI();
-        else if (metricToMeasure == Constants.BT_RTT)
+        else if (metricToMeasure == Constants.BT_RTT && hostName.equals("NWSL 1"))
             measureBluetoothRTT();
     }
 
@@ -167,7 +169,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         for (Device device: bluetoothDevices
              ) {
             String deviceName = device.bluetoothDevice.getName();
-            if (deviceName != null && deviceName.contains("NWSL 2")) {
+            if (deviceName != null && deviceName.contains("NWSL")) {
                 String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device.bluetoothDevice);
                 bluetoothDataSender.setSocket();
