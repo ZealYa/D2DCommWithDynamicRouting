@@ -35,6 +35,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 import tausif.androidprojects.files.TransferService;
@@ -85,7 +86,24 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void bluetoothRTTButton(View view) {
         metricToMeasure = Constants.BT_RTT;
         configureBluetoothDataTransfer();
-        startDiscovery();
+        getBTPairedDevices();
+//        startDiscovery();
+    }
+
+    public void getBTPairedDevices() {
+        bluetoothDevices = new ArrayList<>();
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device: pairedDevices
+                 ) {
+                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0);
+                bluetoothDevices.add(newDevice);
+            }
+            combinedDeviceList.addAll(bluetoothDevices);
+            deviceListAdapter.notifyDataSetChanged();
+            if (hostName.equals("NWSL 1"))
+                measureBluetoothRTT();
+        }
     }
 
     public void bluetoothPktLossButton(View view) {
@@ -118,6 +136,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void configureBluetoothDataTransfer() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         hostName = bluetoothAdapter.getName();
+        Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
         bluetoothDataSender = new BluetoothDataSender();
@@ -143,7 +162,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         });
         if (metricToMeasure == Constants.BT_RSSI)
             measureBluetoothRSSI();
-        else if (metricToMeasure == Constants.BT_RTT && hostName.equals("NWSL 1"))
+        else if (metricToMeasure == Constants.BT_RTT && hostName.equals("NWSL 1") && Constants.timeSlotCount == 1)
             measureBluetoothRTT();
     }
 
@@ -170,7 +189,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
              ) {
             String deviceName = device.bluetoothDevice.getName();
             if (deviceName != null && deviceName.contains("NWSL")) {
-                String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.timeSlotCount, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device.bluetoothDevice);
                 bluetoothDataSender.setSocket();
                 device.rttStartTime = Calendar.getInstance().getTimeInMillis();
@@ -358,30 +377,34 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void processReceivedBTPkt(byte[] receivedData) {
-        String receivedPkt = new String(receivedData);
+        final String receivedPkt = new String(receivedData);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showAlert(receivedPkt);
+            }
+        });
         String splited[] = receivedPkt.split(" ");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.TYPE_RTT) {
             for (Device device: bluetoothDevices
                     ) {
-                if (device.bluetoothDevice.getAddress().equals(splited[2])) {
+                if (device.bluetoothDevice.getAddress().equals(splited[1])) {
                     bluetoothDataSender.setDevice(device.bluetoothDevice);
                     break;
                 }
             }
             bluetoothDataSender.setSocket();
-            int timeSlotNo = Integer.parseInt(splited[1]);
-            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, timeSlotNo, splited[3], splited[2]);
-            if (bluetoothDataSender.device.getName().equals("NWSL 1"))
-                bluetoothDataSender.sendPkt(packet);
+            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1]);
+//            bluetoothDataSender.sendPkt(packet);
         }
         else if (pktType == Constants.TYPE_RTT_RET) {
             for (final Device device: bluetoothDevices
                  ) {
-                if (device.bluetoothDevice.getAddress().equals(splited[2])) {
+                if (device.bluetoothDevice.getAddress().equals(splited[1])) {
                     device.rttEndTime = Calendar.getInstance().getTimeInMillis();
                     device.roundTripTime = device.rttEndTime - device.rttStartTime;
-                    Log.d("rtt", String.valueOf(device.roundTripTime));
+                    Log.d("rtt "+device.bluetoothDevice.getName(), String.valueOf(device.roundTripTime));
                 }
             }
         }
