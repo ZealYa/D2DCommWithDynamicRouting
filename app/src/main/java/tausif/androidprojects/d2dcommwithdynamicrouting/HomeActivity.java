@@ -66,7 +66,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-//        findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
         hasStorageWriteAccess();
         metricToMeasure = -1;
     }
@@ -115,10 +114,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void wifiPktLossButton(View view) {
     }
 
-    public void startDiscoveryButton(View view) {
-        startDiscovery();
-    }
-
     //setting up the device list view adapter and item click events
     public void configureDeviceListView(){
         deviceListView = findViewById(R.id.device_listView);
@@ -160,10 +155,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 deviceListAdapter.notifyDataSetChanged();
             }
         });
-        if (metricToMeasure == Constants.BT_RSSI)
-            measureBluetoothRSSI();
-        else if (metricToMeasure == Constants.BT_RTT && hostName.equals("NWSL 1") && Constants.timeSlotCount == 1)
-            measureBluetoothRTT();
     }
 
     public void measureBluetoothRSSI() {
@@ -225,16 +216,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
-    public void showReceivedData(byte[] receivedData){
-        final String receivedString = new String(receivedData);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAlert(receivedString);
-            }
-        });
-    }
-
     //shows the wifi p2p state
     public void wifiP2PState(int state) {
         if (state == 0)
@@ -273,15 +254,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 if (socket != null) {
-//                    try {
-                        // A connection was accepted. Perform work associated with
-                        // the connection in a separate thread.
-                        manageConnectedBluetoothSocket(socket);
-//                        mmServerSocket.close();
-//                        break;
-//                    } catch (IOException e) {
-//
-//                    }
+                    manageConnectedBluetoothSocket(socket);
                 }
             }
         }
