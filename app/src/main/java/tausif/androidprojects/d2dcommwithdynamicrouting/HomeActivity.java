@@ -1,18 +1,13 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
-import android.app.usage.ExternalStorageStats;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -22,25 +17,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
 import tausif.androidprojects.files.TransferService;
 
-public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
+public class HomeActivity extends AppCompatActivity {
 
     private static final int PICKFILE_REQUEST_CODE = 323;
     ArrayList<Device> combinedDeviceList;
@@ -323,14 +315,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         public void run() {
             readBuffer = new byte[2000];
-//            int numBytes; // bytes returned from read()
+            int numBytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
             while (true) {
                 try {
                     // Read from the InputStream.
 //                    numBytes = mmInStream.read(mmBuffer);
-                    inputStream.read(readBuffer);
+                    numBytes = inputStream.read(readBuffer);
                     processReceivedBTPkt(readBuffer);
                 } catch (IOException e) {
                     Log.d("disconnection error", "Input stream was disconnected", e);
@@ -400,28 +392,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View view) {
-//        if(view.getId() == R.id.send_with_wifi_button){
-//            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//            intent.setType("*/*");
-//            startActivityForResult(intent, PICKFILE_REQUEST_CODE);
-//            sending hard code file
-//            EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-//            textToSend = inputTextBox.getText().toString();
-//            String filename = textToSend + ".txt";
-//            File fileToSend = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
-//            try {
-//                FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
-//                fileOutputStream.write(textToSend.getBytes());
-//                fileOutputStream.close();
-//            } catch (IOException e) {
-//            }
-//            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(),filename);
-//            Toast.makeText(this,"Sending file...",Toast.LENGTH_SHORT).show();
-//        }
-    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
