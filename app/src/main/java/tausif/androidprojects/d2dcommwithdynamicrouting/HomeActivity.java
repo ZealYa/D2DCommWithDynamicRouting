@@ -51,6 +51,7 @@ public class HomeActivity extends AppCompatActivity {
     int metricToMeasure;
     File resultRSSI;
     private String hostName;
+    int deviceCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void getBTPairedDevices() {
+        configureDeviceListView();
         bluetoothDevices = new ArrayList<>();
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
@@ -168,6 +170,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void measureBluetoothRTT() {
+        deviceCount = 0;
         for (Device device: bluetoothDevices
              ) {
             String deviceName = device.bluetoothDevice.getName();
@@ -287,6 +290,7 @@ public class HomeActivity extends AppCompatActivity {
             }
             try {
                 OutputStream outputStream = socket.getOutputStream();
+                outputStream.flush();
                 outputStream.write(packet.getBytes());
             } catch (IOException writeEx) {
 
@@ -342,14 +346,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void processReceivedBTPkt(byte[] receivedData) {
-        final String receivedPkt = new String(receivedData);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAlert(receivedPkt);
-            }
-        });
-        String splited[] = receivedPkt.split(" ");
+        String receivedPkt = new String(receivedData);
+        String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.TYPE_RTT) {
             for (Device device: bluetoothDevices
@@ -361,16 +359,24 @@ public class HomeActivity extends AppCompatActivity {
             }
             bluetoothDataSender.setSocket();
             String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1]);
-//            bluetoothDataSender.sendPkt(packet);
+            bluetoothDataSender.sendPkt(packet);
         }
         else if (pktType == Constants.TYPE_RTT_RET) {
-            for (final Device device: bluetoothDevices
+            for (Device device: bluetoothDevices
                  ) {
                 if (device.bluetoothDevice.getAddress().equals(splited[1])) {
                     device.rttEndTime = Calendar.getInstance().getTimeInMillis();
                     device.roundTripTime = device.rttEndTime - device.rttStartTime;
-                    Log.d("rtt "+device.bluetoothDevice.getName(), String.valueOf(device.roundTripTime));
                 }
+            }
+            deviceCount++;
+            if (deviceCount == 4){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        deviceListAdapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
     }
