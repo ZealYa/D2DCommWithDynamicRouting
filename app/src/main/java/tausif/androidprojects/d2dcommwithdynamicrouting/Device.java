@@ -12,7 +12,7 @@ public class Device {
     public BluetoothDevice bluetoothDevice;
     public int rssi;
     public double roundTripTime;
-    public double packetLossRatio;
+    public int packetLossRatio;
     public long rttStartTime;
     public long rttEndTime;
 
@@ -22,6 +22,6 @@ public class Device {
         this.bluetoothDevice = bluetoothDevice;
         this.rssi = rssi;
         this.roundTripTime = 0.0;
-        this.packetLossRatio = 0.0;
+        this.packetLossRatio = 0;
     }
 }

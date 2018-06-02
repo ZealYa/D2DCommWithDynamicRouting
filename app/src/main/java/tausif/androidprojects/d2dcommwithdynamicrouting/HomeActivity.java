@@ -110,11 +110,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void wifiRTTButton(View view) {
-        Constants.RTT_PACKET_SIZE = 500;
     }
 
     public void wifiPktLossButton(View view) {
-        Constants.RTT_PACKET_SIZE = 1000;
     }
 
     //setting up the device list view adapter and item click events
@@ -197,11 +195,11 @@ public class HomeActivity extends AppCompatActivity {
         for (Device device: bluetoothDevices
              ) {
             String deviceName = device.bluetoothDevice.getName();
-            if (deviceName != null && deviceName.contains("NWSL")) {
+            if (deviceName != null && deviceName.contains("NWSL 2")) {
                 bluetoothDataSender.setDevice(device.bluetoothDevice);
-                bluetoothDataSender.setSocket();
                 for (int i=1; i<=Constants.MAX_LOSS_RATIO_PACKETS_TO_SENT; i++) {
                     String packet = PacketManager.createPacketLossRatioPacket(Constants.TYPE_PKT_LOSS, i, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                    bluetoothDataSender.setSocket();
                     bluetoothDataSender.sendPkt(packet);
                 }
             }
@@ -316,6 +314,7 @@ public class HomeActivity extends AppCompatActivity {
                 OutputStream outputStream = socket.getOutputStream();
                 outputStream.flush();
                 outputStream.write(packet.getBytes());
+                outputStream.close();
             } catch (IOException writeEx) {
 
             }
@@ -370,7 +369,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void processReceivedBTPkt(byte[] receivedData) {
-        String receivedPkt = new String(receivedData);
+        final String receivedPkt = new String(receivedData);
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.TYPE_RTT) {
@@ -407,16 +406,11 @@ public class HomeActivity extends AppCompatActivity {
             int seqNo = Integer.parseInt(splited[1]);
             for (Device device: bluetoothDevices
                  ) {
-                if (device.bluetoothDevice.getAddress().equals(splited[2]))
+                if (device.bluetoothDevice.getAddress().equals(splited[2])){
                     device.packetLossRatio++;
+                    Log.d("packet", receivedPkt);
+                }
             }
-            if (seqNo == Constants.MAX_LOSS_RATIO_PACKETS_TO_SENT)
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        deviceListAdapter.notifyDataSetChanged();
-                    }
-                });
         }
     }
 
