@@ -94,18 +94,27 @@ public class HomeActivity extends AppCompatActivity {
             }
             combinedDeviceList.addAll(bluetoothDevices);
             deviceListAdapter.notifyDataSetChanged();
-            if (hostName.equals("NWSL 1"))
-                measureBluetoothRTT();
+            if (hostName.equals("NWSL 1")) {
+                if (metricToMeasure == Constants.BT_RTT)
+                    measureBluetoothRTT();
+                else if (metricToMeasure == Constants.BT_PACKET_LOSS)
+                    measureBTPktLoss();
+            }
         }
     }
 
     public void bluetoothPktLossButton(View view) {
+        metricToMeasure = Constants.BT_PACKET_LOSS;
+        configureBluetoothDataTransfer();
+        getBTPairedDevices();
     }
 
     public void wifiRTTButton(View view) {
+        Constants.RTT_PACKET_SIZE = 500;
     }
 
     public void wifiPktLossButton(View view) {
+        Constants.RTT_PACKET_SIZE = 1000;
     }
 
     //setting up the device list view adapter and item click events
@@ -180,6 +189,21 @@ public class HomeActivity extends AppCompatActivity {
                 bluetoothDataSender.setSocket();
                 device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                 bluetoothDataSender.sendPkt(packet);
+            }
+        }
+    }
+
+    public void measureBTPktLoss() {
+        for (Device device: bluetoothDevices
+             ) {
+            String deviceName = device.bluetoothDevice.getName();
+            if (deviceName != null && deviceName.contains("NWSL")) {
+                bluetoothDataSender.setDevice(device.bluetoothDevice);
+                bluetoothDataSender.setSocket();
+                for (int i=1; i<=Constants.MAX_LOSS_RATIO_PACKETS_TO_SENT; i++) {
+                    String packet = PacketManager.createPacketLossRatioPacket(Constants.TYPE_PKT_LOSS, i, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                    bluetoothDataSender.sendPkt(packet);
+                }
             }
         }
     }
@@ -378,6 +402,21 @@ public class HomeActivity extends AppCompatActivity {
                     }
                 });
             }
+        }
+        else if (pktType == Constants.TYPE_PKT_LOSS) {
+            int seqNo = Integer.parseInt(splited[1]);
+            for (Device device: bluetoothDevices
+                 ) {
+                if (device.bluetoothDevice.getAddress().equals(splited[2]))
+                    device.packetLossRatio++;
+            }
+            if (seqNo == Constants.MAX_LOSS_RATIO_PACKETS_TO_SENT)
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        deviceListAdapter.notifyDataSetChanged();
+                    }
+                });
         }
     }
 

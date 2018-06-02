@@ -53,7 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="wifi loss"
+            android:text="1000"
             android:onClick="wifiPktLossButton"/>
     </LinearLayout>
 
