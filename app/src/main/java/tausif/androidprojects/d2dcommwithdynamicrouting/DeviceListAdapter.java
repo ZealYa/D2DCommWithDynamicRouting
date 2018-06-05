@@ -58,7 +58,7 @@ public class DeviceListAdapter extends BaseAdapter {
                 title.setText("Bluetooth Devices");
             }
             else
-                title.setText(currentDevice.bluetoothDevice.getName() + " " + String.valueOf(currentDevice.packetLossRatio));
+                title.setText(currentDevice.bluetoothDevice.getName() + " " + String.valueOf(currentDevice.roundTripTime));
         }
         return rowView;
     }
