@@ -50,6 +50,7 @@ public class HomeActivity extends AppCompatActivity {
     ConnectedThread connectedThread;
     int metricToMeasure;
     File resultRSSI;
+    int packetCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +122,7 @@ public class HomeActivity extends AppCompatActivity {
     public void configureBluetoothDataTransfer() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
+        Constants.hostBluetoothName = bluetoothAdapter.getName();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
         bluetoothDataSender = new BluetoothDataSender();
@@ -172,7 +174,10 @@ public class HomeActivity extends AppCompatActivity {
                 String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
-                bluetoothDataSender.sendPkt(packet);
+                for (int i=0;i<3;i++) {
+                    bluetoothDataSender.sendPkt(packet);
+                }
+//                bluetoothDataSender.sendPkt(packet);
             }
         }
     }
@@ -211,6 +216,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void manageConnectedBluetoothSocket(BluetoothSocket socket){
+        packetCount = 0;
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
     }
@@ -264,6 +270,11 @@ public class HomeActivity extends AppCompatActivity {
         public void setDevice(Device device) {
             this.device = device;
         }
+
+        public void setSocket(BluetoothSocket socket) {
+            this.socket = socket;
+        }
+
         public void createSocket() {
             try {
                 socket = device.bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
@@ -279,6 +290,7 @@ public class HomeActivity extends AppCompatActivity {
 
                 }
             }
+            manageConnectedBluetoothSocket(socket);
         }
         public void sendPkt(String packet) {
             try {
@@ -312,7 +324,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         public void run() {
-            readBuffer = new byte[2000];
+            readBuffer = new byte[1500];
             int numBytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
@@ -341,6 +353,17 @@ public class HomeActivity extends AppCompatActivity {
 
     public void processReceivedBTPkt(byte[] receivedData, long receiveTime, int numBytesRead) {
         final String receivedPkt = new String(receivedData);
+        if (Constants.hostBluetoothName.equals("NWSL 1")) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showAlert(receivedPkt);
+                }
+            });
+        }
+        else
+            Log.d("packet "+String.valueOf(packetCount)+":", receivedPkt);
+        packetCount++;
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.TYPE_RTT) {
@@ -352,7 +375,8 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
             String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1]);
-            bluetoothDataSender.createSocket();
+//            bluetoothDataSender.createSocket();
+            bluetoothDataSender.setSocket(connectedThread.socket);
             bluetoothDataSender.sendPkt(packet);
         }
         else if (pktType == Constants.TYPE_RTT_RET) {

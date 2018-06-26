@@ -2,6 +2,7 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 public class Constants {
     public static String hostBluetoothAddress = "";
+    public static String hostBluetoothName = "";
     public static String hostWifiAddress = "";
 
     public static final int WIFI_DEVICE = 1;
@@ -23,4 +24,6 @@ public class Constants {
     public static final int TYPE_RTT = 1;
     public static final int TYPE_RTT_RET = 2;
     public static final int TYPE_PKT_LOSS = 3;
+
+    public static final int noOfRuns = 5;
 }
