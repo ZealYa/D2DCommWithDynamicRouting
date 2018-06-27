@@ -25,5 +25,5 @@ public class Constants {
     public static final int TYPE_RTT_RET = 2;
     public static final int TYPE_PKT_LOSS = 3;
 
-    public static final int noOfRuns = 5;
+    public static final int noOfRuns = 20;
 }

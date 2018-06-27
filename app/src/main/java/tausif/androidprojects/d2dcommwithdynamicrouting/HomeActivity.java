@@ -50,7 +50,8 @@ public class HomeActivity extends AppCompatActivity {
     ConnectedThread connectedThread;
     int metricToMeasure;
     File resultRSSI;
-    int packetCount;
+    int runNo;
+    String rttPkt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,13 +172,11 @@ public class HomeActivity extends AppCompatActivity {
              ) {
             String deviceName = device.bluetoothDevice.getName();
             if (deviceName != null && deviceName.contains("NWSL")) {
-                String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                runNo=0;
+                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
-                for (int i=0;i<3;i++) {
-                    bluetoothDataSender.sendPkt(packet);
-                }
-//                bluetoothDataSender.sendPkt(packet);
+                bluetoothDataSender.sendPkt(rttPkt);
             }
         }
     }
@@ -216,7 +215,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void manageConnectedBluetoothSocket(BluetoothSocket socket){
-        packetCount = 0;
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
     }
@@ -353,17 +351,6 @@ public class HomeActivity extends AppCompatActivity {
 
     public void processReceivedBTPkt(byte[] receivedData, long receiveTime, int numBytesRead) {
         final String receivedPkt = new String(receivedData);
-        if (Constants.hostBluetoothName.equals("NWSL 1")) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    showAlert(receivedPkt);
-                }
-            });
-        }
-        else
-            Log.d("packet "+String.valueOf(packetCount)+":", receivedPkt);
-        packetCount++;
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.TYPE_RTT) {
@@ -375,7 +362,6 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
             String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1]);
-//            bluetoothDataSender.createSocket();
             bluetoothDataSender.setSocket(connectedThread.socket);
             bluetoothDataSender.sendPkt(packet);
         }
@@ -384,15 +370,17 @@ public class HomeActivity extends AppCompatActivity {
                  ) {
                 if (device.bluetoothDevice.getAddress().equals(splited[1])) {
                     device.roundTripTime = receiveTime - device.rttStartTime;
+                    Log.d("rtt "+String.valueOf(runNo), String.valueOf(device.roundTripTime));
+                    runNo++;
+                    if (runNo < Constants.noOfRuns){
+                        device.rttStartTime = 0;
+                        device.rttEndTime = 0;
+                        device.roundTripTime = 0;
+                        bluetoothDataSender.sendPkt(rttPkt);
+                    }
                     break;
                 }
             }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    deviceListAdapter.notifyDataSetChanged();
-                }
-            });
         }
     }
 
