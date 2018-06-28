@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 import java.io.File;
@@ -53,6 +54,7 @@ public class HomeActivity extends AppCompatActivity {
     int runNo;
     long[] rttTimes;
     String rttPkt;
+    String measuredDeviceName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,15 +98,6 @@ public class HomeActivity extends AppCompatActivity {
             combinedDeviceList.addAll(bluetoothDevices);
             deviceListAdapter.notifyDataSetChanged();
         }
-    }
-
-    public void bluetoothPktLossButton(View view) {
-    }
-
-    public void wifiRTTButton(View view) {
-    }
-
-    public void wifiPktLossButton(View view) {
     }
 
     //setting up the device list view adapter and item click events
@@ -168,11 +161,39 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void writeRTTResult() {
+        EditText distanceText = findViewById(R.id.distance_editText);
+        String distance = distanceText.getText().toString().trim();
+        final String filename = "RTT_" + measuredDeviceName + "_" + distance + "_meters.txt";
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showAlert(filename);
+            }
+        });
+        File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            for (long rtt: rttTimes
+                 ) {
+                outputStreamWriter.append(String.valueOf(rtt));
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.close();
+            fileOutputStream.close();
+        } catch (IOException FIOExec) {
+
+        }
+
+    }
+
     public void measureBluetoothRTT() {
         for (Device device: bluetoothDevices
              ) {
             String deviceName = device.bluetoothDevice.getName();
             if (deviceName != null && deviceName.contains("NWSL")) {
+                measuredDeviceName = deviceName;
                 runNo=0;
                 rttTimes = new long[Constants.noOfRuns];
                 rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
@@ -381,10 +402,19 @@ public class HomeActivity extends AppCompatActivity {
                         bluetoothDataSender.sendPkt(rttPkt);
                     }
                     else {
+                        String resultString = "";
                         for (long rtt: rttTimes
                              ) {
-                            Log.d("rtt",String.valueOf(rtt));
+                            resultString = resultString + String.valueOf(rtt) + " ";
                         }
+                        final String toshow = resultString;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showAlert(toshow);
+                            }
+                        });
+                        writeRTTResult();
                     }
                     break;
                 }
