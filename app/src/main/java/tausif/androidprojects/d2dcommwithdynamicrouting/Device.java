@@ -11,7 +11,7 @@ public class Device {
     public WifiP2pDevice wifiDevice;
     public BluetoothDevice bluetoothDevice;
     public int rssi;
-    public double roundTripTime;
+    public long roundTripTime;
     public int packetLossRatio;
     public long rttStartTime;
     public long rttEndTime;
@@ -21,7 +21,7 @@ public class Device {
         this.wifiDevice = wifiDevice;
         this.bluetoothDevice = bluetoothDevice;
         this.rssi = rssi;
-        this.roundTripTime = 0.0;
+        this.roundTripTime = 0;
         this.packetLossRatio = 0;
     }
 }

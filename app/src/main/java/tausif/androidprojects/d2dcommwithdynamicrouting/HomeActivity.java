@@ -51,6 +51,7 @@ public class HomeActivity extends AppCompatActivity {
     int metricToMeasure;
     File resultRSSI;
     int runNo;
+    long[] rttTimes;
     String rttPkt;
 
     @Override
@@ -173,6 +174,7 @@ public class HomeActivity extends AppCompatActivity {
             String deviceName = device.bluetoothDevice.getName();
             if (deviceName != null && deviceName.contains("NWSL")) {
                 runNo=0;
+                rttTimes = new long[Constants.noOfRuns];
                 rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
@@ -370,13 +372,19 @@ public class HomeActivity extends AppCompatActivity {
                  ) {
                 if (device.bluetoothDevice.getAddress().equals(splited[1])) {
                     device.roundTripTime = receiveTime - device.rttStartTime;
-                    Log.d("rtt "+String.valueOf(runNo), String.valueOf(device.roundTripTime));
+                    rttTimes[runNo] = device.roundTripTime;
                     runNo++;
                     if (runNo < Constants.noOfRuns){
                         device.rttStartTime = 0;
                         device.rttEndTime = 0;
                         device.roundTripTime = 0;
                         bluetoothDataSender.sendPkt(rttPkt);
+                    }
+                    else {
+                        for (long rtt: rttTimes
+                             ) {
+                            Log.d("rtt",String.valueOf(rtt));
+                        }
                     }
                     break;
                 }
