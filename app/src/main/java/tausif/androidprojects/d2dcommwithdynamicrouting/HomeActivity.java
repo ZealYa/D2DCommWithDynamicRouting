@@ -175,10 +175,11 @@ public class HomeActivity extends AppCompatActivity {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (long rtt: rttTimes
-                 ) {
-                outputStreamWriter.append(String.valueOf(rtt));
+            for (int i=0;i<Constants.noOfRuns;i++) {
+                outputStreamWriter.append(String.valueOf(rttTimes[i]));
                 outputStreamWriter.append("\n");
+                if (i == 19 || i == 39)
+                    outputStreamWriter.append("\n");
             }
             outputStreamWriter.close();
             fileOutputStream.close();
@@ -196,7 +197,7 @@ public class HomeActivity extends AppCompatActivity {
                 measuredDeviceName = deviceName;
                 runNo=0;
                 rttTimes = new long[Constants.noOfRuns];
-                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress());
+                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PACKET_SIZE);
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
                 bluetoothDataSender.sendPkt(rttPkt);
@@ -384,7 +385,9 @@ public class HomeActivity extends AppCompatActivity {
                     break;
                 }
             }
-            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1]);
+            Constants.RTT_PACKET_SIZE = Integer.parseInt(splited[3]);
+            Log.d("pkt size",String.valueOf(Constants.RTT_PACKET_SIZE));
+            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1], Constants.RTT_PACKET_SIZE);
             bluetoothDataSender.setSocket(connectedThread.socket);
             bluetoothDataSender.sendPkt(packet);
         }
@@ -396,24 +399,16 @@ public class HomeActivity extends AppCompatActivity {
                     rttTimes[runNo] = device.roundTripTime;
                     runNo++;
                     if (runNo < Constants.noOfRuns){
+                        if (runNo == 20 || runNo == 40) {
+                            Constants.RTT_PACKET_SIZE *=2;
+                            rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PACKET_SIZE);
+                        }
                         device.rttStartTime = 0;
                         device.rttEndTime = 0;
                         device.roundTripTime = 0;
                         bluetoothDataSender.sendPkt(rttPkt);
                     }
                     else {
-                        String resultString = "";
-                        for (long rtt: rttTimes
-                             ) {
-                            resultString = resultString + String.valueOf(rtt) + " ";
-                        }
-                        final String toshow = resultString;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                showAlert(toshow);
-                            }
-                        });
                         writeRTTResult();
                     }
                     break;
