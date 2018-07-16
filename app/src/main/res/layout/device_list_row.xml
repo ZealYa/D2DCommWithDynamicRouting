@@ -25,7 +25,8 @@
             android:text="connect"
             android:id="@+id/connect_button"
             android:background="#a4c639"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:onClick="connectButton"/>
 
         <Button
             android:layout_width="0dp"
@@ -34,7 +35,8 @@
             android:text="rtt"
             android:id="@+id/rtt_button"
             android:background="#a4c639"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:onClick="rttButton"/>
 
         <Button
             android:layout_width="0dp"
@@ -43,7 +45,8 @@
             android:text="packet loss"
             android:id="@+id/pkt_loss_button"
             android:background="#a4c639"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:onClick="pktLossButton"/>
 
         <Button
             android:layout_width="0dp"
@@ -52,7 +55,8 @@
             android:text="throughput"
             android:id="@+id/throughput_button"
             android:background="#a4c639"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:onClick="throughputButton"/>
     </LinearLayout>
 
 </LinearLayout>

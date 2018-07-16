@@ -68,6 +68,26 @@ public class HomeActivity extends AppCompatActivity {
         getBTPairedDevices();
     }
 
+    public void connectButton(View view) {
+        int tag = (int)view.getTag();
+        showAlert(String.valueOf(tag));
+    }
+
+    public void rttButton(View view) {
+        int tag = (int)view.getTag();
+        showAlert(String.valueOf(tag));
+    }
+
+    public void pktLossButton(View view) {
+        int tag = (int)view.getTag();
+        showAlert(String.valueOf(tag));
+    }
+
+    public void throughputButton(View view) {
+        int tag = (int)view.getTag();
+        showAlert(String.valueOf(tag));
+    }
+
     public void bluetoothRSSIButton(View view) {
         metricToMeasure = Constants.BT_RSSI;
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
