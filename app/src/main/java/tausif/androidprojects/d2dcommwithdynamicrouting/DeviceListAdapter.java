@@ -41,8 +41,9 @@ public class DeviceListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
-        View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
-        TextView title = (TextView)rowView.findViewById(android.R.id.text1);
+//        View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
+        View rowView = mInflater.inflate(R.layout.device_list_row, viewGroup, false);
+        TextView title = (TextView)rowView.findViewById(R.id.device_name_textView);
         Device currentDevice = devices.get(i);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.wifiDevice == null) {
