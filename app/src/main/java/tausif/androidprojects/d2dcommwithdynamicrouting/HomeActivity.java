@@ -55,6 +55,7 @@ public class HomeActivity extends AppCompatActivity {
     long[] rttTimes;
     String rttPkt;
     String measuredDeviceName;
+    PeerDiscoveryController peerDiscoveryController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,30 +63,41 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-        hasStorageWriteAccess();
-        metricToMeasure = -1;
-        configureBluetoothDataTransfer();
-        getBTPairedDevices();
+//        hasStorageWriteAccess();
+//        metricToMeasure = -1;
+//        configureBluetoothDataTransfer();
+//        getBTPairedDevices();
+        startDiscovery();
+    }
+
+    //setting up the device list view adapter and item click events
+    public void configureDeviceListView(){
+        deviceListView = findViewById(R.id.device_listView);
+        combinedDeviceList = new ArrayList<>();
+        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
+        deviceListView.setAdapter(deviceListAdapter);
+    }
+
+    //configures the bluetooth and wifi discovery options and starts the background process for discovery
+    public void startDiscovery(){
+        configureDeviceListView();
+        peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
     public void connectButton(View view) {
         int tag = (int)view.getTag();
-        showAlert(String.valueOf(tag));
     }
 
     public void rttButton(View view) {
         int tag = (int)view.getTag();
-        showAlert(String.valueOf(tag));
     }
 
     public void pktLossButton(View view) {
         int tag = (int)view.getTag();
-        showAlert(String.valueOf(tag));
     }
 
     public void throughputButton(View view) {
         int tag = (int)view.getTag();
-        showAlert(String.valueOf(tag));
     }
 
     public void bluetoothRSSIButton(View view) {
@@ -120,20 +132,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    //setting up the device list view adapter and item click events
-    public void configureDeviceListView(){
-        deviceListView = findViewById(R.id.device_listView);
-        combinedDeviceList = new ArrayList<>();
-        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
-        deviceListView.setAdapter(deviceListAdapter);
-    }
-
-    //configures the bluetooth and wifi discovery options and starts the background process for discovery
-    public void startDiscovery(){
-        configureDeviceListView();
-        PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
-    }
-
     public void configureBluetoothDataTransfer() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
@@ -149,11 +147,7 @@ public class HomeActivity extends AppCompatActivity {
         this.bluetoothDevices = bluetoothDevices;
         if (combinedDeviceList.size() > 0)
             combinedDeviceList.clear();
-        Device dummyWifiDevice = new Device(Constants.WIFI_DEVICE, null, null, 0);
-        combinedDeviceList.add(dummyWifiDevice);
         combinedDeviceList.addAll(this.wifiDevices);
-        Device dummyBluetoothDevice = new Device(Constants.BLUETOOTH_DEVICE, null, null, 0);
-        combinedDeviceList.add(dummyBluetoothDevice);
         combinedDeviceList.addAll(this.bluetoothDevices);
         runOnUiThread(new Runnable() {
             @Override

@@ -44,23 +44,16 @@ public class DeviceListAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         View rowView = mInflater.inflate(R.layout.device_list_row, viewGroup, false);
 
-        TextView title = (TextView)rowView.findViewById(R.id.device_name_textView);
+        TextView title = rowView.findViewById(R.id.device_name_textView);
+        TextView deviceType = rowView.findViewById(R.id.device_type_textView);
         Device currentDevice = devices.get(i);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
-            if (currentDevice.wifiDevice == null) {
-                title.setTextColor(Color.GREEN);
-                title.setText("Wifi Devices");
-            }
-            else
-                title.setText(currentDevice.wifiDevice.deviceName);
+            title.setText(currentDevice.wifiDevice.deviceName);
+            deviceType.setText("WiFi Direct");
         }
         else {
-            if (currentDevice.bluetoothDevice == null) {
-                title.setTextColor(Color.GREEN);
-                title.setText("Bluetooth Devices");
-            }
-            else
-                title.setText(currentDevice.bluetoothDevice.getName());
+            title.setText(currentDevice.bluetoothDevice.getName());
+            deviceType.setText("Bluetooth");
         }
 
         Button connect = (Button)rowView.findViewById(R.id.connect_button);
