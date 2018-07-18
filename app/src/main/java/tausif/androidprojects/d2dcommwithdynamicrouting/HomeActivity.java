@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Environment;
 import android.os.Handler;
@@ -63,10 +64,6 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-//        hasStorageWriteAccess();
-//        metricToMeasure = -1;
-//        configureBluetoothDataTransfer();
-//        getBTPairedDevices();
         startDiscovery();
     }
 
@@ -86,6 +83,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectButton(View view) {
         int tag = (int)view.getTag();
+        peerDiscoveryController.connectDevice(combinedDeviceList.get(tag));
     }
 
     public void rttButton(View view) {
@@ -124,7 +122,7 @@ public class HomeActivity extends AppCompatActivity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices
                  ) {
-                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0);
+                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0, true);
                 bluetoothDevices.add(newDevice);
             }
             combinedDeviceList.addAll(bluetoothDevices);
@@ -432,21 +430,22 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo) {
-        if(wifiInfo.isGroupOwner){
-            transferService.startServer(8089);
-        }
-        else{
-            //wait 1/2 second for server
-            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
-                }
-            },500);
-
-        }
+    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo, final WifiP2pDevice device) {
+//      Log.d("connected device", device.deviceName);
+//        if(wifiInfo.isGroupOwner){
+//            transferService.startServer(8089);
+//        }
+//        else{
+//            //wait 1/2 second for server
+//            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
+//                }
+//            },500);
+//
+//        }
     }
 
 

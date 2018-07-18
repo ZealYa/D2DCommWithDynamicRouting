@@ -13,7 +13,7 @@ public class Constants {
     public static final int MAX_LOSS_RATIO_PACKETS_TO_SENT = 100;
 
     public static int timeSlotCount = 0;
-    public static final int timeSlotLength = 15;    // in seconds
+    public static final int timeSlotLength = 10;    // in seconds
 
     public static final int BT_RSSI = 0;
     public static final int BT_RTT = 1;

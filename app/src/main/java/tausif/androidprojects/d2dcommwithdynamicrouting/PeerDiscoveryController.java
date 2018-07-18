@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 
@@ -12,6 +14,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.util.Log;
 
 public class PeerDiscoveryController {
     private Context context;
@@ -29,6 +32,7 @@ public class PeerDiscoveryController {
         this.homeActivity = homeActivity;
         peerDiscoveryBroadcastReceiver = new PeerDiscoveryBroadcastReceiver();
         peerDiscoveryBroadcastReceiver.setPeerDiscoveryController(this);
+        peerDiscoveryBroadcastReceiver.setSourceActivity(this.homeActivity);
         intentFilter = new IntentFilter();
         configureWiFiDiscovery();
         configureBluetoothDiscovery();
@@ -62,14 +66,14 @@ public class PeerDiscoveryController {
             wifiDevices.clear();
         for (WifiP2pDevice device: deviceList.getDeviceList()
              ) {
-            Device newDevice = new Device(Constants.WIFI_DEVICE, device, null, 0);
+            Device newDevice = new Device(Constants.WIFI_DEVICE, device, null, 0, false);
             wifiDevices.add(newDevice);
         }
     }
 
     public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
         int flag = 0;
-        Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi);
+        Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
         for (Device oldDevice: bluetoothDevices
              ) {
             if (newDevice.bluetoothDevice.getAddress().equalsIgnoreCase(oldDevice.bluetoothDevice.getAddress())) {
@@ -91,7 +95,7 @@ public class PeerDiscoveryController {
                 if (pairedDevices.size() > 0) {
                     for (BluetoothDevice pairedDevice: pairedDevices
                          ) {
-                        Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0);
+                        Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
                         bluetoothDevices.add(device);
                     }
                 }
@@ -101,6 +105,15 @@ public class PeerDiscoveryController {
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             Constants.timeSlotCount++;
+        }
+    }
+
+    public void connectDevice(Device device) {
+        if (device.deviceType == Constants.WIFI_DEVICE) {
+            WifiP2pConfig newConfig = new WifiP2pConfig();
+            newConfig.deviceAddress = device.wifiDevice.deviceAddress;
+            newConfig.wps.setup = WpsInfo.PBC;
+            wifiP2pManager.connect(channel, newConfig, null);
         }
     }
 }

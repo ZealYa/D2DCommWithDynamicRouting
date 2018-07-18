@@ -58,6 +58,10 @@ public class DeviceListAdapter extends BaseAdapter {
 
         Button connect = (Button)rowView.findViewById(R.id.connect_button);
         connect.setTag(i);
+        if (currentDevice.connected)
+            connect.setText("disconnect");
+        else
+            connect.setText("connect");
 
         Button rtt = (Button)rowView.findViewById(R.id.rtt_button);
         rtt.setTag(i);

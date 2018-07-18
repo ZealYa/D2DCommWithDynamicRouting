@@ -9,6 +9,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
 
 public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
@@ -60,8 +61,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             WifiP2pDevice device = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
             if(networkState.isConnected())
             {
-//                Toast.makeText(sourceActivity,"Connection Status: Connected",Toast.LENGTH_SHORT).show();
-                sourceActivity.onWifiP2PDeviceConnected(wifiInfo);
+                sourceActivity.onWifiP2PDeviceConnected(wifiInfo, device);
             }
         }
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
