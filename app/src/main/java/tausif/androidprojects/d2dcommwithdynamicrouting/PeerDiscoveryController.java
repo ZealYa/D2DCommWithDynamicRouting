@@ -4,9 +4,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 
 import java.util.ArrayList;
@@ -115,5 +117,9 @@ public class PeerDiscoveryController {
             newConfig.wps.setup = WpsInfo.PBC;
             wifiP2pManager.connect(channel, newConfig, null);
         }
+    }
+
+    public void connectionStatChanged(WifiP2pInfo wifiInfo, WifiP2pDevice device) {
+        Log.d("connection status", "connected");
     }
 }
