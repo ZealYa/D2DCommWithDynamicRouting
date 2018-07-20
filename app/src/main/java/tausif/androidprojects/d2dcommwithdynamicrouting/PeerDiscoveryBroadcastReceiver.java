@@ -60,8 +60,8 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             WifiP2pDevice device = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
             if(networkState.isConnected())
             {
-//                Toast.makeText(sourceActivity,"Connection Status: Connected",Toast.LENGTH_SHORT).show();
-                sourceActivity.onWifiP2PDeviceConnected(wifiInfo);
+//                sourceActivity.onWifiP2PDeviceConnected(wifiInfo, device);
+                peerDiscoveryController.connectionStatChanged(wifiInfo, device);
             }
         }
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {

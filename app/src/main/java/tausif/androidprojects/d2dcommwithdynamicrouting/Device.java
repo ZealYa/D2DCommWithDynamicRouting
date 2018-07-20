@@ -12,16 +12,19 @@ public class Device {
     public BluetoothDevice bluetoothDevice;
     public int rssi;
     public long roundTripTime;
-    public int packetLossRatio;
     public long rttStartTime;
     public long rttEndTime;
+    public double packetLossRatio;
+    public boolean connected;
 
-    public Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi) {
+
+    public Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi, boolean connected) {
         this.deviceType = deviceType;
         this.wifiDevice = wifiDevice;
         this.bluetoothDevice = bluetoothDevice;
         this.rssi = rssi;
         this.roundTripTime = 0;
         this.packetLossRatio = 0;
+        this.connected = connected;
     }
 }

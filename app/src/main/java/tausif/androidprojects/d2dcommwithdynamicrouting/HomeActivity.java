@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Environment;
 import android.os.Handler;
@@ -57,6 +58,7 @@ public class HomeActivity extends AppCompatActivity {
     long[] rttTimes;
     String rttPkt;
     String measuredDeviceName;
+    PeerDiscoveryController peerDiscoveryController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,10 +66,38 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-        hasStorageWriteAccess();
-        metricToMeasure = -1;
-        configureBluetoothDataTransfer();
-        getBTPairedDevices();
+        startDiscovery();
+    }
+
+    //setting up the device list view adapter and item click events
+    public void configureDeviceListView(){
+        deviceListView = findViewById(R.id.device_listView);
+        combinedDeviceList = new ArrayList<>();
+        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
+        deviceListView.setAdapter(deviceListAdapter);
+    }
+
+    //configures the bluetooth and wifi discovery options and starts the background process for discovery
+    public void startDiscovery(){
+        configureDeviceListView();
+        peerDiscoveryController = new PeerDiscoveryController(this, this);
+    }
+
+    public void connectButton(View view) {
+        int tag = (int)view.getTag();
+        peerDiscoveryController.connectDevice(combinedDeviceList.get(tag));
+    }
+
+    public void rttButton(View view) {
+        int tag = (int)view.getTag();
+    }
+
+    public void pktLossButton(View view) {
+        int tag = (int)view.getTag();
+    }
+
+    public void throughputButton(View view) {
+        int tag = (int)view.getTag();
     }
 
     public void bluetoothRSSIButton(View view) {
@@ -94,26 +124,12 @@ public class HomeActivity extends AppCompatActivity {
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices
                  ) {
-                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0);
+                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0, true);
                 bluetoothDevices.add(newDevice);
             }
             combinedDeviceList.addAll(bluetoothDevices);
             deviceListAdapter.notifyDataSetChanged();
         }
-    }
-
-    //setting up the device list view adapter and item click events
-    public void configureDeviceListView(){
-        deviceListView = findViewById(R.id.device_listView);
-        combinedDeviceList = new ArrayList<>();
-        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
-        deviceListView.setAdapter(deviceListAdapter);
-    }
-
-    //configures the bluetooth and wifi discovery options and starts the background process for discovery
-    public void startDiscovery(){
-        configureDeviceListView();
-        PeerDiscoveryController peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
     public void configureBluetoothDataTransfer() {
@@ -131,11 +147,7 @@ public class HomeActivity extends AppCompatActivity {
         this.bluetoothDevices = bluetoothDevices;
         if (combinedDeviceList.size() > 0)
             combinedDeviceList.clear();
-        Device dummyWifiDevice = new Device(Constants.WIFI_DEVICE, null, null, 0);
-        combinedDeviceList.add(dummyWifiDevice);
         combinedDeviceList.addAll(this.wifiDevices);
-        Device dummyBluetoothDevice = new Device(Constants.BLUETOOTH_DEVICE, null, null, 0);
-        combinedDeviceList.add(dummyBluetoothDevice);
         combinedDeviceList.addAll(this.bluetoothDevices);
         runOnUiThread(new Runnable() {
             @Override
@@ -442,21 +454,22 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo) {
-        if(wifiInfo.isGroupOwner){
-            transferService.startServer(8089);
-        }
-        else{
-            //wait 1/2 second for server
-            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
-                }
-            },500);
-
-        }
+    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo, final WifiP2pDevice device) {
+//      Log.d("connected device", device.deviceName);
+//        if(wifiInfo.isGroupOwner){
+//            transferService.startServer(8089);
+//        }
+//        else{
+//            //wait 1/2 second for server
+//            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
+//                }
+//            },500);
+//
+//        }
     }
 
 

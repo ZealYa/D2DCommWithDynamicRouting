@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -41,25 +42,36 @@ public class DeviceListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
-        View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
-        TextView title = (TextView)rowView.findViewById(android.R.id.text1);
+        View rowView = mInflater.inflate(R.layout.device_list_row, viewGroup, false);
+
+        TextView title = rowView.findViewById(R.id.device_name_textView);
+        TextView deviceType = rowView.findViewById(R.id.device_type_textView);
         Device currentDevice = devices.get(i);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
-            if (currentDevice.wifiDevice == null) {
-                title.setTextColor(Color.GREEN);
-                title.setText("Wifi Devices");
-            }
-            else
-                title.setText(currentDevice.wifiDevice.deviceName);
+            title.setText(currentDevice.wifiDevice.deviceName);
+            deviceType.setText("WiFi Direct");
         }
         else {
-            if (currentDevice.bluetoothDevice == null) {
-                title.setTextColor(Color.GREEN);
-                title.setText("Bluetooth Devices");
-            }
-            else
-                title.setText(currentDevice.bluetoothDevice.getName());
+            title.setText(currentDevice.bluetoothDevice.getName());
+            deviceType.setText("Bluetooth");
         }
+
+        Button connect = (Button)rowView.findViewById(R.id.connect_button);
+        connect.setTag(i);
+        if (currentDevice.connected)
+            connect.setText("disconnect");
+        else
+            connect.setText("connect");
+
+        Button rtt = (Button)rowView.findViewById(R.id.rtt_button);
+        rtt.setTag(i);
+
+        Button pktLoss = (Button)rowView.findViewById(R.id.pkt_loss_button);
+        pktLoss.setTag(i);
+
+        Button throughput = (Button)rowView.findViewById(R.id.throughput_button);
+        throughput.setTag(i);
+
         return rowView;
     }
 }
