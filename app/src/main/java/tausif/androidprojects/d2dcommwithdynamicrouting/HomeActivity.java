@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Set;
@@ -245,42 +247,58 @@ public class HomeActivity extends AppCompatActivity {
 
     //bluetooth server thread
     private class BluetoothServerThread extends Thread {
-        private final BluetoothServerSocket mmServerSocket;
+//        private final BluetoothServerSocket mmServerSocket;
+        DatagramSocket receiverSocket;
+        DatagramPacket receivedPkt;
 
         public BluetoothServerThread() {
-            // Use a temporary object that is later assigned to mmServerSocket
-            // because mmServerSocket is final.
-            BluetoothServerSocket tmp = null;
+//            // Use a temporary object that is later assigned to mmServerSocket
+//            // because mmServerSocket is final.
+//            BluetoothServerSocket tmp = null;
+//            try {
+//                // MY_UUID is the app's UUID string, also used by the client code.
+//                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, UUID.fromString(MY_UUID));
+//            } catch (IOException e) {
+//            }
+//            mmServerSocket = tmp;
             try {
-                // MY_UUID is the app's UUID string, also used by the client code.
-                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, UUID.fromString(MY_UUID));
-            } catch (IOException e) {
+                receiverSocket = new DatagramSocket(4000);
+            }catch (IOException ex) {
+
             }
-            mmServerSocket = tmp;
+            byte buffer[] = new byte[1024];
+            receivedPkt = new DatagramPacket(buffer, buffer.length);
         }
 
         public void run() {
-            BluetoothSocket socket;
-            // Keep listening until exception occurs or a socket is returned.
-            while (true) {
-                try {
-                    socket = mmServerSocket.accept();
-                } catch (IOException e) {
-                    break;
-                }
+            try {
+                receiverSocket.receive(receivedPkt);
+            }catch (IOException ex) {
 
-                if (socket != null) {
-                    manageConnectedBluetoothSocket(socket);
-                }
             }
+            byte receivedData[] = receivedPkt.getData();
+            Log.d("data received", receivedData.toString());
+//            BluetoothSocket socket;
+//            // Keep listening until exception occurs or a socket is returned.
+//            while (true) {
+//                try {
+//                    socket = mmServerSocket.accept();
+//                } catch (IOException e) {
+//                    break;
+//                }
+//
+//                if (socket != null) {
+//                    manageConnectedBluetoothSocket(socket);
+//                }
+//            }
         }
 
         // Closes the connect socket and causes the thread to finish.
         public void cancel() {
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) {
-            }
+//            try {
+//                mmServerSocket.close();
+//            } catch (IOException e) {
+//            }
         }
     }
     //end of bluetooth server thread
@@ -315,15 +333,21 @@ public class HomeActivity extends AppCompatActivity {
             manageConnectedBluetoothSocket(socket);
         }
         public void sendPkt(String packet, int pktType) {
+//            try {
+//                OutputStream outputStream = socket.getOutputStream();
+//                if (pktType == Constants.TYPE_RTT)
+//                    device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+//                outputStream.write(packet.getBytes());
+//                outputStream.flush();
+//            } catch (IOException writeEx) {
+//
+//            }
             try {
-                OutputStream outputStream = socket.getOutputStream();
-                if (pktType == Constants.TYPE_RTT)
-                    device.rttStartTime = Calendar.getInstance().getTimeInMillis();
-                outputStream.write(packet.getBytes());
-                outputStream.flush();
-            } catch (IOException writeEx) {
+                DatagramSocket senderSkt = new DatagramSocket();
+            }catch (IOException ex){
 
             }
+
         }
     }
 
