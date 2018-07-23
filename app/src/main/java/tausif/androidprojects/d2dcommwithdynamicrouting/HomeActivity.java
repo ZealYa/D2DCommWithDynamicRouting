@@ -63,8 +63,8 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
-        initiateBluetoothUDPListener();
         startDiscovery();
+        initiateBluetoothUDPListener();
     }
 
     //setting up the device list view adapter and item click events
