@@ -1,6 +1,5 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -20,7 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -64,6 +63,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         handler = new Handler();
         transferService = new TransferService(this);
+        initiateBluetoothUDPListener();
         startDiscovery();
     }
 
@@ -88,6 +88,11 @@ public class HomeActivity extends AppCompatActivity {
 
     public void rttButton(View view) {
         int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        if (currentDevice.deviceType == Constants.BLUETOOTH_DEVICE) {
+            BluetoothUDPSender bluetoothUDPSender = new BluetoothUDPSender();
+            bluetoothUDPSender.sendPkt("hello", currentDevice.bluetoothDevice.getAddress());
+        }
     }
 
     public void pktLossButton(View view) {
@@ -98,16 +103,9 @@ public class HomeActivity extends AppCompatActivity {
         int tag = (int)view.getTag();
     }
 
-    public void bluetoothRSSIButton(View view) {
-        metricToMeasure = Constants.BT_RSSI;
-        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1415);
-        }
-        else {
-            resultRSSI = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "resultRSSI.txt");
-        }
-        startDiscovery();
+    public void initiateBluetoothUDPListener() {
+        BluetoothUDPListener bluetoothUDPListener = new BluetoothUDPListener();
+        bluetoothUDPListener.start();
     }
 
     public void bluetoothRTTButton(View view) {
