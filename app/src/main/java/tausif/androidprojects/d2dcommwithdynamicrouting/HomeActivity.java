@@ -64,7 +64,6 @@ public class HomeActivity extends AppCompatActivity {
         handler = new Handler();
         transferService = new TransferService(this);
         startDiscovery();
-        initiateBluetoothUDPListener();
     }
 
     //setting up the device list view adapter and item click events
@@ -88,11 +87,6 @@ public class HomeActivity extends AppCompatActivity {
 
     public void rttButton(View view) {
         int tag = (int)view.getTag();
-        Device currentDevice = combinedDeviceList.get(tag);
-        if (currentDevice.deviceType == Constants.BLUETOOTH_DEVICE) {
-            BluetoothUDPSender bluetoothUDPSender = new BluetoothUDPSender();
-            bluetoothUDPSender.sendPkt("hello", currentDevice.bluetoothDevice.getAddress());
-        }
     }
 
     public void pktLossButton(View view) {
@@ -101,11 +95,6 @@ public class HomeActivity extends AppCompatActivity {
 
     public void throughputButton(View view) {
         int tag = (int)view.getTag();
-    }
-
-    public void initiateBluetoothUDPListener() {
-        BluetoothUDPListener bluetoothUDPListener = new BluetoothUDPListener();
-        bluetoothUDPListener.start();
     }
 
     public void bluetoothRTTButton(View view) {
