@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -16,9 +15,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.util.Log;
 
-public class PeerDiscoveryController {
+public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
     private HomeActivity homeActivity;
     private WifiP2pManager wifiP2pManager;
@@ -41,7 +39,7 @@ public class PeerDiscoveryController {
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         wifiDevices = new ArrayList<>();
         wifiP2pManager.discoverPeers(channel, null);
-        Constants.timeSlotCount = 0;
+        Constants.timeSlotNo = 0;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.timeSlotLength*1000);
     }
@@ -90,7 +88,7 @@ public class PeerDiscoveryController {
     private class controlPeerDiscovery extends TimerTask {
         @Override
         public void run() {
-            if (Constants.timeSlotCount%2==0){
+            if (Constants.timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
                 // adding up already paired devices
                 Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -106,7 +104,7 @@ public class PeerDiscoveryController {
                 bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
-            Constants.timeSlotCount++;
+            Constants.timeSlotNo++;
         }
     }
 
@@ -119,7 +117,18 @@ public class PeerDiscoveryController {
         }
     }
 
-    public void connectionStatChanged(WifiP2pInfo wifiInfo, WifiP2pDevice device) {
-        Log.d("connection status", "connected");
+    @Override
+    public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+        final String groupOwner = wifiP2pInfo.isGroupOwner? "yes":"no";
+        String address = "";
+        if (wifiP2pInfo.groupOwnerAddress != null)
+            address = wifiP2pInfo.groupOwnerAddress.toString();
+        final String toPrintAddress = address;
+        homeActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                homeActivity.showAlert("connected\ngroup owner "+groupOwner+"\nGO address "+toPrintAddress);
+            }
+        });
     }
 }

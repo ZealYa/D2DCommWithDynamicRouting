@@ -56,12 +56,9 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         }
         else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             NetworkInfo networkState = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-            WifiP2pInfo wifiInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_INFO);
-            WifiP2pDevice device = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
             if(networkState.isConnected())
             {
-//                sourceActivity.onWifiP2PDeviceConnected(wifiInfo, device);
-                peerDiscoveryController.connectionStatChanged(wifiInfo, device);
+                wifiP2pManager.requestConnectionInfo(channel, peerDiscoveryController);
             }
         }
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
