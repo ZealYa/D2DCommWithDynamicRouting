@@ -42,15 +42,12 @@ public class HomeActivity extends AppCompatActivity {
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
     private TransferService transferService;
-    private Handler handler;
     String NAME = "server";
     String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
     BluetoothAdapter bluetoothAdapter;
     BluetoothServerThread bluetoothServerThread;
     BluetoothDataSender bluetoothDataSender;
     ConnectedThread connectedThread;
-    int metricToMeasure;
-    File resultRSSI;
     int runNo;
     long[] rttTimes;
     String rttPkt;
@@ -61,8 +58,8 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        handler = new Handler();
         transferService = new TransferService(this);
+        configureBluetoothDataTransfer();
         startDiscovery();
     }
 
@@ -87,6 +84,9 @@ public class HomeActivity extends AppCompatActivity {
 
     public void rttButton(View view) {
         int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        if (currentDevice.deviceType == Constants.BLUETOOTH_DEVICE)
+            measureBluetoothRTT();
     }
 
     public void pktLossButton(View view) {
@@ -95,26 +95,6 @@ public class HomeActivity extends AppCompatActivity {
 
     public void throughputButton(View view) {
         int tag = (int)view.getTag();
-    }
-
-    public void bluetoothRTTButton(View view) {
-        metricToMeasure = Constants.BT_RTT;
-        measureBluetoothRTT();
-    }
-
-    public void getBTPairedDevices() {
-        configureDeviceListView();
-        bluetoothDevices = new ArrayList<>();
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device: pairedDevices
-                 ) {
-                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, 0, true);
-                bluetoothDevices.add(newDevice);
-            }
-            combinedDeviceList.addAll(bluetoothDevices);
-            deviceListAdapter.notifyDataSetChanged();
-        }
     }
 
     public void configureBluetoothDataTransfer() {
@@ -142,24 +122,6 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    public void measureBluetoothRSSI() {
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(resultRSSI);
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (Device device:combinedDeviceList
-                 ) {
-                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice != null && device.bluetoothDevice.getName().contains("NWSL")) {
-                    outputStreamWriter.append(device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi) + "\n");
-                }
-            }
-            outputStreamWriter.append("\n");
-            outputStreamWriter.close();
-            fileOutputStream.close();
-        } catch (IOException e) {
-
-        }
-    }
-
     public void writeRTTResult() {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
@@ -185,7 +147,6 @@ public class HomeActivity extends AppCompatActivity {
         } catch (IOException FIOExec) {
 
         }
-
     }
 
     public void measureBluetoothRTT() {
@@ -196,7 +157,7 @@ public class HomeActivity extends AppCompatActivity {
                 measuredDeviceName = deviceName;
                 runNo=0;
                 rttTimes = new long[Constants.noOfRuns];
-                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PACKET_SIZE);
+                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
                 bluetoothDataSender.sendPkt(rttPkt, Constants.TYPE_RTT);
@@ -385,9 +346,9 @@ public class HomeActivity extends AppCompatActivity {
                     break;
                 }
             }
-            Constants.RTT_PACKET_SIZE = Integer.parseInt(splited[3]);
-            Log.d("pkt size",String.valueOf(Constants.RTT_PACKET_SIZE));
-            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1], Constants.RTT_PACKET_SIZE);
+            Constants.RTT_PKT_SIZE = Integer.parseInt(splited[3]);
+            Log.d("pkt size",String.valueOf(Constants.RTT_PKT_SIZE));
+            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1], Constants.RTT_PKT_SIZE);
             bluetoothDataSender.setSocket(connectedThread.socket);
             bluetoothDataSender.sendPkt(packet, Constants.TYPE_RTT_RET);
         }
@@ -400,8 +361,8 @@ public class HomeActivity extends AppCompatActivity {
                     runNo++;
                     if (runNo < Constants.noOfRuns){
                         if (runNo == 20 || runNo == 40) {
-                            Constants.RTT_PACKET_SIZE *=2;
-                            rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PACKET_SIZE);
+                            Constants.RTT_PKT_SIZE *=2;
+                            rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
                         }
                         device.rttStartTime = 0;
                         device.rttEndTime = 0;
