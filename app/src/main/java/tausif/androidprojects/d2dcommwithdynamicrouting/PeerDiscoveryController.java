@@ -119,6 +119,12 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+        Constants.groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+        Constants.isGroupOwner = wifiP2pInfo.isGroupOwner;
+        if (wifiP2pInfo.isGroupOwner) {
+            WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(homeActivity);
+            udpListener.run();
+        }
         final String groupOwner = wifiP2pInfo.isGroupOwner? "yes":"no";
         String address = "";
         if (wifiP2pInfo.groupOwnerAddress != null)

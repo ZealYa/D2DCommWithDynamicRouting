@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Set;
@@ -87,6 +89,18 @@ public class HomeActivity extends AppCompatActivity {
         Device currentDevice = combinedDeviceList.get(tag);
         if (currentDevice.deviceType == Constants.BLUETOOTH_DEVICE)
             measureBluetoothRTT();
+        else {
+            if (!Constants.isGroupOwner) {
+                String message = "hello from non group owner";
+                try {
+                    DatagramSocket senderSkt = new DatagramSocket();
+                    DatagramPacket pkt = new DatagramPacket(message.getBytes(), message.length(), Constants.groupOwnerAddress, Constants.WiFiDirectUDPListeningPort);
+                    senderSkt.send(pkt);
+                }catch (IOException ex) {
+
+                }
+            }
+        }
     }
 
     public void pktLossButton(View view) {
