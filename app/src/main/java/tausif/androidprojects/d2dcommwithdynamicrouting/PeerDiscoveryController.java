@@ -123,7 +123,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         Constants.isGroupOwner = wifiP2pInfo.isGroupOwner;
         if (wifiP2pInfo.isGroupOwner) {
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(homeActivity);
-            udpListener.run();
+            udpListener.start();
         }
         final String groupOwner = wifiP2pInfo.isGroupOwner? "yes":"no";
         String address = "";

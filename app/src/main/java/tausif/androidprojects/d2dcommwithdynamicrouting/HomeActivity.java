@@ -92,13 +92,10 @@ public class HomeActivity extends AppCompatActivity {
         else {
             if (!Constants.isGroupOwner) {
                 String message = "hello from non group owner";
-                try {
-                    DatagramSocket senderSkt = new DatagramSocket();
-                    DatagramPacket pkt = new DatagramPacket(message.getBytes(), message.length(), Constants.groupOwnerAddress, Constants.WiFiDirectUDPListeningPort);
-                    senderSkt.send(pkt);
-                }catch (IOException ex) {
-
-                }
+                WiFiDirectUDPSender udpSender = new WiFiDirectUDPSender();
+                udpSender.createSkt();
+                udpSender.createPkt(message);
+                udpSender.start();
             }
         }
     }
@@ -114,7 +111,6 @@ public class HomeActivity extends AppCompatActivity {
     public void configureBluetoothDataTransfer() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
-        Constants.hostBluetoothName = bluetoothAdapter.getName();
         bluetoothServerThread = new BluetoothServerThread();
         bluetoothServerThread.start();
         bluetoothDataSender = new BluetoothDataSender();

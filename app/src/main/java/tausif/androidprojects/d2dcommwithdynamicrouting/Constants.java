@@ -4,7 +4,6 @@ import java.net.InetAddress;
 
 public class Constants {
     public static String hostBluetoothAddress = "";
-    public static String hostBluetoothName = "";
     public static String hostWifiAddress = "";
     public static InetAddress groupOwnerAddress;
     public static boolean isGroupOwner;

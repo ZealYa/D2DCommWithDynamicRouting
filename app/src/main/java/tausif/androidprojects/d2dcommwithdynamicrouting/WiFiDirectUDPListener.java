@@ -3,6 +3,7 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 public class WiFiDirectUDPListener extends Thread {
     public HomeActivity homeActivity;
@@ -25,11 +26,13 @@ public class WiFiDirectUDPListener extends Thread {
         while (true) {
             try {
                 socket.receive(receivedPkt);
+                InetAddress srcAddr = receivedPkt.getAddress();
+                final String addrStr = srcAddr.getHostAddress();
                 final String receivedString = new String(receivedBytes, 0 ,receivedPkt.getLength());
                 homeActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        homeActivity.showAlert(receivedString);
+                        homeActivity.showAlert(receivedString + " " + addrStr);
                     }
                 });
             }catch (IOException ex) {
