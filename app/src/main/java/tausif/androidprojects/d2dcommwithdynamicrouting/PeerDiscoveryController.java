@@ -26,6 +26,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     private IntentFilter intentFilter;
     private ArrayList<Device> wifiDevices;
     private ArrayList<Device> bluetoothDevices;
+    private int timeSlotNo;
 
     public PeerDiscoveryController(Context context, HomeActivity homeActivity) {
         this.context = context;
@@ -39,7 +40,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         wifiDevices = new ArrayList<>();
         wifiP2pManager.discoverPeers(channel, null);
-        Constants.timeSlotNo = 0;
+        timeSlotNo = 0;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.timeSlotLength*1000);
     }
@@ -88,7 +89,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     private class controlPeerDiscovery extends TimerTask {
         @Override
         public void run() {
-            if (Constants.timeSlotNo %2==0){
+            if (timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
                 // adding up already paired devices
                 Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -104,11 +105,11 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
                 bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
-            Constants.timeSlotNo++;
+            timeSlotNo++;
         }
     }
 
-    public void connectDevice(Device device) {
+    public void connectWiFiDirectDevice(Device device) {
         if (device.deviceType == Constants.WIFI_DEVICE) {
             WifiP2pConfig newConfig = new WifiP2pConfig();
             newConfig.deviceAddress = device.wifiDevice.deviceAddress;
@@ -121,20 +122,6 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
         Constants.groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
         Constants.isGroupOwner = wifiP2pInfo.isGroupOwner;
-        if (wifiP2pInfo.isGroupOwner) {
-            WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(homeActivity);
-            udpListener.start();
-        }
-        final String groupOwner = wifiP2pInfo.isGroupOwner? "yes":"no";
-        String address = "";
-        if (wifiP2pInfo.groupOwnerAddress != null)
-            address = wifiP2pInfo.groupOwnerAddress.toString();
-        final String toPrintAddress = address;
-        homeActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                homeActivity.showAlert("connected\ngroup owner "+groupOwner+"\nGO address "+toPrintAddress);
-            }
-        });
+        homeActivity.connectionEstablished(Constants.WIFI_DIRECT_CONNECTION);
     }
 }

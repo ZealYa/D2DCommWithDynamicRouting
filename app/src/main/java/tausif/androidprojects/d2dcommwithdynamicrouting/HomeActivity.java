@@ -1,7 +1,6 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
@@ -9,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,11 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Set;
 import java.util.UUID;
 
 import tausif.androidprojects.files.TransferService;
@@ -81,7 +77,17 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectButton(View view) {
         int tag = (int)view.getTag();
-        peerDiscoveryController.connectDevice(combinedDeviceList.get(tag));
+        Device currentDevice = combinedDeviceList.get(tag);
+        if (currentDevice.deviceType == Constants.WIFI_DEVICE)
+            peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
+    }
+
+    public void connectionEstablished(int connectionType) {
+        if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
+            WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
+            udpListener.start();
+            Toast.makeText(this, "wifi direct connection established", Toast.LENGTH_LONG);
+        }
     }
 
     public void rttButton(View view) {
@@ -167,10 +173,10 @@ public class HomeActivity extends AppCompatActivity {
                 measuredDeviceName = deviceName;
                 runNo=0;
                 rttTimes = new long[Constants.noOfRuns];
-                rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
+                rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
                 bluetoothDataSender.setDevice(device);
                 bluetoothDataSender.createSocket();
-                bluetoothDataSender.sendPkt(rttPkt, Constants.TYPE_RTT);
+                bluetoothDataSender.sendPkt(rttPkt, Constants.RTT);
             }
         }
     }
@@ -287,7 +293,7 @@ public class HomeActivity extends AppCompatActivity {
         public void sendPkt(String packet, int pktType) {
             try {
                 OutputStream outputStream = socket.getOutputStream();
-                if (pktType == Constants.TYPE_RTT)
+                if (pktType == Constants.RTT)
                     device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                 outputStream.write(packet.getBytes());
                 outputStream.flush();
@@ -348,7 +354,7 @@ public class HomeActivity extends AppCompatActivity {
         final String receivedPkt = new String(receivedData);
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
-        if (pktType == Constants.TYPE_RTT) {
+        if (pktType == Constants.RTT) {
             for (Device device: bluetoothDevices
                     ) {
                 if (device.bluetoothDevice.getAddress().equals(splited[1])) {
@@ -358,11 +364,11 @@ public class HomeActivity extends AppCompatActivity {
             }
             Constants.RTT_PKT_SIZE = Integer.parseInt(splited[3]);
             Log.d("pkt size",String.valueOf(Constants.RTT_PKT_SIZE));
-            String packet = PacketManager.createRTTPacket(Constants.TYPE_RTT_RET, splited[2], splited[1], Constants.RTT_PKT_SIZE);
+            String packet = PacketManager.createRTTPacket(Constants.RTT_RET, splited[2], splited[1], Constants.RTT_PKT_SIZE);
             bluetoothDataSender.setSocket(connectedThread.socket);
-            bluetoothDataSender.sendPkt(packet, Constants.TYPE_RTT_RET);
+            bluetoothDataSender.sendPkt(packet, Constants.RTT_RET);
         }
-        else if (pktType == Constants.TYPE_RTT_RET) {
+        else if (pktType == Constants.RTT_RET) {
             for (Device device: bluetoothDevices
                  ) {
                 if (device.bluetoothDevice.getAddress().equals(splited[1])) {
@@ -372,12 +378,12 @@ public class HomeActivity extends AppCompatActivity {
                     if (runNo < Constants.noOfRuns){
                         if (runNo == 20 || runNo == 40) {
                             Constants.RTT_PKT_SIZE *=2;
-                            rttPkt = PacketManager.createRTTPacket(Constants.TYPE_RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
+                            rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, device.bluetoothDevice.getAddress(), Constants.RTT_PKT_SIZE);
                         }
                         device.rttStartTime = 0;
                         device.rttEndTime = 0;
                         device.roundTripTime = 0;
-                        bluetoothDataSender.sendPkt(rttPkt, Constants.TYPE_RTT);
+                        bluetoothDataSender.sendPkt(rttPkt, Constants.RTT);
                     }
                     else {
                         writeRTTResult();
