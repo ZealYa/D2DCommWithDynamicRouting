@@ -6,11 +6,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class WiFiDirectUDPListener extends Thread {
-    public HomeActivity homeActivity;
-    byte[] receivedBytes;
-    DatagramPacket receivedPkt;
-    DatagramSocket socket;
-    public WiFiDirectUDPListener(HomeActivity homeActivity) {
+    private HomeActivity homeActivity;
+    private byte[] receivedBytes;
+    private DatagramPacket receivedPkt;
+    private DatagramSocket socket;
+
+    WiFiDirectUDPListener(HomeActivity homeActivity) {
         this.homeActivity = homeActivity;
         receivedBytes = new byte[1024];
         receivedPkt = new DatagramPacket(receivedBytes, receivedBytes.length);
@@ -27,14 +28,6 @@ public class WiFiDirectUDPListener extends Thread {
             try {
                 socket.receive(receivedPkt);
                 InetAddress srcAddr = receivedPkt.getAddress();
-                final String addrStr = srcAddr.getHostAddress();
-                final String receivedString = new String(receivedBytes, 0 ,receivedPkt.getLength());
-                homeActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        homeActivity.showAlert(receivedString + " " + addrStr);
-                    }
-                });
             }catch (IOException ex) {
 
             }
