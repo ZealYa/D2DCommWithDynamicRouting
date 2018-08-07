@@ -86,7 +86,7 @@ public class HomeActivity extends AppCompatActivity {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
-            Toast.makeText(this, "wifi direct connection established", Toast.LENGTH_LONG);
+            Toast.makeText(this, "wifi direct connection established", Toast.LENGTH_LONG).show();
         }
     }
 
