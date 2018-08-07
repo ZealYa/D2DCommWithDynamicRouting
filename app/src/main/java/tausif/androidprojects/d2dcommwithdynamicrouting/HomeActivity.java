@@ -90,6 +90,12 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void ipMacSync() {
+        if (!Constants.isGroupOwner) {
+
+        }
+    }
+
     public void rttButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
