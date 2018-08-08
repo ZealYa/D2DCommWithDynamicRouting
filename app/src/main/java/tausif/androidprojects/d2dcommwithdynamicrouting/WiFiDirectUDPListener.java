@@ -28,6 +28,8 @@ public class WiFiDirectUDPListener extends Thread {
             try {
                 socket.receive(receivedPkt);
                 InetAddress srcAddr = receivedPkt.getAddress();
+                String pktStr = new String(receivedBytes, 0, receivedPkt.getLength());
+                homeActivity.processReceivedWiFiPkt(srcAddr, pktStr);
             }catch (IOException ex) {
 
             }

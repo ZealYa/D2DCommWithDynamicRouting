@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.UUID;
@@ -51,6 +52,7 @@ public class HomeActivity extends AppCompatActivity {
     String rttPkt;
     String measuredDeviceName;
     PeerDiscoveryController peerDiscoveryController;
+    WiFiDirectUDPSender udpSender;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +88,18 @@ public class HomeActivity extends AppCompatActivity {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
-            Toast.makeText(this, "wifi direct connection established", Toast.LENGTH_LONG).show();
+            if (Constants.isGroupOwner)
+                Toast.makeText(this, "group owner", Toast.LENGTH_LONG).show();
+            else
+                Toast.makeText(this, "client", Toast.LENGTH_LONG).show();
         }
     }
 
     public void ipMacSync() {
-        if (!Constants.isGroupOwner) {
-
-        }
+        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
+        udpSender = new WiFiDirectUDPSender();
+        udpSender.createPkt(pkt, Constants.groupOwnerAddress);
+        udpSender.start();
     }
 
     public void rttButton(View view) {
@@ -103,11 +109,7 @@ public class HomeActivity extends AppCompatActivity {
             measureBluetoothRTT();
         else {
             if (!Constants.isGroupOwner) {
-                String message = "hello from non group owner";
-                WiFiDirectUDPSender udpSender = new WiFiDirectUDPSender();
-                udpSender.createSkt();
-                udpSender.createPkt(message);
-                udpSender.start();
+                ipMacSync();
             }
         }
     }
@@ -354,6 +356,15 @@ public class HomeActivity extends AppCompatActivity {
                 Log.e("socket closing error", "Could not close the connect socket", e);
             }
         }
+    }
+
+    public void processReceivedWiFiPkt(InetAddress srcAddr, final String receivedPkt) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showAlert(receivedPkt);
+            }
+        });
     }
 
     public void processReceivedBTPkt(byte[] receivedData, long receiveTime, int numBytesRead) {

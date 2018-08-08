@@ -20,4 +20,8 @@ public class PacketManager {
         }
         return packet;
     }
+
+    public static String createIpMacSyncPkt(int pktType, String macAddr) {
+        return (String.valueOf(pktType) + "#" + macAddr + "#");
+    }
 }
