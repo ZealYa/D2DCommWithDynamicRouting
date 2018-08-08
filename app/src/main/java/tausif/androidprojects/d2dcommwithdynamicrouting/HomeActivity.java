@@ -89,13 +89,16 @@ public class HomeActivity extends AppCompatActivity {
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
             if (Constants.isGroupOwner)
-                Toast.makeText(this, "group owner", Toast.LENGTH_LONG).show();
-            else
-                Toast.makeText(this, "client", Toast.LENGTH_LONG).show();
+//                Toast.makeText(this, "group owner", Toast.LENGTH_LONG).show();
+            else {
+//                Toast.makeText(this, "client", Toast.LENGTH_LONG).show();
+                ipMacSync();
+            }
         }
     }
 
     public void ipMacSync() {
+//        Toast.makeText(this, "inside ip mac sync method", Toast.LENGTH_LONG).show();
         String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
         udpSender = new WiFiDirectUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
