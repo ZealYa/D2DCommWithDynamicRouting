@@ -88,12 +88,8 @@ public class HomeActivity extends AppCompatActivity {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
-            if (Constants.isGroupOwner)
-//                Toast.makeText(this, "group owner", Toast.LENGTH_LONG).show();
-            else {
-//                Toast.makeText(this, "client", Toast.LENGTH_LONG).show();
+            if (!Constants.isGroupOwner)
                 ipMacSync();
-            }
         }
     }
 
