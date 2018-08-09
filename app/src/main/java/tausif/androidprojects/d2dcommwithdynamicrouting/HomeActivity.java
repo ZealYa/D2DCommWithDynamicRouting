@@ -187,19 +187,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    private boolean hasStorageWriteAccess() {
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1415);
-            return false;
-        }
-        return true;
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -405,26 +392,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
     }
-
-    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo, final WifiP2pDevice device) {
-//      Log.d("connected device", device.deviceName);
-//        if(wifiInfo.isGroupOwner){
-//            transferService.startServer(8089);
-//        }
-//        else{
-//            //wait 1/2 second for server
-//            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
-//                }
-//            },500);
-//
-//        }
-    }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
