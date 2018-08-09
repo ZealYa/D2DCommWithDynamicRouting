@@ -21,7 +21,8 @@ public class Constants {
     public static final int RTT = 1;
     public static final int RTT_RET = 2;
     public static final int PKT_LOSS = 3;
-    public static final int IP_MAC_SYNC = 4;
+    public static final int IP_MAC_SYNC_REC = 4;
+    public static final int IP_MAC_SYNC_RET = 5;
 
     public static final int noOfRuns = 60;
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Calendar;
 
 public class WiFiDirectUDPListener extends Thread {
     private HomeActivity homeActivity;
@@ -27,9 +28,10 @@ public class WiFiDirectUDPListener extends Thread {
         while (true) {
             try {
                 socket.receive(receivedPkt);
+                long receivingTime = Calendar.getInstance().getTimeInMillis();
                 InetAddress srcAddr = receivedPkt.getAddress();
                 String pktStr = new String(receivedBytes, 0, receivedPkt.getLength());
-                homeActivity.processReceivedWiFiPkt(srcAddr, pktStr);
+                homeActivity.processReceivedWiFiPkt(srcAddr, receivingTime, pktStr);
             }catch (IOException ex) {
 
             }

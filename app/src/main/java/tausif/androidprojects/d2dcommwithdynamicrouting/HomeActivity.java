@@ -94,8 +94,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void ipMacSync() {
-//        Toast.makeText(this, "inside ip mac sync method", Toast.LENGTH_LONG).show();
-        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
+        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_REC, Constants.hostWifiAddress);
         udpSender = new WiFiDirectUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
         udpSender.start();
@@ -357,13 +356,10 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void processReceivedWiFiPkt(InetAddress srcAddr, final String receivedPkt) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAlert(receivedPkt);
-            }
-        });
+    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
+        String splited[] = receivedPkt.split("#");
+        int pktType = Integer.parseInt(splited[0]);
+
     }
 
     public void processReceivedBTPkt(byte[] receivedData, long receiveTime, int numBytesRead) {
