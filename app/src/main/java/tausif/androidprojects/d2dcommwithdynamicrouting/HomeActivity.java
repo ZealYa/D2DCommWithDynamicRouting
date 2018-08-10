@@ -86,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectionEstablished(int connectionType) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
+            udpSender = new WiFiDirectUDPSender();
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -344,9 +345,20 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
+//        final String prtStr = receivedPkt;
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                showAlert(prtStr);
+//            }
+//        });
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
-
+        if (pktType == Constants.IP_MAC_SYNC_REC) {
+            String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
+            udpSender.createPkt(pkt, srcAddr);
+            udpSender.start();
+        }
     }
 
     public void processReceivedBTPkt(byte[] receivedData, long receiveTime, int numBytesRead) {
