@@ -86,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectionEstablished(int connectionType) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
+            Toast.makeText(this, "connection established", Toast.LENGTH_LONG).show();
             udpSender = new WiFiDirectUDPSender();
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
@@ -345,19 +346,27 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
-//        final String prtStr = receivedPkt;
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                showAlert(prtStr);
-//            }
-//        });
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.IP_MAC_SYNC_REC) {
             String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
             udpSender.createPkt(pkt, srcAddr);
             udpSender.start();
+            matchIPToMac(srcAddr, splited[1]);
+        }
+        else if (pktType == Constants.IP_MAC_SYNC_RET)
+            matchIPToMac(srcAddr, splited[1]);
+    }
+
+    public void matchIPToMac(InetAddress ipAddr, String macAddr) {
+        for (Device device:combinedDeviceList
+             ) {
+            if (device.deviceType == Constants.WIFI_DEVICE) {
+                if (device.wifiDevice.deviceAddress.equals(macAddr)){
+                    device.IPAddress = ipAddr;
+                    break;
+                }
+            }
         }
     }
 

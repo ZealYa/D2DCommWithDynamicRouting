@@ -48,7 +48,7 @@ public class DeviceListAdapter extends BaseAdapter {
         TextView deviceType = rowView.findViewById(R.id.device_type_textView);
         Device currentDevice = devices.get(i);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
-            title.setText(currentDevice.wifiDevice.deviceAddress);
+            title.setText(currentDevice.wifiDevice.deviceName);
             deviceType.setText("WiFi Direct");
         }
         else {
