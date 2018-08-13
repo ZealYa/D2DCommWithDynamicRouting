@@ -364,6 +364,12 @@ public class HomeActivity extends AppCompatActivity {
             if (device.deviceType == Constants.WIFI_DEVICE) {
                 if (device.wifiDevice.deviceAddress.equals(macAddr)){
                     device.IPAddress = ipAddr;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "ip mac synced", Toast.LENGTH_LONG).show();
+                        }
+                    });
                     break;
                 }
             }
