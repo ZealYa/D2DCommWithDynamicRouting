@@ -419,14 +419,4 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == PICKFILE_REQUEST_CODE && resultCode == RESULT_OK){
-            Log.e("file path",data.getDataString());
-        }
-        if (resultCode == RESULT_CANCELED)
-            showAlert("Bluetooth can not be enabled");
-        super.onActivityResult(requestCode, resultCode, data);
-    }
 }
