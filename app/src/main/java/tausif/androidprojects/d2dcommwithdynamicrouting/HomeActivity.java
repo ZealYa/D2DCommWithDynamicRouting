@@ -73,10 +73,19 @@ public class HomeActivity extends AppCompatActivity {
     public void rttButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
-        if (currentDevice.deviceType == Constants.WIFI_DEVICE){
-            if (!Constants.isGroupOwner) {
-                ipMacSync();
-            }
+        EditText distance = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distance)) {
+            distance.setError("enter distance");
+            return;
+        }
+        EditText pktSize = findViewById(R.id.pkt_size_editText);
+        if (textboxIsEmpty(pktSize)) {
+            pktSize.setError("enter packet size");
+            return;
+        }
+        if (currentDevice.IPAddress == null) {
+            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            return;
         }
     }
 
@@ -165,6 +174,11 @@ public class HomeActivity extends AppCompatActivity {
         builder.setMessage(message);
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    //function to check empty text field
+    public boolean textboxIsEmpty(EditText editText) {
+        return editText.getText().toString().trim().length() == 0;
     }
 
     @Override
