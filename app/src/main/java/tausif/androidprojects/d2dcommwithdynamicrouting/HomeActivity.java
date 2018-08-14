@@ -42,6 +42,7 @@ public class HomeActivity extends AppCompatActivity {
     PeerDiscoveryController peerDiscoveryController;
     WiFiDirectUDPSender udpSender;
     boolean willUpdateDeviceList;
+    int wifiRTTRun;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,10 +90,15 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
+        wifiRTTRun = 0;
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        udpSender = null;
+        udpSender = new WiFiDirectUDPSender();
         udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
+        udpSender.start();
     }
 
     public void pktLossButton(View view) {
@@ -130,7 +136,6 @@ public class HomeActivity extends AppCompatActivity {
     public void connectionEstablished(int connectionType) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             Toast.makeText(this, "connection established", Toast.LENGTH_LONG).show();
-            udpSender = new WiFiDirectUDPSender();
             WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -140,6 +145,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void ipMacSync() {
         String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_REC, Constants.hostWifiAddress);
+        udpSender = null;
         udpSender = new WiFiDirectUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
         udpSender.start();
@@ -169,6 +175,8 @@ public class HomeActivity extends AppCompatActivity {
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.IP_MAC_SYNC_REC) {
             String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
+            udpSender = null;
+            udpSender = new WiFiDirectUDPSender();
             udpSender.createPkt(pkt, srcAddr);
             udpSender.start();
             matchIPToMac(srcAddr, splited[1]);
@@ -176,12 +184,31 @@ public class HomeActivity extends AppCompatActivity {
         else if (pktType == Constants.IP_MAC_SYNC_RET)
             matchIPToMac(srcAddr, splited[1]);
         else if (pktType == Constants.RTT) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    showAlert(receivedPkt);
+            int pktSize = Integer.parseInt(splited[3]);
+            String pkt = PacketManager.createRTTPacket(Constants.RTT_RET, Constants.hostWifiAddress, splited[1], pktSize);
+            udpSender = null;
+            udpSender = new WiFiDirectUDPSender();
+            udpSender.createPkt(pkt, srcAddr);
+            udpSender.start();
+        }
+        else if (pktType == Constants.RTT_RET) {
+            for (Device device:combinedDeviceList
+                 ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
+                        device.roundTripTime = receivingTime - device.rttStartTime;
+                        wifiRTTRun++;
+                        if (wifiRTTRun < Constants.noOfRuns) {
+                            udpSender = null;
+                            udpSender = new WiFiDirectUDPSender();
+                            udpSender.createPkt(device.rttPkt, srcAddr);
+                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+                            udpSender.start();
+                        }
+                        break;
+                    }
                 }
-            });
+            }
         }
     }
 

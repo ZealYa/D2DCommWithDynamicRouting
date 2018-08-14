@@ -14,7 +14,6 @@ public class Device {
     private int rssi;
     public long roundTripTime;
     public long rttStartTime;
-    public long rttEndTime;
     public String rttPkt;
     public double packetLossRatio;
     public boolean connected;
@@ -28,7 +27,6 @@ public class Device {
         this.rssi = rssi;
         this.roundTripTime = 0;
         this.rttStartTime = 0;
-        this.rttEndTime = 0;
         this.rttPkt = "";
         this.packetLossRatio = 0;
         this.connected = connected;
