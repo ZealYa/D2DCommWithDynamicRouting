@@ -18,7 +18,7 @@
             android:id="@+id/distance_editText"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:inputType="numberDecimal"
             android:hint="distance"
             android:background="@android:color/holo_red_dark"/>
@@ -27,7 +27,7 @@
             android:id="@+id/pkt_size_editText"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:inputType="numberDecimal"
             android:hint="packet size"
             android:background="@android:color/holo_green_dark"/>

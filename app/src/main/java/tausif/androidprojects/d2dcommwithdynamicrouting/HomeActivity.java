@@ -41,11 +41,13 @@ public class HomeActivity extends AppCompatActivity {
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
     WiFiDirectUDPSender udpSender;
+    boolean willUpdateDeviceList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        willUpdateDeviceList = true;
         startDiscovery();
     }
 
@@ -73,20 +75,24 @@ public class HomeActivity extends AppCompatActivity {
     public void rttButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
-        EditText distance = findViewById(R.id.distance_editText);
-        if (textboxIsEmpty(distance)) {
-            distance.setError("enter distance");
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
             return;
         }
-        EditText pktSize = findViewById(R.id.pkt_size_editText);
-        if (textboxIsEmpty(pktSize)) {
-            pktSize.setError("enter packet size");
+        EditText pktSizeText = findViewById(R.id.pkt_size_editText);
+        if (textboxIsEmpty(pktSizeText)) {
+            pktSizeText.setError("enter packet size");
             return;
         }
         if (currentDevice.IPAddress == null) {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
+        String pktSizeStr = pktSizeText.getText().toString().trim();
+        int pktSize = Integer.parseInt(pktSizeStr);
+        currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
     }
 
     public void pktLossButton(View view) {
@@ -99,18 +105,20 @@ public class HomeActivity extends AppCompatActivity {
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
-        this.wifiDevices = wifiDevices;
-        this.bluetoothDevices = bluetoothDevices;
-        if (combinedDeviceList.size() > 0)
-            combinedDeviceList.clear();
-        combinedDeviceList.addAll(this.wifiDevices);
-        combinedDeviceList.addAll(this.bluetoothDevices);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceListAdapter.notifyDataSetChanged();
-            }
-        });
+        if (willUpdateDeviceList) {
+            this.wifiDevices = wifiDevices;
+            this.bluetoothDevices = bluetoothDevices;
+            if (combinedDeviceList.size() > 0)
+                combinedDeviceList.clear();
+            combinedDeviceList.addAll(this.wifiDevices);
+            combinedDeviceList.addAll(this.bluetoothDevices);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    deviceListAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     //shows the wifi p2p state
@@ -143,6 +151,7 @@ public class HomeActivity extends AppCompatActivity {
             if (device.deviceType == Constants.WIFI_DEVICE) {
                 if (device.wifiDevice.deviceAddress.equals(macAddr)){
                     device.IPAddress = ipAddr;
+                    willUpdateDeviceList = false;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -155,7 +164,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
+    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, final String receivedPkt) {
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.IP_MAC_SYNC_REC) {
@@ -166,6 +175,14 @@ public class HomeActivity extends AppCompatActivity {
         }
         else if (pktType == Constants.IP_MAC_SYNC_RET)
             matchIPToMac(srcAddr, splited[1]);
+        else if (pktType == Constants.RTT) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showAlert(receivedPkt);
+                }
+            });
+        }
     }
 
     //function to show an alert message

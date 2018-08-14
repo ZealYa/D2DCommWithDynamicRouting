@@ -4,7 +4,7 @@ public class PacketManager {
     public static String createRTTPacket(int pktType, String sourceAddress, String destinationAddress, int pktSize) {
         String packet = String.valueOf(pktType) + "#" + sourceAddress + "#" + destinationAddress + "#" + String.valueOf(pktSize);
         packet = packet + "#";
-        int remaining = Constants.RTT_PKT_SIZE - packet.length();
+        int remaining = pktSize - packet.length();
         for (int i = 0; i < remaining; i++) {
             packet += ".";
         }
