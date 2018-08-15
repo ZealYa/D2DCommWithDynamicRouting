@@ -52,7 +52,7 @@ public class DeviceListAdapter extends BaseAdapter {
             deviceType.setText("WiFi Direct");
         }
         else {
-            title.setText(currentDevice.bluetoothDevice.getAddress());
+            title.setText(currentDevice.bluetoothDevice.getName());
             deviceType.setText("Bluetooth");
         }
 
