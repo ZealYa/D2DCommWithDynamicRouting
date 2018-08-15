@@ -1,5 +1,7 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -49,8 +51,16 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        checkWritePermission();
         willUpdateDeviceList = true;
         startDiscovery();
+    }
+
+    public void checkWritePermission() {
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
+        }
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
@@ -219,18 +229,29 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void writeResult(String deviceName, int measurementType) {
-        String result = "";
-        for (long time:rttTimes
-             ) {
-            result = result + String.valueOf(time) + " ";
+        EditText distanceText = findViewById(R.id.distance_editText);
+        String distance = distanceText.getText().toString().trim();
+
+        EditText pktSizeText = findViewById(R.id.pkt_size_editText);
+        String pktSize = pktSizeText.getText().toString().trim();
+
+        if (measurementType == Constants.RTT) {
+            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttTimes);
+            if (retVal)
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), Constants.writeSuccess, Toast.LENGTH_LONG).show();
+                    }
+                });
+            else
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), Constants.writeFail, Toast.LENGTH_LONG).show();
+                    }
+                });
         }
-        final String resultStr = result;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAlert(resultStr);
-            }
-        });
     }
 
     //function to show an alert message

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class FileWriter {
-    public static boolean writeRTTResult(String deviceName, String distance, String pktSize, long RTTValues[]) {
+    public static boolean writeRTTResult(String deviceName, String pktSize, String distance, long RTTValues[]) {
         final String filename = "RTT_" + deviceName + "_" + pktSize + "_" + distance + "_meters.txt";
         File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
