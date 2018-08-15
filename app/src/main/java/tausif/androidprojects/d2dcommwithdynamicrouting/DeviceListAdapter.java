@@ -69,9 +69,11 @@ public class DeviceListAdapter extends BaseAdapter {
         Button pktLoss = (Button)rowView.findViewById(R.id.pkt_loss_button);
         pktLoss.setTag(i);
 
-        Button throughput = (Button)rowView.findViewById(R.id.throughput_button);
-        throughput.setTag(i);
+        Button udpThroughput = (Button)rowView.findViewById(R.id.udp_throughput_button);
+        udpThroughput.setTag(i);
 
+        Button tcpThroughput = (Button)rowView.findViewById(R.id.tcp_throughput_button);
+        tcpThroughput.setTag(i);
         return rowView;
     }
 }

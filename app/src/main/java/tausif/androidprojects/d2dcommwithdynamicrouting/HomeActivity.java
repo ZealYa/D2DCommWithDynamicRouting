@@ -122,7 +122,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void TCPThroughputButton(View view) {
-
+        int tag = (int)view.getTag();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
