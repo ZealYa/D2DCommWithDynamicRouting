@@ -1,38 +1,20 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
-import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.UUID;
-
-import tausif.androidprojects.files.TransferService;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -44,8 +26,9 @@ public class HomeActivity extends AppCompatActivity {
     PeerDiscoveryController peerDiscoveryController;
     WiFiDirectUDPSender udpSender;
     boolean willUpdateDeviceList;
-    int wifiRTTRun;
-    long rttTimes[];
+    int experimentNo;
+    long RTTs[];
+    long udpThroughputRTTs[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +84,8 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
-        wifiRTTRun = 0;
-        rttTimes = new long[Constants.noOfRuns];
+        experimentNo = 0;
+        RTTs = new long[Constants.highestNoOfRuns];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
@@ -119,6 +102,18 @@ public class HomeActivity extends AppCompatActivity {
 
     public void UDPThroughputButton(View view) {
         int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
+            return;
+        }
+        if (currentDevice.IPAddress == null) {
+            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            return;
+        }
+        experimentNo = 0;
+        udpThroughputRTTs = new long[Constants.highestNoOfRuns +1];
     }
 
     public void TCPThroughputButton(View view) {
@@ -213,9 +208,9 @@ public class HomeActivity extends AppCompatActivity {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
                     if (device.wifiDevice.deviceAddress.equals(splited[1])) {
                         device.roundTripTime = receivingTime - device.rttStartTime;
-                        rttTimes[wifiRTTRun] = device.roundTripTime;
-                        wifiRTTRun++;
-                        if (wifiRTTRun < Constants.noOfRuns) {
+                        RTTs[experimentNo] = device.roundTripTime;
+                        experimentNo++;
+                        if (experimentNo < Constants.highestNoOfRuns) {
                             udpSender = null;
                             udpSender = new WiFiDirectUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
@@ -240,7 +235,7 @@ public class HomeActivity extends AppCompatActivity {
         String pktSize = pktSizeText.getText().toString().trim();
 
         if (measurementType == Constants.RTT) {
-            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttTimes);
+            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs);
             if (retVal)
                 runOnUiThread(new Runnable() {
                     @Override

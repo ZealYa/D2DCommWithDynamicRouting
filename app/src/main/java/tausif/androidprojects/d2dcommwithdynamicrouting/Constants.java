@@ -14,6 +14,7 @@ public class Constants {
 
     public static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     public static final int MAX_LOSS_RATIO_PKTS = 100;
+    public static int UDP_THROUGHPUT_PKT_SIZE = 200;
 
     public static final int timeSlotLength = 10;    // in seconds
 
@@ -23,7 +24,7 @@ public class Constants {
     public static final int IP_MAC_SYNC_REC = 104;
     public static final int IP_MAC_SYNC_RET = 105;
 
-    public static final int noOfRuns = 15;
+    public static final int highestNoOfRuns = 15;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;
 
