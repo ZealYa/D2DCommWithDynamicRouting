@@ -117,8 +117,12 @@ public class HomeActivity extends AppCompatActivity {
         int tag = (int)view.getTag();
     }
 
-    public void throughputButton(View view) {
+    public void UDPThroughputButton(View view) {
         int tag = (int)view.getTag();
+    }
+
+    public void TCPThroughputButton(View view) {
+
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery

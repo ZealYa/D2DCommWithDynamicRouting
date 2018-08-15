@@ -69,11 +69,21 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="throughput"
-            android:id="@+id/throughput_button"
+            android:text="throughput-udp"
+            android:id="@+id/udp_throughput_button"
             android:background="#a4c639"
             android:layout_margin="5dp"
-            android:onClick="throughputButton"/>
+            android:onClick="UDPThroughputButton"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="throughput-tcp"
+            android:id="@+id/tcp_throughput_button"
+            android:background="#a4c639"
+            android:layout_margin="5dp"
+            android:onClick="TCPThroughputButton"/>
     </LinearLayout>
 
 </LinearLayout>
