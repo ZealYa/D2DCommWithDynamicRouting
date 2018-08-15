@@ -43,6 +43,7 @@ public class HomeActivity extends AppCompatActivity {
     WiFiDirectUDPSender udpSender;
     boolean willUpdateDeviceList;
     int wifiRTTRun;
+    long rttTimes[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +92,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         wifiRTTRun = 0;
+        rttTimes = new long[Constants.noOfRuns];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
@@ -197,6 +199,7 @@ public class HomeActivity extends AppCompatActivity {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
                     if (device.wifiDevice.deviceAddress.equals(splited[1])) {
                         device.roundTripTime = receivingTime - device.rttStartTime;
+                        rttTimes[wifiRTTRun] = device.roundTripTime;
                         wifiRTTRun++;
                         if (wifiRTTRun < Constants.noOfRuns) {
                             udpSender = null;
@@ -205,11 +208,29 @@ public class HomeActivity extends AppCompatActivity {
                             device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                             udpSender.start();
                         }
+                        else {
+                            writeResult(device.wifiDevice.deviceName, Constants.RTT);
+                        }
                         break;
                     }
                 }
             }
         }
+    }
+
+    public void writeResult(String deviceName, int measurementType) {
+        String result = "";
+        for (long time:rttTimes
+             ) {
+            result = result + String.valueOf(time) + " ";
+        }
+        final String resultStr = result;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showAlert(resultStr);
+            }
+        });
     }
 
     //function to show an alert message
