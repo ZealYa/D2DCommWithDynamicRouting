@@ -34,12 +34,12 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        checkWritePermission();
+        checkStorageWritePermission();
         willUpdateDeviceList = true;
         startDiscovery();
     }
 
-    public void checkWritePermission() {
+    public void checkStorageWritePermission() {
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
@@ -98,6 +98,17 @@ public class HomeActivity extends AppCompatActivity {
 
     public void pktLossButton(View view) {
         int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
+            return;
+        }
+        if (currentDevice.IPAddress == null) {
+            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            return;
+        }
+
     }
 
     public void UDPThroughputButton(View view) {
