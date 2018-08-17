@@ -92,6 +92,7 @@ public class HomeActivity extends AppCompatActivity {
         udpSender = null;
         udpSender = new WDUDPSender();
         udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+        udpSender.setRunLoop(false);
         currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
         udpSender.start();
     }
@@ -108,10 +109,12 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
+        currentDevice.setLossRatioPktsReceived(0);
         udpSender = null;
         udpSender = new WDUDPSender();
         String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
-        udpSender.createPkt("", currentDevice.IPAddress);
+        udpSender.createPkt(lossRatioPkt, currentDevice.IPAddress);
+        udpSender.setRunLoop(true);
         udpSender.setNoOfPktsToSend(Constants.MAX_LOSS_RATIO_PKTS);
         udpSender.start();
     }
@@ -175,6 +178,7 @@ public class HomeActivity extends AppCompatActivity {
         udpSender = null;
         udpSender = new WDUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
+        udpSender.setRunLoop(false);
         udpSender.start();
     }
 
@@ -205,6 +209,7 @@ public class HomeActivity extends AppCompatActivity {
             udpSender = null;
             udpSender = new WDUDPSender();
             udpSender.createPkt(pkt, srcAddr);
+            udpSender.setRunLoop(false);
             udpSender.start();
             matchIPToMac(srcAddr, splited[1]);
         }
@@ -216,6 +221,7 @@ public class HomeActivity extends AppCompatActivity {
             udpSender = null;
             udpSender = new WDUDPSender();
             udpSender.createPkt(pkt, srcAddr);
+            udpSender.setRunLoop(false);
             udpSender.start();
         }
         else if (pktType == Constants.RTT_RET) {
@@ -230,6 +236,7 @@ public class HomeActivity extends AppCompatActivity {
                             udpSender = null;
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
+                            udpSender.setRunLoop(false);
                             device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                             udpSender.start();
                         }

@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.net.InetAddress;
-import java.util.Date;
 
 
 public class Device {
@@ -15,7 +14,7 @@ public class Device {
     public long roundTripTime;
     public long rttStartTime;
     public String rttPkt;
-    public double packetLossRatio;
+    public int lossRatioPktsReceived;
     public boolean connected;
     public InetAddress IPAddress;
 
@@ -28,8 +27,11 @@ public class Device {
         this.roundTripTime = 0;
         this.rttStartTime = 0;
         this.rttPkt = "";
-        this.packetLossRatio = 0;
         this.connected = connected;
         this.IPAddress = null;
+    }
+
+    public void setLossRatioPktsReceived(int lossRatioPktsReceived) {
+        this.lossRatioPktsReceived = lossRatioPktsReceived;
     }
 }

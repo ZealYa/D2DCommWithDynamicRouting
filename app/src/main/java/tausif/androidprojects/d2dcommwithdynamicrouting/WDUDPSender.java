@@ -23,6 +23,10 @@ public class WDUDPSender extends Thread {
         packet = new DatagramPacket(pktStr.getBytes(), pktStr.length(), destAddr, Constants.WiFiDirectUDPListeningPort);
     }
 
+    public void setRunLoop(boolean runLoop) {
+        this.runLoop = runLoop;
+    }
+
     public void setNoOfPktsToSend(int noOfPktsToSend) {
         this.noOfPktsToSend = noOfPktsToSend;
     }
