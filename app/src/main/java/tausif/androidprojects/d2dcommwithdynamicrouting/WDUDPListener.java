@@ -6,13 +6,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Calendar;
 
-public class WiFiDirectUDPListener extends Thread {
+public class WDUDPListener extends Thread {
     private HomeActivity homeActivity;
     private byte[] receivedBytes;
     private DatagramPacket receivedPkt;
     private DatagramSocket socket;
 
-    WiFiDirectUDPListener(HomeActivity homeActivity) {
+    WDUDPListener(HomeActivity homeActivity) {
         this.homeActivity = homeActivity;
         receivedBytes = new byte[1024];
         receivedPkt = new DatagramPacket(receivedBytes, receivedBytes.length);

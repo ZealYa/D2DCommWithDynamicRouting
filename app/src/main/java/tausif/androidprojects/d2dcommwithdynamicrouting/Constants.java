@@ -5,6 +5,7 @@ import java.net.InetAddress;
 public class Constants {
     public static String hostBluetoothAddress = "";
     public static String hostWifiAddress = "";
+
     public static InetAddress groupOwnerAddress;
     public static boolean isGroupOwner;
     public static int WiFiDirectUDPListeningPort = 9000;
@@ -14,7 +15,6 @@ public class Constants {
 
     public static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     public static final int MAX_LOSS_RATIO_PKTS = 100;
-    public static int UDP_THROUGHPUT_PKT_SIZE = 200;
 
     public static final int timeSlotLength = 10;    // in seconds
 

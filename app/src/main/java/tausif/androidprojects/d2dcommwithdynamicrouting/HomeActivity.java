@@ -24,7 +24,7 @@ public class HomeActivity extends AppCompatActivity {
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
-    WiFiDirectUDPSender udpSender;
+    WDUDPSender udpSender;
     boolean willUpdateDeviceList;
     int experimentNo;
     long RTTs[];
@@ -90,7 +90,7 @@ public class HomeActivity extends AppCompatActivity {
         int pktSize = Integer.parseInt(pktSizeStr);
         currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
         udpSender = null;
-        udpSender = new WiFiDirectUDPSender();
+        udpSender = new WDUDPSender();
         udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
         currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
         udpSender.start();
@@ -108,7 +108,12 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
-
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
+        udpSender.createPkt("", currentDevice.IPAddress);
+        udpSender.setNoOfPktsToSend(Constants.MAX_LOSS_RATIO_PKTS);
+        udpSender.start();
     }
 
     public void UDPThroughputButton(View view) {
@@ -158,7 +163,7 @@ public class HomeActivity extends AppCompatActivity {
     public void connectionEstablished(int connectionType) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             Toast.makeText(this, "connection established", Toast.LENGTH_LONG).show();
-            WiFiDirectUDPListener udpListener = new WiFiDirectUDPListener(this);
+            WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
                 ipMacSync();
@@ -168,7 +173,7 @@ public class HomeActivity extends AppCompatActivity {
     public void ipMacSync() {
         String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_REC, Constants.hostWifiAddress);
         udpSender = null;
-        udpSender = new WiFiDirectUDPSender();
+        udpSender = new WDUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
         udpSender.start();
     }
@@ -198,7 +203,7 @@ public class HomeActivity extends AppCompatActivity {
         if (pktType == Constants.IP_MAC_SYNC_REC) {
             String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
             udpSender = null;
-            udpSender = new WiFiDirectUDPSender();
+            udpSender = new WDUDPSender();
             udpSender.createPkt(pkt, srcAddr);
             udpSender.start();
             matchIPToMac(srcAddr, splited[1]);
@@ -209,7 +214,7 @@ public class HomeActivity extends AppCompatActivity {
             int pktSize = Integer.parseInt(splited[3]);
             String pkt = PacketManager.createRTTPacket(Constants.RTT_RET, Constants.hostWifiAddress, splited[1], pktSize);
             udpSender = null;
-            udpSender = new WiFiDirectUDPSender();
+            udpSender = new WDUDPSender();
             udpSender.createPkt(pkt, srcAddr);
             udpSender.start();
         }
@@ -223,7 +228,7 @@ public class HomeActivity extends AppCompatActivity {
                         experimentNo++;
                         if (experimentNo < Constants.highestNoOfRuns) {
                             udpSender = null;
-                            udpSender = new WiFiDirectUDPSender();
+                            udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
                             device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                             udpSender.start();
