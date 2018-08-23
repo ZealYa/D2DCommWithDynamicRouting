@@ -2,11 +2,13 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -109,7 +111,6 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
             return;
         }
-        currentDevice.setLossRatioPktsReceived(0);
         udpSender = null;
         udpSender = new WDUDPSender();
         String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
@@ -188,6 +189,7 @@ public class HomeActivity extends AppCompatActivity {
             if (device.deviceType == Constants.WIFI_DEVICE) {
                 if (device.wifiDevice.deviceAddress.equals(macAddr)){
                     device.IPAddress = ipAddr;
+                    device.lossRatioPktsReceived = 0;
                     willUpdateDeviceList = false;
                     runOnUiThread(new Runnable() {
                         @Override
@@ -244,6 +246,34 @@ public class HomeActivity extends AppCompatActivity {
                             writeResult(device.wifiDevice.deviceName, Constants.RTT);
                         }
                         break;
+                    }
+                }
+            }
+        }
+        else if (pktType == Constants.PKT_LOSS) {
+            for (final Device device:combinedDeviceList
+                 ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
+                        if (device.lossRatioPktsReceived == 0) {
+                            device.lossRatioPktsReceived++;
+                            Log.d("pkt loss", "first pkt");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Handler handler = new Handler();
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            double pktLoss = ((Constants.MAX_LOSS_RATIO_PKTS - device.lossRatioPktsReceived)/Constants.MAX_LOSS_RATIO_PKTS) * 100.00;
+                                            Log.d("pkt loss after 1 minute", String.valueOf(pktLoss));
+                                        }
+                                    }, 60 * 1000);
+                                }
+                            });
+                        }
+                        else
+                            device.lossRatioPktsReceived++;
                     }
                 }
             }

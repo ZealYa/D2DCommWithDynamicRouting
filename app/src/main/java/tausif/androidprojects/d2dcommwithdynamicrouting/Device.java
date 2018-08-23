@@ -30,8 +30,4 @@ public class Device {
         this.connected = connected;
         this.IPAddress = null;
     }
-
-    public void setLossRatioPktsReceived(int lossRatioPktsReceived) {
-        this.lossRatioPktsReceived = lossRatioPktsReceived;
-    }
 }
