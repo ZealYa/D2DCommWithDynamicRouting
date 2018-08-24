@@ -22,9 +22,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="3"
-            android:text="device type"
+            android:text="bluetooth"
             android:gravity="center"
-            android:id="@+id/device_type_textView"
             android:background="#00bfff"/>
 
     </LinearLayout>
@@ -52,38 +51,26 @@
             android:text="rtt"
             android:id="@+id/rtt_button"
             android:background="#a4c639"
-            android:layout_margin="5dp"
-            android:onClick="rttButton"/>
+            android:layout_margin="5dp" />
 
         <Button
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="packet loss"
-            android:id="@+id/pkt_loss_button"
-            android:background="#a4c639"
-            android:layout_margin="5dp"
-            android:onClick="pktLossButton"/>
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="throughput-udp"
-            android:id="@+id/udp_throughput_button"
-            android:background="#a4c639"
-            android:layout_margin="5dp"
-            android:onClick="UDPThroughputButton"/>
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="throughput-tcp"
+            android:text="throughput"
             android:id="@+id/tcp_throughput_button"
             android:background="#a4c639"
             android:layout_margin="5dp"
             android:onClick="TCPThroughputButton"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="disconnect"
+            android:id="@+id/disconnect_button"
+            android:background="#a4c639"
+            android:layout_margin="5dp" />
     </LinearLayout>
 
 </LinearLayout>
