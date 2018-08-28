@@ -14,7 +14,7 @@ public class FileWriter {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (int i = 0; i < Constants.highestNoOfRuns; i++) {
+            for (int i = 0; i < Constants.noOfExps; i++) {
                 outputStreamWriter.append(String.valueOf(RTTValues[i]));
                 outputStreamWriter.append("\n");
             }

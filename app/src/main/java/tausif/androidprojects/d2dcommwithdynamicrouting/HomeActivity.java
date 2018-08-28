@@ -1,6 +1,8 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -37,6 +39,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         checkStorageWritePermission();
+        makeBluetoothDiscoverable();
         willUpdateDeviceList = true;
         startDiscovery();
     }
@@ -46,6 +49,12 @@ public class HomeActivity extends AppCompatActivity {
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
+    }
+
+    public void makeBluetoothDiscoverable() {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 1800);
+        startActivity(intent);
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
@@ -87,7 +96,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        RTTs = new long[Constants.highestNoOfRuns];
+        RTTs = new long[Constants.noOfExps];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
@@ -133,7 +142,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        udpThroughputRTTs = new long[Constants.highestNoOfRuns +1];
+        udpThroughputRTTs = new long[Constants.noOfExps +1];
     }
 
     public void TCPThroughputButton(View view) {
@@ -234,7 +243,7 @@ public class HomeActivity extends AppCompatActivity {
                         device.roundTripTime = receivingTime - device.rttStartTime;
                         RTTs[experimentNo] = device.roundTripTime;
                         experimentNo++;
-                        if (experimentNo < Constants.highestNoOfRuns) {
+                        if (experimentNo < Constants.noOfExps) {
                             udpSender = null;
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
