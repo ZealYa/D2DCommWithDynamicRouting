@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -72,14 +73,18 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void recordRSSI(View view) {
-        if (Constants.willRecordRSSI)
+        Button recordRSSIButton = (Button)findViewById(R.id.record_rssi_button);
+        if (Constants.willRecordRSSI) {
             Constants.willRecordRSSI = false;
+            recordRSSIButton.setText("start rssi");
+        }
         else{
             EditText distanceText = findViewById(R.id.distance_editText);
             if (textboxIsEmpty(distanceText)) {
                 distanceText.setError("enter distance");
                 return;
             }
+            recordRSSIButton.setText("stop rssi");
             Constants.noOfExps = 15;
             Constants.willRecordRSSI = true;
         }
