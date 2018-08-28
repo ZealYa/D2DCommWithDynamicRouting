@@ -71,6 +71,20 @@ public class HomeActivity extends AppCompatActivity {
         deviceListView.setAdapter(deviceListAdapter);
     }
 
+    public void recordRSSI(View view) {
+        if (Constants.willRecordRSSI)
+            Constants.willRecordRSSI = false;
+        else{
+            EditText distanceText = findViewById(R.id.distance_editText);
+            if (textboxIsEmpty(distanceText)) {
+                distanceText.setError("enter distance");
+                return;
+            }
+            Constants.noOfExps = 15;
+            Constants.willRecordRSSI = true;
+        }
+    }
+
     public void connectButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
@@ -164,6 +178,25 @@ public class HomeActivity extends AppCompatActivity {
                     deviceListAdapter.notifyDataSetChanged();
                 }
             });
+            if (Constants.noOfExps == 0) {
+                EditText distanceText = findViewById(R.id.distance_editText);
+                String distance = distanceText.getText().toString().trim();
+                boolean retVal = FileWriter.writeRSSIResult(bluetoothDevices, distance);
+                if (retVal)
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), Constants.writeSuccess, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                else
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), Constants.writeFail, Toast.LENGTH_LONG).show();
+                        }
+                    });
+            }
         }
     }
 

@@ -28,7 +28,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     private ArrayList<Device> bluetoothDevices;
     private int timeSlotNo;
 
-    public PeerDiscoveryController(Context context, HomeActivity homeActivity) {
+    PeerDiscoveryController(Context context, HomeActivity homeActivity) {
         this.context = context;
         this.homeActivity = homeActivity;
         peerDiscoveryBroadcastReceiver = new PeerDiscoveryBroadcastReceiver();
@@ -101,6 +101,8 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
                     }
                 }
                 bluetoothAdapter.startDiscovery();
+                if (Constants.willRecordRSSI)
+                    Constants.noOfExps--;
             } else {
                 bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);

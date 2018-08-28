@@ -24,7 +24,8 @@ public class Constants {
     public static final int IP_MAC_SYNC_REC = 104;
     public static final int IP_MAC_SYNC_RET = 105;
 
-    public static final int noOfExps = 15;
+    public static int noOfExps = 15;
+    public static boolean willRecordRSSI = false;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;
 

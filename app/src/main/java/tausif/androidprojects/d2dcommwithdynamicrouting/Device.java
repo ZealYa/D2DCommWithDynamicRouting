@@ -10,7 +10,7 @@ public class Device {
     public int deviceType;
     public WifiP2pDevice wifiDevice;
     public BluetoothDevice bluetoothDevice;
-    private int rssi;
+    public int rssi;
     public long roundTripTime;
     public long rttStartTime;
     public String rttPkt;
@@ -19,7 +19,7 @@ public class Device {
     public InetAddress IPAddress;
 
 
-    public Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi, boolean connected) {
+    Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi, boolean connected) {
         this.deviceType = deviceType;
         this.wifiDevice = wifiDevice;
         this.bluetoothDevice = bluetoothDevice;
