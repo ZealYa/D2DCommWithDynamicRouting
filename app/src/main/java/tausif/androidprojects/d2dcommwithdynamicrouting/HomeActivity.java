@@ -4,6 +4,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +36,7 @@ public class HomeActivity extends AppCompatActivity {
     int experimentNo;
     long RTTs[];
     long udpThroughputRTTs[];
+    String rssiFileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,10 +83,13 @@ public class HomeActivity extends AppCompatActivity {
         }
         else{
             EditText distanceText = findViewById(R.id.distance_editText);
+            String distance = distanceText.getText().toString().trim();
             if (textboxIsEmpty(distanceText)) {
                 distanceText.setError("enter distance");
                 return;
             }
+            rssiFileName = "RSSI_" + distance + "_meters.txt";
+            File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), rssiFileName);
             recordRSSIButton.setText("stop rssi");
             Constants.noOfExps = 15;
             Constants.willRecordRSSI = true;
@@ -183,25 +189,15 @@ public class HomeActivity extends AppCompatActivity {
                     deviceListAdapter.notifyDataSetChanged();
                 }
             });
-            if (Constants.noOfExps == 0) {
-                EditText distanceText = findViewById(R.id.distance_editText);
-                String distance = distanceText.getText().toString().trim();
-                boolean retVal = FileWriter.writeRSSIResult(bluetoothDevices, distance);
-                if (retVal)
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), Constants.writeSuccess, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                else
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), Constants.writeFail, Toast.LENGTH_LONG).show();
-                        }
-                    });
-            }
+            if (Constants.noOfExps >= 0)
+                FileWriter.writeRSSIResult(this, rssiFileName, bluetoothDevices);
+            else
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "rssi recorded", Toast.LENGTH_LONG);
+                    }
+                });
         }
     }
 

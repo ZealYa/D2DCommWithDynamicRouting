@@ -1,5 +1,6 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.content.Context;
 import android.os.Environment;
 
 import java.io.File;
@@ -27,11 +28,9 @@ public class FileWriter {
         }
     }
 
-    public static boolean writeRSSIResult(ArrayList<Device> bluetoothDevices, String distance) {
-        String filename = "RSSI_" + distance + "_meters.txt";
-        File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+    public static void writeRSSIResult(Context context, String filename, ArrayList<Device> bluetoothDevices) {
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
+            FileOutputStream fileOutputStream = context.openFileOutput(filename, Context.MODE_APPEND);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
             for (Device device:bluetoothDevices
                  ) {
@@ -39,11 +38,10 @@ public class FileWriter {
                 outputStreamWriter.append(rssiString);
                 outputStreamWriter.append("\n");
             }
+            outputStreamWriter.append("\n");
             outputStreamWriter.close();
             fileOutputStream.close();
-            return true;
         } catch (IOException FIOExec) {
-            return false;
         }
     }
 }
