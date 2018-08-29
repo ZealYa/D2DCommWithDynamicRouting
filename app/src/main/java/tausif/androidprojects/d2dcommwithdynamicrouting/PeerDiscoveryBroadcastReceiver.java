@@ -9,6 +9,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
 
 public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
@@ -62,6 +63,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             }
         }
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            Log.d("device found", "bluetooth");
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
             peerDiscoveryController.bluetoothDeviceDiscovered(device, rssi);

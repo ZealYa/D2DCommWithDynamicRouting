@@ -43,7 +43,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         checkStorageWritePermission();
-        makeBluetoothDiscoverable();
+//        makeBluetoothDiscoverable();
         willUpdateDeviceList = true;
         startDiscovery();
     }
@@ -189,15 +189,17 @@ public class HomeActivity extends AppCompatActivity {
                     deviceListAdapter.notifyDataSetChanged();
                 }
             });
-            if (Constants.noOfExps >= 0)
-                FileWriter.writeRSSIResult(this, rssiFileName, bluetoothDevices);
-            else
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(), "rssi recorded", Toast.LENGTH_LONG);
-                    }
-                });
+            if (Constants.willRecordRSSI) {
+                if (Constants.noOfExps >= 0)
+                    FileWriter.writeRSSIResult(this, rssiFileName, bluetoothDevices);
+                else
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "rssi result written", Toast.LENGTH_LONG).show();
+                        }
+                    });
+            }
         }
     }
 

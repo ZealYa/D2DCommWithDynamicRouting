@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.util.Log;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
@@ -73,17 +74,8 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     }
 
     public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
-        int flag = 0;
         Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
-        for (Device oldDevice: bluetoothDevices
-             ) {
-            if (newDevice.bluetoothDevice.getAddress().equalsIgnoreCase(oldDevice.bluetoothDevice.getAddress())) {
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 0)
-            bluetoothDevices.add(newDevice);
+        bluetoothDevices.add(newDevice);
     }
 
     private class controlPeerDiscovery extends TimerTask {
@@ -101,6 +93,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
                     }
                 }
                 bluetoothAdapter.startDiscovery();
+                Log.d("discovery", "start");
                 if (Constants.willRecordRSSI)
                     Constants.noOfExps--;
             } else {

@@ -16,7 +16,7 @@ public class Constants {
     public static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     public static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    public static final int timeSlotLength = 10;    // in seconds
+    public static final int timeSlotLength = 15;    // in seconds
 
     public static final int RTT = 101;
     public static final int RTT_RET = 102;

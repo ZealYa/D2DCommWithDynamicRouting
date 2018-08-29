@@ -63,7 +63,7 @@ public class DeviceListAdapter extends BaseAdapter {
             tcpThroughput.setTag(i);
 
             Button disconnect = (Button)rowView.findViewById(R.id.disconnect_button);
-            disconnect.setText(i);
+            disconnect.setTag(i);
         }
         else {
             rowView = mInflater.inflate(R.layout.wd_device_list_row, viewGroup, false);
@@ -80,7 +80,7 @@ public class DeviceListAdapter extends BaseAdapter {
             rttUDP.setTag(i);
 
             Button pktLoss = (Button)rowView.findViewById(R.id.pkt_loss_button);
-            pktLoss.setText(i);
+            pktLoss.setTag(i);
 
             Button udpThroughput = (Button)rowView.findViewById(R.id.udp_throughput_button);
             udpThroughput.setTag(i);
@@ -92,7 +92,7 @@ public class DeviceListAdapter extends BaseAdapter {
             tcpThroughput.setTag(i);
 
             Button disconnect = (Button)rowView.findViewById(R.id.disconnect_button);
-            disconnect.setText(i);
+            disconnect.setTag(i);
         }
 
         TextView title = rowView.findViewById(R.id.device_name_textView);
