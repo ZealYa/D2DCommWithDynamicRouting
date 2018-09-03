@@ -36,7 +36,6 @@ public class HomeActivity extends AppCompatActivity {
     int experimentNo;
     long RTTs[];
     long udpThroughputRTTs[];
-    String rssiFileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,24 +75,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void recordRSSI(View view) {
-        Button recordRSSIButton = (Button)findViewById(R.id.record_rssi_button);
-        if (Constants.willRecordRSSI) {
-            Constants.willRecordRSSI = false;
-            recordRSSIButton.setText("start rssi");
-        }
-        else{
-            EditText distanceText = findViewById(R.id.distance_editText);
-            String distance = distanceText.getText().toString().trim();
-            if (textboxIsEmpty(distanceText)) {
-                distanceText.setError("enter distance");
-                return;
-            }
-            rssiFileName = "RSSI_" + distance + "_meters.txt";
-            File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), rssiFileName);
-            recordRSSIButton.setText("stop rssi");
-            Constants.noOfExps = 15;
-            Constants.willRecordRSSI = true;
-        }
     }
 
     public void connectButton(View view) {
@@ -117,7 +98,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         if (currentDevice.IPAddress == null) {
-            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            showToast("ip mac not synced");
             return;
         }
         experimentNo = 0;
@@ -142,7 +123,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         if (currentDevice.IPAddress == null) {
-            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            showToast("ip mac not synced");
             return;
         }
         udpSender = null;
@@ -163,7 +144,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         if (currentDevice.IPAddress == null) {
-            Toast.makeText(this, "ip mac not synced", Toast.LENGTH_LONG).show();
+            showToast("ip mac not synced");
             return;
         }
         experimentNo = 0;
@@ -189,17 +170,6 @@ public class HomeActivity extends AppCompatActivity {
                     deviceListAdapter.notifyDataSetChanged();
                 }
             });
-            if (Constants.willRecordRSSI) {
-                if (Constants.noOfExps >= 0)
-                    FileWriter.writeRSSIResult(this, rssiFileName, bluetoothDevices);
-                else
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), "rssi result written", Toast.LENGTH_LONG).show();
-                        }
-                    });
-            }
         }
     }
 
@@ -211,7 +181,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectionEstablished(int connectionType) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
-            Toast.makeText(this, "connection established", Toast.LENGTH_LONG).show();
+            showToast("connection established");
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -236,12 +206,7 @@ public class HomeActivity extends AppCompatActivity {
                     device.IPAddress = ipAddr;
                     device.lossRatioPktsReceived = 0;
                     willUpdateDeviceList = false;
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), "ip mac synced", Toast.LENGTH_LONG).show();
-                        }
-                    });
+                    showToast("ip mac synced");
                     break;
                 }
             }
@@ -335,19 +300,9 @@ public class HomeActivity extends AppCompatActivity {
         if (measurementType == Constants.RTT) {
             boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs);
             if (retVal)
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(), Constants.writeSuccess, Toast.LENGTH_LONG).show();
-                    }
-                });
+                showToast("rtt written successfully");
             else
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(), Constants.writeFail, Toast.LENGTH_LONG).show();
-                    }
-                });
+                showToast("rtt write not successful");
         }
     }
 
@@ -357,6 +312,15 @@ public class HomeActivity extends AppCompatActivity {
         builder.setMessage(message);
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    public void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     //function to check empty text field

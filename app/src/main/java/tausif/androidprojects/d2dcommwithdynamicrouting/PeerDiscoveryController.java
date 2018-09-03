@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.util.Log;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
@@ -93,7 +92,6 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
                     }
                 }
                 bluetoothAdapter.startDiscovery();
-                Log.d("discovery", "start");
                 if (Constants.willRecordRSSI)
                     Constants.noOfExps--;
             } else {
