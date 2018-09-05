@@ -63,7 +63,6 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
             }
         }
         else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-            Log.d("device found", "bluetooth");
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
             peerDiscoveryController.bluetoothDeviceDiscovered(device, rssi);

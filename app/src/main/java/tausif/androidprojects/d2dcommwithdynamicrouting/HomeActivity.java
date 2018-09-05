@@ -4,7 +4,6 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -13,12 +12,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,25 +30,29 @@ public class HomeActivity extends AppCompatActivity {
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
     boolean willUpdateDeviceList;
+    boolean willRecordRSSI;
     int experimentNo;
     long RTTs[];
     long udpThroughputRTTs[];
+    String distance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        checkStorageWritePermission();
-//        makeBluetoothDiscoverable();
+        setUpPermissions();
+        makeBluetoothDiscoverable();
         willUpdateDeviceList = true;
+        willRecordRSSI = false;
         startDiscovery();
     }
 
-    public void checkStorageWritePermission() {
+    public void setUpPermissions() {
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
     }
 
     public void makeBluetoothDiscoverable() {
@@ -75,6 +76,17 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void recordRSSI(View view) {
+        EditText distanceText = (EditText)findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText))
+            distanceText.setError("");
+        else {
+            distance = distanceText.getText().toString().trim();
+            if (willRecordRSSI)
+                willRecordRSSI = false;
+            else
+                willRecordRSSI = true;
+        }
+
     }
 
     public void connectButton(View view) {
@@ -170,6 +182,11 @@ public class HomeActivity extends AppCompatActivity {
                     deviceListAdapter.notifyDataSetChanged();
                 }
             });
+            if (willRecordRSSI) {
+                long currentTime = Calendar.getInstance().getTimeInMillis();
+                String timestamp = String.valueOf(currentTime);
+                FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
+            }
         }
     }
 

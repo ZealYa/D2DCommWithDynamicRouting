@@ -28,9 +28,11 @@ public class FileWriter {
         }
     }
 
-    public static void writeRSSIResult(Context context, String filename, ArrayList<Device> bluetoothDevices) {
+    public static void writeRSSIResult(String distance, String timestamp, ArrayList<Device> bluetoothDevices) {
+        String filename = "RSSI_" + timestamp + "_" + distance + "_meters.txt";
+        File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
-            FileOutputStream fileOutputStream = context.openFileOutput(filename, Context.MODE_APPEND);
+            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
             for (Device device:bluetoothDevices
                  ) {
@@ -38,7 +40,6 @@ public class FileWriter {
                 outputStreamWriter.append(rssiString);
                 outputStreamWriter.append("\n");
             }
-            outputStreamWriter.append("\n");
             outputStreamWriter.close();
             fileOutputStream.close();
         } catch (IOException FIOExec) {
