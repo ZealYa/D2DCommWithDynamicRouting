@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.util.Log;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
@@ -43,7 +42,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         wifiP2pManager.discoverPeers(channel, null);
         timeSlotNo = 0;
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.timeSlotLength*1000);
+        timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.TIME_SLOT_LENGTH *1000);
     }
 
     private void configureWiFiDiscovery() {
@@ -94,7 +93,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
                 }
                 bluetoothAdapter.startDiscovery();
                 if (Constants.willRecordRSSI)
-                    Constants.noOfExps--;
+                    Constants.NO_OF_EXPS--;
             } else {
                 bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);

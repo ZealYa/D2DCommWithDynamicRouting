@@ -1,6 +1,5 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
-import android.content.Context;
 import android.os.Environment;
 
 import java.io.File;
@@ -16,7 +15,7 @@ public class FileWriter {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (int i = 0; i < Constants.noOfExps; i++) {
+            for (int i = 0; i < Constants.NO_OF_EXPS; i++) {
                 outputStreamWriter.append(String.valueOf(RTTValues[i]));
                 outputStreamWriter.append("\n");
             }

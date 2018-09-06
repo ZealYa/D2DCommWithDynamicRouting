@@ -17,7 +17,7 @@ public class WDUDPListener extends Thread {
         receivedBytes = new byte[1024];
         receivedPkt = new DatagramPacket(receivedBytes, receivedBytes.length);
         try {
-            socket = new DatagramSocket(Constants.WiFiDirectUDPListeningPort);
+            socket = new DatagramSocket(Constants.WI_FI_DIRECT_UDP_LISTENING_PORT);
         }catch (IOException ex) {
 
         }

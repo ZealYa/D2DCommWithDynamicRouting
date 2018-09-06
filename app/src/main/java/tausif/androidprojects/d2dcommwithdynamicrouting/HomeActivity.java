@@ -29,6 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
+    Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     boolean willRecordRSSI;
     int experimentNo;
@@ -41,7 +42,8 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         setUpPermissions();
-        makeBluetoothDiscoverable();
+        BTDiscoverableHandler = new Handler();
+        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
         willUpdateDeviceList = true;
         willRecordRSSI = false;
         startDiscovery();
@@ -55,11 +57,15 @@ public class HomeActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
     }
 
-    public void makeBluetoothDiscoverable() {
-        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 1800);
-        startActivity(intent);
-    }
+    private Runnable makeBluetoothDiscoverable = new Runnable() {
+        @Override
+        public void run() {
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.BT_DISCOVERABLE_LENGTH);
+            startActivity(intent);
+            BTDiscoverableHandler.postDelayed(this, Constants.BT_DISCOVERABLE_LENGTH*1000);
+        }
+    };
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(){
@@ -109,21 +115,25 @@ public class HomeActivity extends AppCompatActivity {
             pktSizeText.setError("enter packet size");
             return;
         }
-        if (currentDevice.IPAddress == null) {
-            showToast("ip mac not synced");
-            return;
-        }
         experimentNo = 0;
-        RTTs = new long[Constants.noOfExps];
+        RTTs = new long[Constants.NO_OF_EXPS];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
-        currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
-        udpSender = null;
-        udpSender = new WDUDPSender();
-        udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
-        udpSender.setRunLoop(false);
-        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
-        udpSender.start();
+        if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
+            if (currentDevice.IPAddress == null) {
+                showToast("ip mac not synced");
+                return;
+            }
+            currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.RTT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+            udpSender = null;
+            udpSender = new WDUDPSender();
+            udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+            udpSender.setRunLoop(false);
+            currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
+            udpSender.start();
+        }
+        else {
+        }
     }
 
     public void pktLossButton(View view) {
@@ -160,7 +170,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        udpThroughputRTTs = new long[Constants.noOfExps +1];
+        udpThroughputRTTs = new long[Constants.NO_OF_EXPS +1];
     }
 
     public void TCPThroughputButton(View view) {
@@ -261,7 +271,7 @@ public class HomeActivity extends AppCompatActivity {
                         device.roundTripTime = receivingTime - device.rttStartTime;
                         RTTs[experimentNo] = device.roundTripTime;
                         experimentNo++;
-                        if (experimentNo < Constants.noOfExps) {
+                        if (experimentNo < Constants.NO_OF_EXPS) {
                             udpSender = null;
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);

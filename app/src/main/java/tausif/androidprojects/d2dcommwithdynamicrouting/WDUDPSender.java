@@ -20,7 +20,7 @@ public class WDUDPSender extends Thread {
     }
 
     public void createPkt(String pktStr, InetAddress destAddr) {
-        packet = new DatagramPacket(pktStr.getBytes(), pktStr.length(), destAddr, Constants.WiFiDirectUDPListeningPort);
+        packet = new DatagramPacket(pktStr.getBytes(), pktStr.length(), destAddr, Constants.WI_FI_DIRECT_UDP_LISTENING_PORT);
     }
 
     public void setRunLoop(boolean runLoop) {
