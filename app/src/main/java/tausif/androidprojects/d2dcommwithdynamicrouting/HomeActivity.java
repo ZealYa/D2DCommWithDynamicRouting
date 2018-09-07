@@ -29,6 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
+    BluetoothSender bluetoothSender;
     Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     boolean willRecordRSSI;
@@ -66,6 +67,10 @@ public class HomeActivity extends AppCompatActivity {
             BTDiscoverableHandler.postDelayed(this, Constants.BT_DISCOVERABLE_LENGTH*1000);
         }
     };
+
+    private void setUpBluetoothDataTransfer() {
+        bluetoothSender = new BluetoothSender();
+    }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(){
@@ -133,6 +138,10 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
+            bluetoothSender.setDevice(currentDevice);
+            bluetoothSender.createSocket();
+            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
+            bluetoothSender.sendPkt(packet, Constants.RTT);
         }
     }
 

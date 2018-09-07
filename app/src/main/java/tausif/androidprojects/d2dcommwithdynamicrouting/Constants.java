@@ -6,6 +6,8 @@ public class Constants {
     public static String hostBluetoothAddress = "";
     public static String hostWifiAddress = "";
 
+    public static final String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
+
     public static InetAddress groupOwnerAddress;
     public static boolean isGroupOwner;
     public static final int WI_FI_DIRECT_UDP_LISTENING_PORT = 9000;
