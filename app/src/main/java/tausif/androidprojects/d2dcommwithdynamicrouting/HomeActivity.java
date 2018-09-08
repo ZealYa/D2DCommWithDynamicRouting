@@ -138,10 +138,10 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-            bluetoothSender.setDevice(currentDevice);
-            bluetoothSender.createSocket();
-            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
-            bluetoothSender.sendPkt(packet, Constants.RTT);
+//            bluetoothSender.setDevice(currentDevice);
+//            bluetoothSender.createSocket();
+//            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
+//            bluetoothSender.sendPkt(packet, Constants.RTT);
         }
     }
 
@@ -188,6 +188,8 @@ public class HomeActivity extends AppCompatActivity {
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
+        wifiDevices = cleanUpDeviceList(wifiDevices, Constants.WIFI_DEVICE);
+        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
         if (willUpdateDeviceList) {
             this.wifiDevices = wifiDevices;
             this.bluetoothDevices = bluetoothDevices;
@@ -205,8 +207,48 @@ public class HomeActivity extends AppCompatActivity {
                 long currentTime = Calendar.getInstance().getTimeInMillis();
                 String timestamp = String.valueOf(currentTime);
                 FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
+                showToast("rssi recorded");
             }
         }
+    }
+
+    public ArrayList<Device> cleanUpDeviceList(ArrayList<Device> devices, int deviceType) {
+        ArrayList<Device> cleanedList = new ArrayList<>();
+        if (deviceType == Constants.WIFI_DEVICE) {
+            for (Device newDevice: devices
+                 ) {
+                if (newDevice.wifiDevice.deviceName.contains("NWSL")) {
+                    boolean newDeviceFlag = true;
+                    for (Device oldDevice: cleanedList
+                            ) {
+                        if (oldDevice.wifiDevice.deviceAddress.equals(newDevice.wifiDevice.deviceAddress)) {
+                            newDeviceFlag = false;
+                            break;
+                        }
+                    }
+                    if (newDeviceFlag)
+                        cleanedList.add(newDevice);
+                }
+            }
+        }
+        else {
+            for (Device newDevice: devices
+                    ) {
+                if (newDevice.bluetoothDevice.getName().contains("NWSL")) {
+                    boolean newDeviceFlag = true;
+                    for (Device oldDevice: cleanedList
+                            ) {
+                        if (oldDevice.bluetoothDevice.getAddress().equals(newDevice.bluetoothDevice.getAddress())) {
+                            newDeviceFlag = false;
+                            break;
+                        }
+                    }
+                    if (newDeviceFlag)
+                        cleanedList.add(newDevice);
+                }
+            }
+        }
+        return cleanedList;
     }
 
     //shows the wifi p2p state
