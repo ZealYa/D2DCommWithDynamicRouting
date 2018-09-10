@@ -42,11 +42,12 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        willUpdateDeviceList = true;
+        willRecordRSSI = false;
         setUpPermissions();
         BTDiscoverableHandler = new Handler();
         BTDiscoverableHandler.post(makeBluetoothDiscoverable);
-        willUpdateDeviceList = true;
-        willRecordRSSI = false;
+        setUpBluetoothDataTransfer();
         startDiscovery();
     }
 
@@ -70,6 +71,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setUpBluetoothDataTransfer() {
         bluetoothSender = new BluetoothSender();
+        BluetoothConnectionListener bluetoothConnectionListener = new BluetoothConnectionListener(this);
+        bluetoothConnectionListener.start();
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
@@ -138,8 +141,9 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-//            bluetoothSender.setDevice(currentDevice);
-//            bluetoothSender.createSocket();
+            showToast("rtt button pressed");
+            bluetoothSender.setDevice(currentDevice);
+            bluetoothSender.createSocket();
 //            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
 //            bluetoothSender.sendPkt(packet, Constants.RTT);
         }
@@ -217,7 +221,8 @@ public class HomeActivity extends AppCompatActivity {
         if (deviceType == Constants.WIFI_DEVICE) {
             for (Device newDevice: devices
                  ) {
-                if (newDevice.wifiDevice.deviceName.contains("NWSL")) {
+                String deviceName = newDevice.wifiDevice.deviceName;
+                if (deviceName!=null && newDevice.wifiDevice.deviceName.contains("NWSL")) {
                     boolean newDeviceFlag = true;
                     for (Device oldDevice: cleanedList
                             ) {
@@ -234,7 +239,8 @@ public class HomeActivity extends AppCompatActivity {
         else {
             for (Device newDevice: devices
                     ) {
-                if (newDevice.bluetoothDevice.getName().contains("NWSL")) {
+                String deviceName = newDevice.bluetoothDevice.getName();
+                if (deviceName!=null && deviceName.contains("NWSL")) {
                     boolean newDeviceFlag = true;
                     for (Device oldDevice: cleanedList
                             ) {
@@ -264,6 +270,9 @@ public class HomeActivity extends AppCompatActivity {
             udpListener.start();
             if (!Constants.isGroupOwner)
                 ipMacSync();
+        }
+        else {
+            showToast("bluetooth connection established");
         }
     }
 
@@ -385,11 +394,16 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     //function to show an alert message
-    public void showAlert(String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+    public void showAlert(final String message){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
+                builder.setMessage(message);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
     }
 
     public void showToast(final String message) {

@@ -31,6 +31,7 @@ public class Constants {
     public static boolean willRecordRSSI = false;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;
+    public static final int BLUETOOTH_CONNECTION = 1001;
 
     public static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 2000;
     public static final int REQUEST_CODE_LOCATION = 2001;

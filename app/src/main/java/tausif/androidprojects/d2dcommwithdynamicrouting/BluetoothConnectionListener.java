@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class BluetoothConnectionListener extends Thread{
+    HomeActivity homeActivity;
     private final BluetoothServerSocket mmServerSocket;
-    BluetoothConnectionListener() {
+    BluetoothConnectionListener(HomeActivity homeActivity) {
         BluetoothServerSocket tmp = null;
         try {
+            this.homeActivity = homeActivity;
             // MY_UUID is the app's UUID string, also used by the client code.
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord("connection listener", UUID.fromString(Constants.MY_UUID));
@@ -31,6 +33,7 @@ public class BluetoothConnectionListener extends Thread{
                 break;
             }
             if (socket != null) {
+                homeActivity.connectionEstablished(Constants.BLUETOOTH_CONNECTION);
             }
         }
     }

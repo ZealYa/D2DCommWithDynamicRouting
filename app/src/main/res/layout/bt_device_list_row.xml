@@ -51,7 +51,8 @@
             android:text="rtt"
             android:id="@+id/rtt_button"
             android:background="#a4c639"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:onClick="rttButton"/>
 
         <Button
             android:layout_width="0dp"
