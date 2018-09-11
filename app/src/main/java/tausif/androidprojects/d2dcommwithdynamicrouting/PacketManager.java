@@ -1,8 +1,8 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 public class PacketManager {
-    public static String createRTTPacket(int pktType, String sourceAddress, String destinationAddress, int pktSize) {
-        String packet = String.valueOf(pktType) + "#" + sourceAddress + "#" + destinationAddress + "#" + String.valueOf(pktSize);
+    public static String createRTTPacket(int pktType, String sourceName, String destinationName, int pktSize) {
+        String packet = String.valueOf(pktType) + "#" + sourceName + "#" + destinationName + "#" + String.valueOf(pktSize);
         packet = packet + "#";
         int remaining = pktSize - packet.length();
         for (int i = 0; i < remaining; i++) {

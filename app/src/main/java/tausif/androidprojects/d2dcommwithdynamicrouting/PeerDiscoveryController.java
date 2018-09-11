@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.util.Log;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
@@ -58,7 +59,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
 
     private void configureBluetoothDiscovery() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Constants.hostBluetoothAddress = bluetoothAdapter.getAddress();
+        Constants.hostBluetoothName = bluetoothAdapter.getName();
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
     }
 

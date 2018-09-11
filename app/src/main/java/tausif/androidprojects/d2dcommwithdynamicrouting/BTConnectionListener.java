@@ -7,10 +7,10 @@ import android.bluetooth.BluetoothSocket;
 import java.io.IOException;
 import java.util.UUID;
 
-public class BluetoothConnectionListener extends Thread{
+public class BTConnectionListener extends Thread{
     HomeActivity homeActivity;
     private final BluetoothServerSocket mmServerSocket;
-    BluetoothConnectionListener(HomeActivity homeActivity) {
+    BTConnectionListener(HomeActivity homeActivity) {
         BluetoothServerSocket tmp = null;
         try {
             this.homeActivity = homeActivity;

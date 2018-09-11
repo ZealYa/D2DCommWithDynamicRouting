@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class HomeActivity extends AppCompatActivity {
@@ -30,8 +31,7 @@ public class HomeActivity extends AppCompatActivity {
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
-    ConnectedSocketManager connectedSocketManager;
-//    SocketConnector socketConnector;
+    BTConnectedSocketManager btConnectedSocketManager;
     Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     boolean willRecordRSSI;
@@ -72,9 +72,8 @@ public class HomeActivity extends AppCompatActivity {
     };
 
     private void setUpBluetoothDataTransfer() {
-//        socketConnector = new SocketConnector();
-        BluetoothConnectionListener bluetoothConnectionListener = new BluetoothConnectionListener(this);
-        bluetoothConnectionListener.start();
+        BTConnectionListener btConnectionListener = new BTConnectionListener(this);
+        btConnectionListener.start();
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
@@ -143,17 +142,23 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-            SocketConnector socketConnector = new SocketConnector();
+            RTTs = new long[Constants.NO_OF_EXPS];
+            BTSocketConnector socketConnector = new BTSocketConnector();
             socketConnector.setDevice(currentDevice);
             BluetoothSocket connectedSocket = socketConnector.createSocket();
-            connectedSocketManager = null;
+            btConnectedSocketManager = null;
             if (connectedSocket!=null) {
-                connectedSocketManager = new ConnectedSocketManager(connectedSocket);
-                connectedSocketManager.start();
+                btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+                btConnectedSocketManager.start();
             }
-            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
-            connectedSocketManager.sendPkt(packet, Constants.RTT);
+            btConnectedSocketManager.setDevice(currentDevice);
+            calculateBTRTT(currentDevice, pktSize);
         }
+    }
+
+    public void calculateBTRTT(Device currentDevice, int pktSize) {
+        String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), pktSize);
+        btConnectedSocketManager.sendPkt(packet, Constants.RTT);
     }
 
     public void pktLossButton(View view) {
@@ -280,8 +285,8 @@ public class HomeActivity extends AppCompatActivity {
         }
         else {
             showToast("bluetooth connection established");
-            connectedSocketManager = new ConnectedSocketManager(connectedSocket);
-            connectedSocketManager.start();
+            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+            btConnectedSocketManager.start();
         }
     }
 
@@ -309,7 +314,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, final String receivedPkt) {
+    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
         if (pktType == Constants.IP_MAC_SYNC_REC) {
@@ -354,9 +359,6 @@ public class HomeActivity extends AppCompatActivity {
                         break;
                     }
                 }
-                else {
-                    //bluetooth rtt
-                }
             }
         }
         else if (pktType == Constants.PKT_LOSS) {
@@ -389,6 +391,38 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void processReceivedBTPkt(byte[] readBuffer, long receivingTime, int numBytes) {
+        final String receivedPkt = new String(readBuffer);
+        String splited[] = receivedPkt.split("#");
+        int pktType = Integer.parseInt(splited[0]);
+        if (pktType == Constants.RTT) {
+            for (Device device: combinedDeviceList) {
+                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
+                    int pktSize = Integer.parseInt(splited[3]);
+                    btConnectedSocketManager.setDevice(device);
+                    String packet = PacketManager.createRTTPacket(Constants.RTT_RET, Constants.hostBluetoothName, splited[1], pktSize);
+                    btConnectedSocketManager.sendPkt(packet, Constants.RTT_RET);
+                    break;
+                }
+            }
+        }
+        else if (pktType == Constants.RTT_RET) {
+            for (final Device device: combinedDeviceList) {
+                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
+                    device.roundTripTime = receivingTime - device.rttStartTime;
+                    RTTs[Constants.NO_OF_EXPS-1] = device.roundTripTime;
+                    Constants.NO_OF_EXPS--;
+                    if (Constants.NO_OF_EXPS > 0) {
+                        calculateBTRTT(device, Integer.parseInt(splited[3]));
+                    }
+                    else {
+                        Log.d("rtts", Arrays.toString(RTTs));
+                    }
+                }
+            }
+        }
+    }
+
     public void writeResult(String deviceName, int measurementType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
@@ -407,15 +441,10 @@ public class HomeActivity extends AppCompatActivity {
 
     //function to show an alert message
     public void showAlert(final String message){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
-                builder.setMessage(message);
-                AlertDialog dialog = builder.create();
-                dialog.show();
-            }
-        });
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message);
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     public void showToast(final String message) {

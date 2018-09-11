@@ -3,7 +3,7 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 import java.net.InetAddress;
 
 public class Constants {
-    public static String hostBluetoothAddress = "";
+    public static String hostBluetoothName = "";
     public static String hostWifiAddress = "";
 
     public static final String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";

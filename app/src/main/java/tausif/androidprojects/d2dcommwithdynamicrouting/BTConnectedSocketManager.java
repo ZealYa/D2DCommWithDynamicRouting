@@ -2,23 +2,22 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Calendar;
 
-public class ConnectedSocketManager extends Thread {
+public class BTConnectedSocketManager extends Thread {
     private final BluetoothSocket socket;
     private final InputStream inputStream;
     private byte[] readBuffer; // mmBuffer store for the stream
     private Device device;
+    private HomeActivity homeActivity;
 
-    public ConnectedSocketManager(BluetoothSocket socket) {
+    public BTConnectedSocketManager(BluetoothSocket socket, HomeActivity homeActivity) {
+        this.homeActivity = homeActivity;
         this.socket = socket;
         InputStream tmpIn = null;
-        // Get the input and output streams; using temp objects because
-        // member streams are final.
         try {
             tmpIn = this.socket.getInputStream();
         } catch (IOException e) {
@@ -53,7 +52,7 @@ public class ConnectedSocketManager extends Thread {
                 // Read from the InputStream.
                 numBytes = inputStream.read(readBuffer);
                 long receiveTime = Calendar.getInstance().getTimeInMillis();
-//                processReceivedBTPkt(readBuffer, receiveTime, numBytes);
+                homeActivity.processReceivedBTPkt(readBuffer, receiveTime, numBytes);
             } catch (IOException e) {
                 Log.d("disconnection error", "Input stream was disconnected", e);
                 break;
