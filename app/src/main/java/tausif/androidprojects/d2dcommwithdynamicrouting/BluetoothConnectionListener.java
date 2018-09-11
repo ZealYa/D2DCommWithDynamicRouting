@@ -33,7 +33,7 @@ public class BluetoothConnectionListener extends Thread{
                 break;
             }
             if (socket != null) {
-                homeActivity.connectionEstablished(Constants.BLUETOOTH_CONNECTION);
+                homeActivity.connectionEstablished(Constants.BLUETOOTH_CONNECTION, socket);
             }
         }
     }

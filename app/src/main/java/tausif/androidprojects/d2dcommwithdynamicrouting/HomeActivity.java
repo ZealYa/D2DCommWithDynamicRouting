@@ -2,6 +2,7 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
@@ -29,7 +30,8 @@ public class HomeActivity extends AppCompatActivity {
     DeviceListAdapter deviceListAdapter;
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
-    BluetoothSender bluetoothSender;
+    ConnectedSocketManager connectedSocketManager;
+//    SocketConnector socketConnector;
     Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     boolean willRecordRSSI;
@@ -70,7 +72,7 @@ public class HomeActivity extends AppCompatActivity {
     };
 
     private void setUpBluetoothDataTransfer() {
-        bluetoothSender = new BluetoothSender();
+//        socketConnector = new SocketConnector();
         BluetoothConnectionListener bluetoothConnectionListener = new BluetoothConnectionListener(this);
         bluetoothConnectionListener.start();
     }
@@ -141,11 +143,16 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-            showToast("rtt button pressed");
-            bluetoothSender.setDevice(currentDevice);
-            bluetoothSender.createSocket();
-//            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
-//            bluetoothSender.sendPkt(packet, Constants.RTT);
+            SocketConnector socketConnector = new SocketConnector();
+            socketConnector.setDevice(currentDevice);
+            BluetoothSocket connectedSocket = socketConnector.createSocket();
+            connectedSocketManager = null;
+            if (connectedSocket!=null) {
+                connectedSocketManager = new ConnectedSocketManager(connectedSocket);
+                connectedSocketManager.start();
+            }
+            String packet = PacketManager.createRTTPacket(Constants.RTT, Constants.hostBluetoothAddress, currentDevice.bluetoothDevice.getAddress(), pktSize);
+            connectedSocketManager.sendPkt(packet, Constants.RTT);
         }
     }
 
@@ -263,9 +270,9 @@ public class HomeActivity extends AppCompatActivity {
             showAlert("WiFi direct disabled");
     }
 
-    public void connectionEstablished(int connectionType) {
+    public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
-            showToast("connection established");
+            showToast("wifi direct connection established");
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -273,6 +280,8 @@ public class HomeActivity extends AppCompatActivity {
         }
         else {
             showToast("bluetooth connection established");
+            connectedSocketManager = new ConnectedSocketManager(connectedSocket);
+            connectedSocketManager.start();
         }
     }
 
@@ -344,6 +353,9 @@ public class HomeActivity extends AppCompatActivity {
                         }
                         break;
                     }
+                }
+                else {
+                    //bluetooth rtt
                 }
             }
         }

@@ -115,6 +115,6 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
         Constants.groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
         Constants.isGroupOwner = wifiP2pInfo.isGroupOwner;
-        homeActivity.connectionEstablished(Constants.WIFI_DIRECT_CONNECTION);
+        homeActivity.connectionEstablished(Constants.WIFI_DIRECT_CONNECTION, null);
     }
 }

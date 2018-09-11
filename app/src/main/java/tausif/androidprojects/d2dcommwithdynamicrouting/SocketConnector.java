@@ -7,7 +7,7 @@ import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.UUID;
 
-public class BluetoothSender {
+public class SocketConnector {
     private BluetoothSocket socket;
     private Device device;
 
@@ -19,7 +19,7 @@ public class BluetoothSender {
         this.socket = socket;
     }
 
-    public void createSocket() {
+    public BluetoothSocket createSocket() {
         try {
             socket = device.bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(Constants.MY_UUID));
         }catch (IOException sktCrt) {
@@ -30,20 +30,11 @@ public class BluetoothSender {
         }catch (IOException sktCnct) {
             try {
                 socket.close();
+                return null;
             }catch (IOException sktClse) {
 
             }
         }
-    }
-    public void sendPkt(String packet, int pktType) {
-        try {
-            OutputStream outputStream = socket.getOutputStream();
-            if (pktType == Constants.RTT)
-                device.rttStartTime = Calendar.getInstance().getTimeInMillis();
-            outputStream.write(packet.getBytes());
-            outputStream.flush();
-        } catch (IOException writeEx) {
-
-        }
+        return socket;
     }
 }

@@ -5,14 +5,16 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Calendar;
 
-public class BluetoothReceiver {
+public class ConnectedSocketManager extends Thread {
     private final BluetoothSocket socket;
     private final InputStream inputStream;
     private byte[] readBuffer; // mmBuffer store for the stream
+    private Device device;
 
-    public BluetoothReceiver(BluetoothSocket socket) {
+    public ConnectedSocketManager(BluetoothSocket socket) {
         this.socket = socket;
         InputStream tmpIn = null;
         // Get the input and output streams; using temp objects because
@@ -23,6 +25,22 @@ public class BluetoothReceiver {
             Log.e("input stream error", "Error occurred when creating input stream", e);
         }
         inputStream = tmpIn;
+    }
+
+    public void setDevice(Device device) {
+        this.device = device;
+    }
+
+    public void sendPkt(String packet, int pktType) {
+        try {
+            OutputStream outputStream = socket.getOutputStream();
+            if (pktType == Constants.RTT)
+                device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+            outputStream.write(packet.getBytes());
+            outputStream.flush();
+        } catch (IOException writeEx) {
+
+        }
     }
 
     public void run() {
