@@ -18,7 +18,7 @@ public class Constants {
     public static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     public static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    public static final int TIME_SLOT_LENGTH = 15;    // in seconds
+    public static final int TIME_SLOT_LENGTH = 10;    // in seconds
     public static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
     public static final int RTT = 101;
@@ -27,7 +27,8 @@ public class Constants {
     public static final int IP_MAC_SYNC_REC = 104;
     public static final int IP_MAC_SYNC_RET = 105;
 
-    public static int NO_OF_EXPS = 10;
+    public static int EXP_NO = 10;
+    public static final int MAX_NO_OF_EXPS = 10;
     public static boolean willRecordRSSI = false;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;

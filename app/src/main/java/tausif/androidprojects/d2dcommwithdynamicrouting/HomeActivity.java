@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 
 public class HomeActivity extends AppCompatActivity {
@@ -125,7 +124,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        RTTs = new long[Constants.NO_OF_EXPS];
+        RTTs = new long[Constants.EXP_NO];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
@@ -142,7 +141,8 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-            RTTs = new long[Constants.NO_OF_EXPS];
+            Constants.EXP_NO = Constants.MAX_NO_OF_EXPS;
+            RTTs = new long[Constants.EXP_NO];
             BTSocketConnector socketConnector = new BTSocketConnector();
             socketConnector.setDevice(currentDevice);
             BluetoothSocket connectedSocket = socketConnector.createSocket();
@@ -195,7 +195,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        udpThroughputRTTs = new long[Constants.NO_OF_EXPS +1];
+        udpThroughputRTTs = new long[Constants.EXP_NO +1];
     }
 
     public void TCPThroughputButton(View view) {
@@ -345,7 +345,7 @@ public class HomeActivity extends AppCompatActivity {
                         device.roundTripTime = receivingTime - device.rttStartTime;
                         RTTs[experimentNo] = device.roundTripTime;
                         experimentNo++;
-                        if (experimentNo < Constants.NO_OF_EXPS) {
+                        if (experimentNo < Constants.EXP_NO) {
                             udpSender = null;
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
@@ -354,7 +354,7 @@ public class HomeActivity extends AppCompatActivity {
                             udpSender.start();
                         }
                         else {
-                            writeResult(device.wifiDevice.deviceName, Constants.RTT);
+                            writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
                         }
                         break;
                     }
@@ -410,20 +410,20 @@ public class HomeActivity extends AppCompatActivity {
             for (final Device device: combinedDeviceList) {
                 if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
                     device.roundTripTime = receivingTime - device.rttStartTime;
-                    RTTs[Constants.NO_OF_EXPS-1] = device.roundTripTime;
-                    Constants.NO_OF_EXPS--;
-                    if (Constants.NO_OF_EXPS > 0) {
+                    RTTs[Constants.EXP_NO -1] = device.roundTripTime;
+                    Constants.EXP_NO--;
+                    if (Constants.EXP_NO > 0) {
                         calculateBTRTT(device, Integer.parseInt(splited[3]));
                     }
                     else {
-                        Log.d("rtts", Arrays.toString(RTTs));
+                        writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
                     }
                 }
             }
         }
     }
 
-    public void writeResult(String deviceName, int measurementType) {
+    public void  writeResult(String deviceName, int measurementType, int deviceType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
 
@@ -431,7 +431,7 @@ public class HomeActivity extends AppCompatActivity {
         String pktSize = pktSizeText.getText().toString().trim();
 
         if (measurementType == Constants.RTT) {
-            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs);
+            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType);
             if (retVal)
                 showToast("rtt written successfully");
             else
