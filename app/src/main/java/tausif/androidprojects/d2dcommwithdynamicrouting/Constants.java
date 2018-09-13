@@ -19,7 +19,7 @@ public class Constants {
     public static final int MAX_LOSS_RATIO_PKTS = 100;
 
     public static final int TIME_SLOT_LENGTH = 10;    // in seconds
-    public static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
+    public static final int BT_DISCOVERABLE_LENGTH = 2700;  //in seconds
 
     public static final int RTT = 101;
     public static final int RTT_RET = 102;
@@ -29,7 +29,6 @@ public class Constants {
 
     public static int EXP_NO = 10;
     public static final int MAX_NO_OF_EXPS = 10;
-    public static boolean willRecordRSSI = false;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;
     public static final int BLUETOOTH_CONNECTION = 1001;
