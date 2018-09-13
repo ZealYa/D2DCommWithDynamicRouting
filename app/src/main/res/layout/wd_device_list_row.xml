@@ -63,16 +63,6 @@
             android:background="#a4c639"
             android:layout_margin="5dp"
             android:onClick="pktLossButton"/>
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="throughput-udp"
-            android:id="@+id/udp_throughput_button"
-            android:background="#a4c639"
-            android:layout_margin="5dp"
-            android:onClick="UDPThroughputButton"/>
     </LinearLayout>
 
     <LinearLayout
@@ -85,10 +75,11 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="rtt tcp"
-            android:id="@+id/rtt_tcp_button"
+            android:text="throughput-udp"
+            android:id="@+id/udp_throughput_button"
             android:background="#a4c639"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:onClick="UDPThroughputButton"/>
 
         <Button
             android:layout_width="0dp"

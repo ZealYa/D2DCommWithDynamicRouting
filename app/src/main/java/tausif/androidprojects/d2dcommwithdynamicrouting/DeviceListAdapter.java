@@ -85,9 +85,6 @@ public class DeviceListAdapter extends BaseAdapter {
             Button udpThroughput = (Button)rowView.findViewById(R.id.udp_throughput_button);
             udpThroughput.setTag(i);
 
-            Button rttTCP = (Button)rowView.findViewById(R.id.rtt_tcp_button);
-            rttTCP.setTag(i);
-
             Button tcpThroughput = (Button)rowView.findViewById(R.id.tcp_throughput_button);
             tcpThroughput.setTag(i);
 

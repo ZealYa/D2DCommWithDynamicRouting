@@ -100,7 +100,6 @@ public class HomeActivity extends AppCompatActivity {
             else
                 willRecordRSSI = true;
         }
-
     }
 
     public void connectButton(View view) {
@@ -124,7 +123,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         experimentNo = 0;
-        RTTs = new long[Constants.EXP_NO];
+        RTTs = new long[Constants.MAX_NO_OF_EXPS];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
@@ -345,7 +344,7 @@ public class HomeActivity extends AppCompatActivity {
                         device.roundTripTime = receivingTime - device.rttStartTime;
                         RTTs[experimentNo] = device.roundTripTime;
                         experimentNo++;
-                        if (experimentNo < Constants.EXP_NO) {
+                        if (experimentNo < Constants.MAX_NO_OF_EXPS) {
                             udpSender = null;
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(device.rttPkt, srcAddr);
@@ -377,9 +376,9 @@ public class HomeActivity extends AppCompatActivity {
                                         @Override
                                         public void run() {
                                             double pktLoss = ((Constants.MAX_LOSS_RATIO_PKTS - device.lossRatioPktsReceived)/Constants.MAX_LOSS_RATIO_PKTS) * 100.00;
-                                            Log.d("pkt loss after 1 minute", String.valueOf(pktLoss));
+                                            Log.d("pkt loss in 5 seconds", String.valueOf(pktLoss));
                                         }
-                                    }, 60 * 1000);
+                                    }, 5 * 1000);
                                 }
                             });
                         }
