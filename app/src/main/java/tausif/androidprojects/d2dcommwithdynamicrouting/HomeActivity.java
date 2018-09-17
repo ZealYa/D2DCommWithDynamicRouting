@@ -36,6 +36,7 @@ public class HomeActivity extends AppCompatActivity {
     boolean willRecordRSSI;
     int experimentNo;
     long RTTs[];
+    int udpThrpughputPktSizes[];
     long udpThroughputRTTs[];
     String distance;
 
@@ -45,6 +46,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         willUpdateDeviceList = true;
         willRecordRSSI = false;
+        udpThrpughputPktSizes = new int[] {450, 500, 550, 600, 650, 700, 750, 800, 850, 900};
         setUpPermissions();
         BTDiscoverableHandler = new Handler();
         BTDiscoverableHandler.post(makeBluetoothDiscoverable);
@@ -189,16 +191,20 @@ public class HomeActivity extends AppCompatActivity {
             distanceText.setError("enter distance");
             return;
         }
+        experimentNo = 0;
+        udpThroughputRTTs = new long[Constants.MAX_NO_OF_EXPS];
+        int pktSize = udpThrpughputPktSizes[experimentNo];
         if (currentDevice.IPAddress == null) {
             showToast("ip mac not synced");
             return;
         }
-        experimentNo = 0;
-        udpThroughputRTTs = new long[Constants.EXP_NO +1];
-    }
-
-    public void TCPThroughputButton(View view) {
-        int tag = (int)view.getTag();
+        currentDevice.rttPkt = PacketManager.createRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+        udpSender.setRunLoop(false);
+        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
+        udpSender.start();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
@@ -388,6 +394,41 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         }
+        else if (pktType == Constants.UDP_THROUGHPUT) {
+            int pktSize = Integer.parseInt(splited[3]);
+            String pkt = PacketManager.createRTTPacket(Constants.UDP_THROUGHPUT_RET, Constants.hostWifiAddress, splited[1], pktSize);
+            udpSender = null;
+            udpSender = new WDUDPSender();
+            udpSender.createPkt(pkt, srcAddr);
+            udpSender.setRunLoop(false);
+            udpSender.start();
+        }
+        else if (pktType == Constants.UDP_THROUGHPUT_RET) {
+            for (Device device:combinedDeviceList
+                    ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
+                        device.roundTripTime = receivingTime - device.rttStartTime;
+                        udpThroughputRTTs[experimentNo] = device.roundTripTime;
+                        Log.d(splited[3], String.valueOf(udpThroughputRTTs[experimentNo]));
+                        experimentNo++;
+                        if (experimentNo < Constants.MAX_NO_OF_EXPS) {
+                            String packet = PacketManager.createRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, splited[1], udpThrpughputPktSizes[experimentNo]);
+                            udpSender = null;
+                            udpSender = new WDUDPSender();
+                            udpSender.createPkt(packet, srcAddr);
+                            udpSender.setRunLoop(false);
+                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+                            udpSender.start();
+                        }
+                        else {
+                            writeResult(device.wifiDevice.deviceName, Constants.UDP_THROUGHPUT, Constants.WIFI_DEVICE);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public void processReceivedBTPkt(byte[] readBuffer, long receivingTime, int numBytes) {
@@ -435,6 +476,13 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("rtt written successfully");
             else
                 showToast("rtt write not successful");
+        }
+        else if (measurementType == Constants.UDP_THROUGHPUT) {
+            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs);
+            if (retVal)
+                showToast("throughput rtt written successfully");
+            else
+                showToast("throughput rtt write not successful");
         }
     }
 

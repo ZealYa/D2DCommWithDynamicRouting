@@ -32,6 +32,26 @@ public class FileWriter {
         }
     }
 
+    public static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTValues) {
+        String prefix = "WD_";
+        String filename = prefix + "THROUGHPUT_RTT_" + deviceName + "_" + distance + "_meters.txt";
+        File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
+                outputStreamWriter.append(String.valueOf(RTTValues[i]));
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.close();
+            fileOutputStream.close();
+            return true;
+        } catch (IOException FIOExec) {
+            return false;
+        }
+    }
+
+
     public static void writeRSSIResult(String distance, String timestamp, ArrayList<Device> bluetoothDevices) {
         String filename = "RSSI_" + timestamp + "_" + distance + "_meters.txt";
         File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);

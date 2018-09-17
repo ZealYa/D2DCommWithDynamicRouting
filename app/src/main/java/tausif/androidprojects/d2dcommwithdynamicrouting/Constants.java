@@ -26,6 +26,8 @@ public class Constants {
     public static final int PKT_LOSS = 103;
     public static final int IP_MAC_SYNC_REC = 104;
     public static final int IP_MAC_SYNC_RET = 105;
+    public static final int UDP_THROUGHPUT = 106;
+    public static final int UDP_THROUGHPUT_RET = 107;
 
     public static int EXP_NO = 10;
     public static final int MAX_NO_OF_EXPS = 10;
