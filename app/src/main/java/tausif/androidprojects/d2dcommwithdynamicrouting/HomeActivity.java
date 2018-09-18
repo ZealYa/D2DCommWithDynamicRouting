@@ -410,7 +410,6 @@ public class HomeActivity extends AppCompatActivity {
                     if (device.wifiDevice.deviceAddress.equals(splited[1])) {
                         device.roundTripTime = receivingTime - device.rttStartTime;
                         udpThroughputRTTs[experimentNo] = device.roundTripTime;
-                        Log.d(splited[3], String.valueOf(udpThroughputRTTs[experimentNo]));
                         experimentNo++;
                         if (experimentNo < Constants.MAX_NO_OF_EXPS) {
                             String packet = PacketManager.createRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, splited[1], udpThrpughputPktSizes[experimentNo]);
