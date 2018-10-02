@@ -216,8 +216,8 @@ public class HomeActivity extends AppCompatActivity {
             this.bluetoothDevices = bluetoothDevices;
             if (combinedDeviceList.size() > 0)
                 combinedDeviceList.clear();
-            combinedDeviceList.addAll(this.wifiDevices);
             combinedDeviceList.addAll(this.bluetoothDevices);
+            combinedDeviceList.addAll(this.wifiDevices);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
