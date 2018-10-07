@@ -2,6 +2,7 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Set;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -49,10 +51,11 @@ public class HomeActivity extends AppCompatActivity {
         willRecordRSSI = false;
         udpThrpughputPktSizes = new int[] {450, 500, 550, 600, 650, 700, 750, 800, 850, 900};
         setUpPermissions();
-        BTDiscoverableHandler = new Handler();
-        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+//        BTDiscoverableHandler = new Handler();
+//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
         setUpBluetoothDataTransfer();
-        startDiscovery();
+//        startDiscovery();
+        getBTPairedDevices();
     }
 
     public void setUpPermissions() {
@@ -90,6 +93,23 @@ public class HomeActivity extends AppCompatActivity {
         combinedDeviceList = new ArrayList<>();
         deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
         deviceListView.setAdapter(deviceListAdapter);
+    }
+
+    public void getBTPairedDevices() {
+        configureDeviceListView();
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Constants.hostBluetoothName = bluetoothAdapter.getName();
+        bluetoothDevices = new ArrayList<>();
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice pairedDevice: pairedDevices
+                    ) {
+                Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
+                bluetoothDevices.add(device);
+            }
+        }
+        combinedDeviceList.addAll(bluetoothDevices);
+        deviceListAdapter.notifyDataSetChanged();
     }
 
     public void recordRSSI(View view) {
@@ -148,8 +168,8 @@ public class HomeActivity extends AppCompatActivity {
             udpSender.start();
         }
         else {
-            Constants.EXP_NO = Constants.MAX_NO_OF_EXPS;
-            RTTs = new long[Constants.EXP_NO];
+            Constants.EXP_NO = 0;
+            RTTs = new long[Constants.MAX_NO_OF_EXPS];
             BTSocketConnector socketConnector = new BTSocketConnector();
             socketConnector.setDevice(currentDevice);
             BluetoothSocket connectedSocket = socketConnector.createSocket();
@@ -469,13 +489,15 @@ public class HomeActivity extends AppCompatActivity {
             for (final Device device: combinedDeviceList) {
                 if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
                     device.roundTripTime = receivingTime - device.rttStartTime;
-                    RTTs[Constants.EXP_NO -1] = device.roundTripTime;
-                    Constants.EXP_NO--;
-                    if (Constants.EXP_NO > 0) {
-                        calculateBTRTT(device, Integer.parseInt(splited[3]));
+                    RTTs[Constants.EXP_NO] = device.roundTripTime;
+                    Log.d("exp "+String.valueOf(Constants.EXP_NO), String.valueOf(RTTs[Constants.EXP_NO]));
+                    Constants.EXP_NO++;
+                    if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                        writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
+                        Constants.EXP_NO = 0;
                     }
                     else {
-                        writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
+                        calculateBTRTT(device, Integer.parseInt(splited[3]));
                     }
                 }
             }
