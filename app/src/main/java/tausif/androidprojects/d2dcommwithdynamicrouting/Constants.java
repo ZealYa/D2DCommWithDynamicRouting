@@ -19,7 +19,7 @@ public class Constants {
     public static final int MAX_LOSS_RATIO_PKTS = 100;
 
     public static final int TIME_SLOT_LENGTH = 5;    // in seconds
-    public static final int BT_DISCOVERABLE_LENGTH = 3600;  //in seconds
+    public static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
     public static final int RTT = 101;
     public static final int RTT_RET = 102;
@@ -29,7 +29,7 @@ public class Constants {
     public static final int UDP_THROUGHPUT = 106;
     public static final int UDP_THROUGHPUT_RET = 107;
 
-    public static int EXP_NO = 10;
+    public static int EXP_NO = 0;
     public static final int MAX_NO_OF_EXPS = 10;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;

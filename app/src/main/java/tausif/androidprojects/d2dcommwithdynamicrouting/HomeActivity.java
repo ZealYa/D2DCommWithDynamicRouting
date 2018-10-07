@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -93,14 +94,19 @@ public class HomeActivity extends AppCompatActivity {
 
     public void recordRSSI(View view) {
         EditText distanceText = (EditText)findViewById(R.id.distance_editText);
+        Button recordRSSI = findViewById(R.id.record_rssi_button);
         if (textboxIsEmpty(distanceText))
             distanceText.setError("");
         else {
             distance = distanceText.getText().toString().trim();
-            if (willRecordRSSI)
+            if (willRecordRSSI) {
                 willRecordRSSI = false;
-            else
+                recordRSSI.setText("record rssi");
+            }
+            else {
                 willRecordRSSI = true;
+                recordRSSI.setText("recording rssi");
+            }
         }
     }
 
@@ -225,10 +231,24 @@ public class HomeActivity extends AppCompatActivity {
                 }
             });
             if (willRecordRSSI) {
-                long currentTime = Calendar.getInstance().getTimeInMillis();
-                String timestamp = String.valueOf(currentTime);
-                FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
-                showToast("rssi recorded");
+                if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                    showToast("rssi recorded");
+                    willRecordRSSI = false;
+                    final Button recordRSSI = findViewById(R.id.record_rssi_button);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            recordRSSI.setText("record rssi");
+                        }
+                    });
+                    Constants.EXP_NO = 0;
+                }
+                else {
+                    long currentTime = Calendar.getInstance().getTimeInMillis();
+                    String timestamp = String.valueOf(currentTime);
+                    FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
+                    Constants.EXP_NO++;
+                }
             }
         }
     }
