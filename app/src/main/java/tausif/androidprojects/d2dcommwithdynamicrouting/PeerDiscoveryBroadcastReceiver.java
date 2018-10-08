@@ -44,6 +44,7 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             WifiP2pDevice hostDevice = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
             Constants.hostWifiAddress = hostDevice.deviceAddress;
+            Log.d("wd address", Constants.hostWifiAddress);
         }
         else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {

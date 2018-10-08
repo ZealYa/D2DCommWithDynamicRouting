@@ -53,9 +53,9 @@ public class HomeActivity extends AppCompatActivity {
         setUpPermissions();
 //        BTDiscoverableHandler = new Handler();
 //        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
-        setUpBluetoothDataTransfer();
-//        startDiscovery();
-        getBTPairedDevices();
+//        setUpBluetoothDataTransfer();
+        startDiscovery();
+//        getBTPairedDevices();
     }
 
     public void setUpPermissions() {
@@ -325,8 +325,8 @@ public class HomeActivity extends AppCompatActivity {
             showToast("wifi direct connection established");
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
-            if (!Constants.isGroupOwner)
-                ipMacSync();
+//            if (!Constants.isGroupOwner)
+//                ipMacSync();
         }
         else {
             showToast("bluetooth connection established");
@@ -490,7 +490,6 @@ public class HomeActivity extends AppCompatActivity {
                 if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
                     device.roundTripTime = receivingTime - device.rttStartTime;
                     RTTs[Constants.EXP_NO] = device.roundTripTime;
-                    Log.d("exp "+String.valueOf(Constants.EXP_NO), String.valueOf(RTTs[Constants.EXP_NO]));
                     Constants.EXP_NO++;
                     if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
                         writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
