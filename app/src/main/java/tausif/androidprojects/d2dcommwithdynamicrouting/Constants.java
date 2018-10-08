@@ -18,7 +18,7 @@ public class Constants {
     public static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     public static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    public static final int TIME_SLOT_LENGTH = 5;    // in seconds
+    public static final int TIME_SLOT_LENGTH = 10;    // in seconds
     public static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
     public static final int RTT = 101;
@@ -30,7 +30,7 @@ public class Constants {
     public static final int UDP_THROUGHPUT_RET = 107;
 
     public static int EXP_NO = 0;
-    public static final int MAX_NO_OF_EXPS = 50;
+    public static final int MAX_NO_OF_EXPS = 10;
 
     public static final int WIFI_DIRECT_CONNECTION = 1000;
     public static final int BLUETOOTH_CONNECTION = 1001;

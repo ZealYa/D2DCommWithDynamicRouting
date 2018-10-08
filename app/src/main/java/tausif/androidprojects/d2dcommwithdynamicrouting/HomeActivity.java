@@ -51,8 +51,8 @@ public class HomeActivity extends AppCompatActivity {
         willRecordRSSI = false;
         udpThrpughputPktSizes = new int[] {450, 500, 550, 600, 650, 700, 750, 800, 850, 900};
         setUpPermissions();
-//        BTDiscoverableHandler = new Handler();
-//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+        BTDiscoverableHandler = new Handler();
+        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
 //        setUpBluetoothDataTransfer();
         startDiscovery();
 //        getBTPairedDevices();
@@ -124,6 +124,7 @@ public class HomeActivity extends AppCompatActivity {
                 recordRSSI.setText("record rssi");
             }
             else {
+                Constants.EXP_NO = 0;
                 willRecordRSSI = true;
                 recordRSSI.setText("recording rssi");
             }
