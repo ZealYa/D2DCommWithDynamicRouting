@@ -51,8 +51,8 @@ public class HomeActivity extends AppCompatActivity {
         willRecordRSSI = false;
         udpThrpughputPktSizes = new int[] {450, 500, 550, 600, 650, 700, 750, 800, 850, 900};
         setUpPermissions();
-        BTDiscoverableHandler = new Handler();
-        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+//        BTDiscoverableHandler = new Handler();
+//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
 //        setUpBluetoothDataTransfer();
         startDiscovery();
 //        getBTPairedDevices();
@@ -237,13 +237,13 @@ public class HomeActivity extends AppCompatActivity {
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
         wifiDevices = cleanUpDeviceList(wifiDevices, Constants.WIFI_DEVICE);
-        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
+//        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
         if (willUpdateDeviceList) {
             this.wifiDevices = wifiDevices;
             this.bluetoothDevices = bluetoothDevices;
             if (combinedDeviceList.size() > 0)
                 combinedDeviceList.clear();
-            combinedDeviceList.addAll(this.bluetoothDevices);
+//            combinedDeviceList.addAll(this.bluetoothDevices);
             combinedDeviceList.addAll(this.wifiDevices);
             runOnUiThread(new Runnable() {
                 @Override
@@ -326,8 +326,8 @@ public class HomeActivity extends AppCompatActivity {
             showToast("wifi direct connection established");
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
-//            if (!Constants.isGroupOwner)
-//                ipMacSync();
+            if (!Constants.isGroupOwner)
+                ipMacSync();
         }
         else {
             showToast("bluetooth connection established");
