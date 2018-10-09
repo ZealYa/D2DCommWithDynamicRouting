@@ -53,9 +53,9 @@ public class HomeActivity extends AppCompatActivity {
         setUpPermissions();
 //        BTDiscoverableHandler = new Handler();
 //        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
-//        setUpBluetoothDataTransfer();
-        startDiscovery();
-//        getBTPairedDevices();
+        setUpBluetoothDataTransfer();
+//        startDiscovery();
+        getBTPairedDevices();
     }
 
     public void setUpPermissions() {
@@ -151,7 +151,7 @@ public class HomeActivity extends AppCompatActivity {
             pktSizeText.setError("enter packet size");
             return;
         }
-        experimentNo = 0;
+        Constants.EXP_NO = 0;
         RTTs = new long[Constants.MAX_NO_OF_EXPS];
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
