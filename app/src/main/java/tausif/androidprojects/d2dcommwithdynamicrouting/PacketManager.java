@@ -1,8 +1,18 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 public class PacketManager {
-    public static String createRTTPacket(int pktType, String sourceName, String destinationName, int pktSize) {
+    public static String createBluetoothRTTPacket(int pktType, String sourceName, String destinationName, int pktSize) {
         String packet = String.valueOf(pktType) + "#" + sourceName + "#" + destinationName + "#" + String.valueOf(pktSize);
+        packet = packet + "#";
+        int remaining = pktSize - packet.length();
+        for (int i = 0; i < remaining; i++) {
+            packet += ".";
+        }
+        return packet;
+    }
+
+    public static String createWDRTTPacket(int pktType, int seqNo, String sourceAddress, String destinationAddress, int pktSize) {
+        String packet = String.valueOf(pktType) + "#" + String.valueOf(seqNo) + "#" + sourceAddress + "#" + destinationAddress + "#" + String.valueOf(pktSize);
         packet = packet + "#";
         int remaining = pktSize - packet.length();
         for (int i = 0; i < remaining; i++) {
@@ -16,7 +26,7 @@ public class PacketManager {
         packet = packet + "#";
         int remaining = Constants.LOSS_RATIO_PKT_SIZE - packet.length();
         for (int i=0;i<remaining; i++) {
-            packet = packet + ".";
+            packet += ".";
         }
         return packet;
     }
