@@ -51,7 +51,7 @@ public class BTConnectedSocketManager extends Thread {
                 // Read from the InputStream.
                 numBytes = inputStream.read(readBuffer);
                 long receiveTime = Calendar.getInstance().getTimeInMillis();
-                homeActivity.processReceivedBTPkt(readBuffer, receiveTime, numBytes);
+                homeActivity.processReceivedBTPkt(readBuffer, receiveTime);
             } catch (IOException e) {
                 Log.d("disconnection error", "Input stream was disconnected", e);
                 break;

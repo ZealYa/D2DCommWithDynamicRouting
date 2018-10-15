@@ -12,13 +12,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +46,7 @@ public class HomeActivity extends AppCompatActivity {
     long udpThroughputRTTs[];
     String distance;
     Device currentDevice;
+    int currentPktSize;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +118,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void recordRSSI(View view) {
-        EditText distanceText = (EditText)findViewById(R.id.distance_editText);
+        EditText distanceText = findViewById(R.id.distance_editText);
         Button recordRSSI = findViewById(R.id.record_rssi_button);
         if (textboxIsEmpty(distanceText))
             distanceText.setError("");
@@ -147,7 +146,8 @@ public class HomeActivity extends AppCompatActivity {
     public void manageRttTimeBound(int seqNo) {
         if (!RTTCalculated[seqNo]) {
             currentSeqNo++;
-//            sendWDRTTPkt();
+            String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
+            sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
         }
     }
 
@@ -165,16 +165,16 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         String pktSizeStr = pktSizeText.getText().toString().trim();
-        int pktSize = Integer.parseInt(pktSizeStr);
+        currentPktSize = Integer.parseInt(pktSizeStr);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.IPAddress == null) {
                 showToast("ip mac not synced");
                 return;
             }
-            calculateWDRTT(currentDevice, pktSize);
+            calculateWDRTT(currentDevice, currentPktSize);
         }
         else {
-            calculateBTRTT(currentDevice, pktSize);
+            calculateBTRTT(currentDevice, currentPktSize);
         }
     }
 
@@ -503,7 +503,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void processReceivedBTPkt(byte[] readBuffer, long receivingTime, int numBytes) {
+    public void processReceivedBTPkt(byte[] readBuffer, long receivingTime) {
         final String receivedPkt = new String(readBuffer);
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
