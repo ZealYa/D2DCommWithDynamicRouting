@@ -2,21 +2,17 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.bluetooth.BluetoothDevice;
 import android.net.wifi.p2p.WifiP2pDevice;
-
 import java.net.InetAddress;
 
 
-public class Device {
-    public int deviceType;
-    public WifiP2pDevice wifiDevice;
-    public BluetoothDevice bluetoothDevice;
-    public int rssi;
-    public long roundTripTime;
-    public long rttStartTime;
-    public String rttPkt;
-    public int lossRatioPktsReceived;
-    public boolean connected;
-    public InetAddress IPAddress;
+class Device {
+    int deviceType;
+    WifiP2pDevice wifiDevice;
+    BluetoothDevice bluetoothDevice;
+    int rssi;
+    int lossRatioPktsReceived;
+    boolean connected;
+    InetAddress IPAddress;
 
 
     Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi, boolean connected) {
@@ -24,9 +20,6 @@ public class Device {
         this.wifiDevice = wifiDevice;
         this.bluetoothDevice = bluetoothDevice;
         this.rssi = rssi;
-        this.roundTripTime = 0;
-        this.rttStartTime = 0;
-        this.rttPkt = "";
         this.connected = connected;
         this.IPAddress = null;
     }

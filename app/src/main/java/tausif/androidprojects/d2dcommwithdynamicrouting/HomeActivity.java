@@ -47,6 +47,7 @@ public class HomeActivity extends AppCompatActivity {
     int udpThrpughputPktSizes[];
     long udpThroughputRTTs[];
     String distance;
+    Device currentDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,17 +139,21 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectButton(View view) {
         int tag = (int)view.getTag();
-        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice = combinedDeviceList.get(tag);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE)
             peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
     }
 
     public void manageRttTimeBound(int seqNo) {
+        if (!RTTCalculated[seqNo]) {
+            currentSeqNo++;
+//            sendWDRTTPkt();
+        }
     }
 
     public void rttButton(View view) {
         int tag = (int)view.getTag();
-        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice = combinedDeviceList.get(tag);
         EditText distanceText = findViewById(R.id.distance_editText);
         if (textboxIsEmpty(distanceText)) {
             distanceText.setError("enter distance");
@@ -187,7 +192,7 @@ public class HomeActivity extends AppCompatActivity {
         }
         btConnectedSocketManager.setDevice(currentDevice);
         String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), pktSize);
-        btConnectedSocketManager.sendPkt(packet, Constants.RTT);
+        RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
     }
 
     public void calculateWDRTT(Device currentDevice, int pktSize) {
@@ -198,8 +203,8 @@ public class HomeActivity extends AppCompatActivity {
         Arrays.fill(RTTs, 0);
         RTTCalculated = new boolean[1000];
         Arrays.fill(RTTCalculated, false);
-        currentDevice.rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
-        sendWDRTTPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+        String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
     }
 
     public void sendWDRTTPkt(String pkt, InetAddress destinationIP) {
@@ -219,7 +224,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void pktLossButton(View view) {
         int tag = (int)view.getTag();
-        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice = combinedDeviceList.get(tag);
         EditText distanceText = findViewById(R.id.distance_editText);
         if (textboxIsEmpty(distanceText)) {
             distanceText.setError("enter distance");
@@ -240,7 +245,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void UDPThroughputButton(View view) {
         int tag = (int)view.getTag();
-        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice = combinedDeviceList.get(tag);
         EditText distanceText = findViewById(R.id.distance_editText);
         if (textboxIsEmpty(distanceText)) {
             distanceText.setError("enter distance");
@@ -253,12 +258,12 @@ public class HomeActivity extends AppCompatActivity {
             showToast("ip mac not synced");
             return;
         }
-        currentDevice.rttPkt = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        String rttPkt = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
         udpSender = null;
         udpSender = new WDUDPSender();
-        udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
+        udpSender.createPkt(rttPkt, currentDevice.IPAddress);
         udpSender.setRunLoop(false);
-        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
+//        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
         udpSender.start();
     }
 
@@ -431,14 +436,6 @@ public class HomeActivity extends AppCompatActivity {
                                 writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
                             }
                         }
-                        if (experimentNo < Constants.MAX_NO_OF_EXPS) {
-                            udpSender = null;
-                            udpSender = new WDUDPSender();
-                            udpSender.createPkt(device.rttPkt, srcAddr);
-                            udpSender.setRunLoop(false);
-                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
-                            udpSender.start();
-                        }
                         break;
                     }
                 }
@@ -484,8 +481,8 @@ public class HomeActivity extends AppCompatActivity {
                     ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
                     if (device.wifiDevice.deviceAddress.equals(splited[1])) {
-                        device.roundTripTime = receivingTime - device.rttStartTime;
-                        udpThroughputRTTs[experimentNo] = device.roundTripTime;
+//                        device.roundTripTime = receivingTime - device.rttStartTime;
+//                        udpThroughputRTTs[experimentNo] = device.roundTripTime;
                         experimentNo++;
                         if (experimentNo < Constants.MAX_NO_OF_EXPS) {
                             String packet = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, splited[1], udpThrpughputPktSizes[experimentNo]);
@@ -493,7 +490,7 @@ public class HomeActivity extends AppCompatActivity {
                             udpSender = new WDUDPSender();
                             udpSender.createPkt(packet, srcAddr);
                             udpSender.setRunLoop(false);
-                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+//                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                             udpSender.start();
                         }
                         else {
@@ -516,7 +513,7 @@ public class HomeActivity extends AppCompatActivity {
                     int pktSize = Integer.parseInt(splited[3]);
                     btConnectedSocketManager.setDevice(device);
                     String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT_RET, Constants.hostBluetoothName, splited[1], pktSize);
-                    btConnectedSocketManager.sendPkt(packet, Constants.RTT_RET);
+                    btConnectedSocketManager.sendPkt(packet);
                     break;
                 }
             }
@@ -524,8 +521,7 @@ public class HomeActivity extends AppCompatActivity {
         else if (pktType == Constants.RTT_RET) {
             for (final Device device: combinedDeviceList) {
                 if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
-                    device.roundTripTime = receivingTime - device.rttStartTime;
-                    RTTs[Constants.EXP_NO] = device.roundTripTime;
+                    RTTs[Constants.EXP_NO] = receivingTime - RTTs[Constants.EXP_NO];
                     Constants.EXP_NO++;
                     if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
                         writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);

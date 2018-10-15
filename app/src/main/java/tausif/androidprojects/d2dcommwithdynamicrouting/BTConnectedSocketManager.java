@@ -10,11 +10,10 @@ import java.util.Calendar;
 public class BTConnectedSocketManager extends Thread {
     private final BluetoothSocket socket;
     private final InputStream inputStream;
-    private byte[] readBuffer; // mmBuffer store for the stream
     private Device device;
     private HomeActivity homeActivity;
 
-    public BTConnectedSocketManager(BluetoothSocket socket, HomeActivity homeActivity) {
+    BTConnectedSocketManager(BluetoothSocket socket, HomeActivity homeActivity) {
         this.homeActivity = homeActivity;
         this.socket = socket;
         InputStream tmpIn = null;
@@ -30,20 +29,20 @@ public class BTConnectedSocketManager extends Thread {
         this.device = device;
     }
 
-    public void sendPkt(String packet, int pktType) {
+    long sendPkt(String packet) {
         try {
             OutputStream outputStream = socket.getOutputStream();
-            if (pktType == Constants.RTT)
-                device.rttStartTime = Calendar.getInstance().getTimeInMillis();
+            long rttStartTime = Calendar.getInstance().getTimeInMillis();
             outputStream.write(packet.getBytes());
             outputStream.flush();
+            return rttStartTime;
         } catch (IOException writeEx) {
-
+            return 0;
         }
     }
 
     public void run() {
-        readBuffer = new byte[1500];
+        byte [] readBuffer = new byte[1500];
         int numBytes; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs.
