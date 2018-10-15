@@ -41,9 +41,8 @@ public class HomeActivity extends AppCompatActivity {
     int experimentNo;
     int currentSeqNo;
     long RTTs[];
-    ArrayList WDRTTs;
-    ArrayList WDRTTCalculated;
     boolean RTTCalculated[];
+    int rttCalculatedCount;
     Handler rttTimeBoundHandler;
     int udpThrpughputPktSizes[];
     long udpThroughputRTTs[];
@@ -160,30 +159,14 @@ public class HomeActivity extends AppCompatActivity {
             pktSizeText.setError("enter packet size");
             return;
         }
-        RTTs = new long[Constants.MAX_NO_OF_EXPS];
-        Arrays.fill(RTTs, 0);
-        RTTCalculated = new boolean[Constants.MAX_NO_OF_EXPS];
-        Arrays.fill(RTTCalculated, false);
         String pktSizeStr = pktSizeText.getText().toString().trim();
         int pktSize = Integer.parseInt(pktSizeStr);
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
-            currentSeqNo = 0;
-            rttTimeBoundHandler = new Handler();
             if (currentDevice.IPAddress == null) {
                 showToast("ip mac not synced");
                 return;
             }
-            currentDevice.rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
-            sendWDRTTPkt(currentDevice.rttPkt, currentDevice.IPAddress);
-            RTTs[currentSeqNo] = Calendar.getInstance().getTimeInMillis();
-//            currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
-//            udpSender.start();
-            rttTimeBoundHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    manageRttTimeBound(currentSeqNo);
-                }
-            }, 1000);
+            calculateWDRTT(currentDevice, pktSize);
         }
         else {
             calculateBTRTT(currentDevice, pktSize);
@@ -192,6 +175,8 @@ public class HomeActivity extends AppCompatActivity {
 
     public void calculateBTRTT(Device currentDevice, int pktSize) {
         Constants.EXP_NO = 0;
+        RTTs = new long[Constants.MAX_NO_OF_EXPS];
+        Arrays.fill(RTTs, 0);
         BTSocketConnector socketConnector = new BTSocketConnector();
         socketConnector.setDevice(currentDevice);
         BluetoothSocket connectedSocket = socketConnector.createSocket();
@@ -205,10 +190,16 @@ public class HomeActivity extends AppCompatActivity {
         btConnectedSocketManager.sendPkt(packet, Constants.RTT);
     }
 
-    public void calculateWDRTT() {
+    public void calculateWDRTT(Device currentDevice, int pktSize) {
+        rttTimeBoundHandler = new Handler();
         currentSeqNo = 0;
-        WDRTTs = new ArrayList();
-        WDRTTCalculated = new ArrayList();
+        rttCalculatedCount = 0;
+        RTTs = new long[1000];
+        Arrays.fill(RTTs, 0);
+        RTTCalculated = new boolean[1000];
+        Arrays.fill(RTTCalculated, false);
+        currentDevice.rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        sendWDRTTPkt(currentDevice.rttPkt, currentDevice.IPAddress);
     }
 
     public void sendWDRTTPkt(String pkt, InetAddress destinationIP) {
@@ -216,11 +207,14 @@ public class HomeActivity extends AppCompatActivity {
         udpSender = new WDUDPSender();
         udpSender.setRunLoop(false);
         udpSender.createPkt(pkt, destinationIP);
-        long startTime = Calendar.getInstance().getTimeInMillis();
-        WDRTTs.add(startTime);
-        WDRTTs.set(currentSeqNo, startTime);
-
+        RTTs[currentSeqNo] = Calendar.getInstance().getTimeInMillis();
         udpSender.start();
+        rttTimeBoundHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                manageRttTimeBound(currentSeqNo);
+            }
+        }, 1000);
     }
 
     public void pktLossButton(View view) {
@@ -409,8 +403,9 @@ public class HomeActivity extends AppCompatActivity {
         else if (pktType == Constants.IP_MAC_SYNC_RET)
             matchIPToMac(srcAddr, splited[1]);
         else if (pktType == Constants.RTT) {
-            int pktSize = Integer.parseInt(splited[3]);
-            String pkt = PacketManager.createBluetoothRTTPacket(Constants.RTT_RET, Constants.hostWifiAddress, splited[1], pktSize);
+            int pktSize = Integer.parseInt(splited[4]);
+            int seqNo = Integer.parseInt(splited[1]);
+            String pkt = PacketManager.createWDRTTPacket(Constants.RTT_RET, seqNo, Constants.hostWifiAddress, splited[2], pktSize);
             udpSender = null;
             udpSender = new WDUDPSender();
             udpSender.createPkt(pkt, srcAddr);
@@ -421,10 +416,21 @@ public class HomeActivity extends AppCompatActivity {
             for (Device device:combinedDeviceList
                  ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
-                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
-                        device.roundTripTime = receivingTime - device.rttStartTime;
-                        RTTs[experimentNo] = device.roundTripTime;
-                        experimentNo++;
+                    if (device.wifiDevice.deviceAddress.equals(splited[2])) {
+                        int seqNo = Integer.parseInt(splited[1]);
+                        int pktSize = Integer.parseInt(splited[4]);
+                        if (seqNo == currentSeqNo) {
+                            RTTs[seqNo] = receivingTime - RTTs[seqNo];
+                            RTTCalculated[seqNo] = true;
+                            rttCalculatedCount++;
+                            currentSeqNo++;
+                            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+                                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], pktSize);
+                                sendWDRTTPkt(rttPkt, srcAddr);
+                            } else {
+                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
+                            }
+                        }
                         if (experimentNo < Constants.MAX_NO_OF_EXPS) {
                             udpSender = null;
                             udpSender = new WDUDPSender();
@@ -432,9 +438,6 @@ public class HomeActivity extends AppCompatActivity {
                             udpSender.setRunLoop(false);
                             device.rttStartTime = Calendar.getInstance().getTimeInMillis();
                             udpSender.start();
-                        }
-                        else {
-                            writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
                         }
                         break;
                     }
