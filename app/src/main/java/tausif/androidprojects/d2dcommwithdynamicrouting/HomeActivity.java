@@ -41,6 +41,8 @@ public class HomeActivity extends AppCompatActivity {
     int experimentNo;
     int currentSeqNo;
     long RTTs[];
+    ArrayList WDRTTs;
+    ArrayList WDRTTCalculated;
     boolean RTTCalculated[];
     Handler rttTimeBoundHandler;
     int udpThrpughputPktSizes[];
@@ -172,13 +174,10 @@ public class HomeActivity extends AppCompatActivity {
                 return;
             }
             currentDevice.rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
-            udpSender = null;
-            udpSender = new WDUDPSender();
-            udpSender.createPkt(currentDevice.rttPkt, currentDevice.IPAddress);
-            udpSender.setRunLoop(false);
+            sendWDRTTPkt(currentDevice.rttPkt, currentDevice.IPAddress);
             RTTs[currentSeqNo] = Calendar.getInstance().getTimeInMillis();
 //            currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
-            udpSender.start();
+//            udpSender.start();
             rttTimeBoundHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -187,23 +186,41 @@ public class HomeActivity extends AppCompatActivity {
             }, 1000);
         }
         else {
-            Constants.EXP_NO = 0;
-            BTSocketConnector socketConnector = new BTSocketConnector();
-            socketConnector.setDevice(currentDevice);
-            BluetoothSocket connectedSocket = socketConnector.createSocket();
-            btConnectedSocketManager = null;
-            if (connectedSocket!=null) {
-                btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
-                btConnectedSocketManager.start();
-            }
-            btConnectedSocketManager.setDevice(currentDevice);
             calculateBTRTT(currentDevice, pktSize);
         }
     }
 
     public void calculateBTRTT(Device currentDevice, int pktSize) {
+        Constants.EXP_NO = 0;
+        BTSocketConnector socketConnector = new BTSocketConnector();
+        socketConnector.setDevice(currentDevice);
+        BluetoothSocket connectedSocket = socketConnector.createSocket();
+        btConnectedSocketManager = null;
+        if (connectedSocket!=null) {
+            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+            btConnectedSocketManager.start();
+        }
+        btConnectedSocketManager.setDevice(currentDevice);
         String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), pktSize);
         btConnectedSocketManager.sendPkt(packet, Constants.RTT);
+    }
+
+    public void calculateWDRTT() {
+        currentSeqNo = 0;
+        WDRTTs = new ArrayList();
+        WDRTTCalculated = new ArrayList();
+    }
+
+    public void sendWDRTTPkt(String pkt, InetAddress destinationIP) {
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        udpSender.setRunLoop(false);
+        udpSender.createPkt(pkt, destinationIP);
+        long startTime = Calendar.getInstance().getTimeInMillis();
+        WDRTTs.add(startTime);
+        WDRTTs.set(currentSeqNo, startTime);
+
+        udpSender.start();
     }
 
     public void pktLossButton(View view) {
