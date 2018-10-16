@@ -18,6 +18,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +42,7 @@ public class HomeActivity extends AppCompatActivity {
     int experimentNo;
     int currentSeqNo;
     long RTTs[];
+    long rttToWrite[];
     boolean RTTCalculated[];
     int rttCalculatedCount;
     Handler rttTimeBoundHandler;
@@ -199,6 +202,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void calculateWDRTT(Device currentDevice, int pktSize) {
+        rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
+        Constants.EXP_NO = 0;
         rttTimeBoundHandler = new Handler();
         currentSeqNo = 0;
         rttCalculatedCount = 0;
@@ -430,6 +435,8 @@ public class HomeActivity extends AppCompatActivity {
                         if (seqNo == currentSeqNo) {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
                             Log.d(String.valueOf(seqNo), String.valueOf(RTTs[seqNo]));
+                            rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
+                            Constants.EXP_NO++;
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
                             currentSeqNo++;
@@ -437,7 +444,8 @@ public class HomeActivity extends AppCompatActivity {
                                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], pktSize);
                                 sendWDRTTPkt(rttPkt, srcAddr);
                             } else {
-//                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
+                                Constants.EXP_NO = 0;
+                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
                             }
                         }
                         break;
@@ -547,7 +555,11 @@ public class HomeActivity extends AppCompatActivity {
         String pktSize = pktSizeText.getText().toString().trim();
 
         if (measurementType == Constants.RTT) {
-            boolean retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType);
+            boolean retVal;
+            if (deviceType == Constants.WIFI_DEVICE)
+                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType);
+            else
+                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType);
             if (retVal)
                 showToast("rtt written successfully");
             else
