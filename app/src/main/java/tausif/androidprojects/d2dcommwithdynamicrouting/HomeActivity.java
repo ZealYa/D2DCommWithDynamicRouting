@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -146,8 +147,10 @@ public class HomeActivity extends AppCompatActivity {
     public void manageRttTimeBound(int seqNo) {
         if (!RTTCalculated[seqNo]) {
             currentSeqNo++;
-            String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
-            sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
+                sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+            }
         }
     }
 
@@ -426,6 +429,7 @@ public class HomeActivity extends AppCompatActivity {
                         int pktSize = Integer.parseInt(splited[4]);
                         if (seqNo == currentSeqNo) {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
+                            Log.d(String.valueOf(seqNo), String.valueOf(RTTs[seqNo]));
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
                             currentSeqNo++;
@@ -433,7 +437,7 @@ public class HomeActivity extends AppCompatActivity {
                                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], pktSize);
                                 sendWDRTTPkt(rttPkt, srcAddr);
                             } else {
-                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
+//                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
                             }
                         }
                         break;

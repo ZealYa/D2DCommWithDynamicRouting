@@ -81,7 +81,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         @Override
         public void run() {
             if (timeSlotNo %2==0){
-//                bluetoothDevices = new ArrayList<>();
+                bluetoothDevices = new ArrayList<>();
 //                // adding up already paired devices
 //                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 //                if (pairedDevices.size() > 0) {
