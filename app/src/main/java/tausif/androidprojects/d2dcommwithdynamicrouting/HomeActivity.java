@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -50,6 +51,7 @@ public class HomeActivity extends AppCompatActivity {
     long initialStartTime;
     long cumulativeRTTs[];
     int pktReceiveCount[];
+    boolean pktReceiveCounted[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +67,8 @@ public class HomeActivity extends AppCompatActivity {
 //        getBTPairedDevices();
         pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
         Arrays.fill(pktReceiveCount, 0);
+        pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
+        Arrays.fill(pktReceiveCounted, false);
     }
 
     public void setUpPermissions() {
@@ -470,24 +474,29 @@ public class HomeActivity extends AppCompatActivity {
             for (final Device device:combinedDeviceList
                  ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
-                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
-                        if (device.lossRatioPktsReceived == 0) {
-                            device.lossRatioPktsReceived++;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Handler handler = new Handler();
-                                    handler.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            double pktLoss = ((Constants.MAX_LOSS_RATIO_PKTS - device.lossRatioPktsReceived)/Constants.MAX_LOSS_RATIO_PKTS) * 100.00;
-                                        }
-                                    }, 2 * 1000);
-                                }
-                            });
+                    if (device.wifiDevice.deviceAddress.equals(splited[2])) {
+                        currentDevice = device;
+                        final int expNo = Integer.parseInt(splited[1]);
+                        if (!pktReceiveCounted[expNo]) {
+                            if (pktReceiveCount[expNo] == 0) {
+                                pktReceiveCount[expNo]++;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Handler handler = new Handler();
+                                        handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                pktReceiveCounted[expNo] = true;
+                                                Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
+                                            }
+                                        }, 2000);
+                                    }
+                                });
+                            }
+                            else
+                                pktReceiveCount[expNo]++;
                         }
-                        else
-                            device.lossRatioPktsReceived++;
                     }
                 }
             }
