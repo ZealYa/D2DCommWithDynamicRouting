@@ -12,14 +12,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,18 +37,17 @@ public class HomeActivity extends AppCompatActivity {
     Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     boolean willRecordRSSI;
-    int experimentNo;
     int currentSeqNo;
     long RTTs[];
     long rttToWrite[];
     boolean RTTCalculated[];
     int rttCalculatedCount;
     Handler rttTimeBoundHandler;
-    int udpThrpughputPktSizes[];
-    long udpThroughputRTTs[];
     String distance;
     Device currentDevice;
     int currentPktSize;
+    long initialStartTime;
+    long cumulativeRTTs[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +55,6 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         willUpdateDeviceList = true;
         willRecordRSSI = false;
-        udpThrpughputPktSizes = new int[] {450, 500, 550, 600, 650, 700, 750, 800, 850, 900};
         setUpPermissions();
 //        BTDiscoverableHandler = new Handler();
 //        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
@@ -185,6 +181,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void calculateBTRTT(Device currentDevice, int pktSize) {
+        cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
         RTTs = new long[Constants.MAX_NO_OF_EXPS];
         Arrays.fill(RTTs, 0);
@@ -203,6 +200,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void calculateWDRTT(Device currentDevice, int pktSize) {
         rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
+        cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
         rttTimeBoundHandler = new Handler();
         currentSeqNo = 0;
@@ -221,6 +219,8 @@ public class HomeActivity extends AppCompatActivity {
         udpSender.setRunLoop(false);
         udpSender.createPkt(pkt, destinationIP);
         RTTs[currentSeqNo] = Calendar.getInstance().getTimeInMillis();
+        if (currentSeqNo == 0)
+            initialStartTime = RTTs[currentSeqNo];
         udpSender.start();
         rttTimeBoundHandler.postDelayed(new Runnable() {
             @Override
@@ -259,20 +259,10 @@ public class HomeActivity extends AppCompatActivity {
             distanceText.setError("enter distance");
             return;
         }
-        experimentNo = 0;
-        udpThroughputRTTs = new long[Constants.MAX_NO_OF_EXPS];
-        int pktSize = udpThrpughputPktSizes[experimentNo];
         if (currentDevice.IPAddress == null) {
             showToast("ip mac not synced");
             return;
         }
-        String rttPkt = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
-        udpSender = null;
-        udpSender = new WDUDPSender();
-        udpSender.createPkt(rttPkt, currentDevice.IPAddress);
-        udpSender.setRunLoop(false);
-//        currentDevice.rttStartTime = Calendar.getInstance().getTimeInMillis();
-        udpSender.start();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
@@ -434,8 +424,8 @@ public class HomeActivity extends AppCompatActivity {
                         int pktSize = Integer.parseInt(splited[4]);
                         if (seqNo == currentSeqNo) {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
-                            Log.d(String.valueOf(seqNo), String.valueOf(RTTs[seqNo]));
                             rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
+                            cumulativeRTTs[Constants.EXP_NO] = receivingTime - initialStartTime;
                             Constants.EXP_NO++;
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
@@ -480,34 +470,12 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         else if (pktType == Constants.UDP_THROUGHPUT) {
-            int pktSize = Integer.parseInt(splited[3]);
-            String pkt = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT_RET, Constants.hostWifiAddress, splited[1], pktSize);
-            udpSender = null;
-            udpSender = new WDUDPSender();
-            udpSender.createPkt(pkt, srcAddr);
-            udpSender.setRunLoop(false);
-            udpSender.start();
         }
         else if (pktType == Constants.UDP_THROUGHPUT_RET) {
             for (Device device:combinedDeviceList
                     ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
                     if (device.wifiDevice.deviceAddress.equals(splited[1])) {
-//                        device.roundTripTime = receivingTime - device.rttStartTime;
-//                        udpThroughputRTTs[experimentNo] = device.roundTripTime;
-                        experimentNo++;
-                        if (experimentNo < Constants.MAX_NO_OF_EXPS) {
-                            String packet = PacketManager.createBluetoothRTTPacket(Constants.UDP_THROUGHPUT, Constants.hostWifiAddress, splited[1], udpThrpughputPktSizes[experimentNo]);
-                            udpSender = null;
-                            udpSender = new WDUDPSender();
-                            udpSender.createPkt(packet, srcAddr);
-                            udpSender.setRunLoop(false);
-//                            device.rttStartTime = Calendar.getInstance().getTimeInMillis();
-                            udpSender.start();
-                        }
-                        else {
-                            writeResult(device.wifiDevice.deviceName, Constants.UDP_THROUGHPUT, Constants.WIFI_DEVICE);
-                        }
                         break;
                     }
                 }
@@ -557,21 +525,21 @@ public class HomeActivity extends AppCompatActivity {
         if (measurementType == Constants.RTT) {
             boolean retVal;
             if (deviceType == Constants.WIFI_DEVICE)
-                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType);
+                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType, cumulativeRTTs);
             else
-                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType);
+                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
             if (retVal)
                 showToast("rtt written successfully");
             else
                 showToast("rtt write not successful");
         }
-        else if (measurementType == Constants.UDP_THROUGHPUT) {
-            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs);
-            if (retVal)
-                showToast("throughput rtt written successfully");
-            else
-                showToast("throughput rtt write not successful");
-        }
+//        else if (measurementType == Constants.UDP_THROUGHPUT) {
+//            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );
+//            if (retVal)
+//                showToast("throughput rtt written successfully");
+//            else
+//                showToast("throughput rtt write not successful");
+//        }
     }
 
     //function to show an alert message

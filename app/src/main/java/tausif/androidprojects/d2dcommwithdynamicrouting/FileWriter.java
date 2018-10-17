@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
-public class FileWriter {
-    public static boolean writeRTTResult(String deviceName, String pktSize, String distance, long[] RTTValues, int deviceType) {
+class FileWriter {
+    static boolean writeRTTResult(String deviceName, String pktSize, String distance, long[] RTTs, int deviceType, long[] cumulativeRTTs) {
         String prefix;
         if (deviceType == Constants.BLUETOOTH_DEVICE)
             prefix = "BT_";
@@ -17,22 +17,41 @@ public class FileWriter {
             prefix = "WD_";
         String filename = prefix + "RTT_" + deviceName + "_" + pktSize + "_" + distance + "_meters.txt";
         File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
-                outputStreamWriter.append(String.valueOf(RTTValues[i]));
-                outputStreamWriter.append("\n");
+        if (deviceType == Constants.BLUETOOTH_DEVICE) {
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
+                    outputStreamWriter.append(String.valueOf(RTTs[i]));
+                    outputStreamWriter.append("\n");
+                }
+                outputStreamWriter.close();
+                fileOutputStream.close();
+                return true;
+            } catch (IOException FIOExec) {
+                return false;
             }
-            outputStreamWriter.close();
-            fileOutputStream.close();
-            return true;
-        } catch (IOException FIOExec) {
-            return false;
         }
+        else {
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
+                    String str = String.valueOf(RTTs[i]) + " " + String.valueOf(cumulativeRTTs[i]);
+                    outputStreamWriter.append(str);
+                    outputStreamWriter.append("\n");
+                }
+                outputStreamWriter.close();
+                fileOutputStream.close();
+                return true;
+            } catch (IOException FIOExec) {
+                return false;
+            }
+        }
+
     }
 
-    public static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTValues) {
+    static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTs) {
         String prefix = "WD_";
         String filename = prefix + "THROUGHPUT_RTT_" + deviceName + "_" + distance + "_meters.txt";
         File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
@@ -40,7 +59,7 @@ public class FileWriter {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
             for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
-                outputStreamWriter.append(String.valueOf(RTTValues[i]));
+                outputStreamWriter.append(String.valueOf(RTTs[i]));
                 outputStreamWriter.append("\n");
             }
             outputStreamWriter.close();
@@ -52,7 +71,7 @@ public class FileWriter {
     }
 
 
-    public static void writeRSSIResult(String distance, String timestamp, ArrayList<Device> bluetoothDevices) {
+    static void writeRSSIResult(String distance, String timestamp, ArrayList<Device> bluetoothDevices) {
         String filename = "RSSI_" + timestamp + "_" + distance + "_meters.txt";
         File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
