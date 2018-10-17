@@ -42,12 +42,14 @@ public class HomeActivity extends AppCompatActivity {
     long rttToWrite[];
     boolean RTTCalculated[];
     int rttCalculatedCount;
-    Handler rttTimeBoundHandler;
+    Handler rttHandler;
+    Handler pktLossHandler;
     String distance;
     Device currentDevice;
     int currentPktSize;
     long initialStartTime;
     long cumulativeRTTs[];
+    int pktReceiveCount[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +63,8 @@ public class HomeActivity extends AppCompatActivity {
 //        setUpBluetoothDataTransfer();
         startDiscovery();
 //        getBTPairedDevices();
+        pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
+        Arrays.fill(pktReceiveCount, 0);
     }
 
     public void setUpPermissions() {
@@ -153,6 +157,13 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void managePktLossTimeBound() {
+        Constants.EXP_NO++;
+        if (Constants.EXP_NO < Constants.MAX_NO_OF_EXPS) {
+            startPktLossExp();
+        }
+    }
+
     public void rttButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
@@ -202,7 +213,7 @@ public class HomeActivity extends AppCompatActivity {
         rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
         cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
-        rttTimeBoundHandler = new Handler();
+        rttHandler = new Handler();
         currentSeqNo = 0;
         rttCalculatedCount = 0;
         RTTs = new long[1000];
@@ -222,7 +233,7 @@ public class HomeActivity extends AppCompatActivity {
         if (currentSeqNo == 0)
             initialStartTime = RTTs[currentSeqNo];
         udpSender.start();
-        rttTimeBoundHandler.postDelayed(new Runnable() {
+        rttHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 manageRttTimeBound(currentSeqNo);
@@ -242,13 +253,25 @@ public class HomeActivity extends AppCompatActivity {
             showToast("ip mac not synced");
             return;
         }
+        Constants.EXP_NO = 0;
+        pktLossHandler = new Handler();
+        startPktLossExp();
+    }
+
+    public void startPktLossExp() {
         udpSender = null;
         udpSender = new WDUDPSender();
-        String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
+        String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.EXP_NO, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
         udpSender.createPkt(lossRatioPkt, currentDevice.IPAddress);
         udpSender.setRunLoop(true);
         udpSender.setNoOfPktsToSend(Constants.MAX_LOSS_RATIO_PKTS);
         udpSender.start();
+        pktLossHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                managePktLossTimeBound();
+            }
+        }, 5000);
     }
 
     public void UDPThroughputButton(View view) {
