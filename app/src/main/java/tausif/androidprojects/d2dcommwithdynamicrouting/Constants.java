@@ -30,7 +30,7 @@ public class Constants {
     static final int UDP_THROUGHPUT_RET = 107;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 5;
+    static final int MAX_NO_OF_EXPS = 10;
 
     static final int WIFI_DIRECT_CONNECTION = 1000;
     static final int BLUETOOTH_CONNECTION = 1001;

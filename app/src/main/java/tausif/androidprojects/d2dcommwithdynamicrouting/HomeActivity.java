@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -249,10 +250,6 @@ public class HomeActivity extends AppCompatActivity {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
         EditText distanceText = findViewById(R.id.distance_editText);
-        if (textboxIsEmpty(distanceText)) {
-            distanceText.setError("enter distance");
-            return;
-        }
         if (currentDevice.IPAddress == null) {
             showToast("ip mac not synced");
             return;
@@ -489,6 +486,12 @@ public class HomeActivity extends AppCompatActivity {
                                             public void run() {
                                                 pktReceiveCounted[expNo] = true;
                                                 Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
+                                                int expCounter = 0;
+                                                for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++)
+                                                    if (pktReceiveCounted[i])
+                                                        expCounter++;
+                                                if (expCounter == Constants.MAX_NO_OF_EXPS)
+                                                    writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
                                             }
                                         }, 2000);
                                     }
@@ -564,6 +567,13 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("rtt written successfully");
             else
                 showToast("rtt write not successful");
+        }
+        else if (measurementType == Constants.PKT_LOSS) {
+            boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
+            if (retVal)
+                showToast("pkt loss result written successfully");
+            else
+                showToast("pkt loss result writing not successful");
         }
 //        else if (measurementType == Constants.UDP_THROUGHPUT) {
 //            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );

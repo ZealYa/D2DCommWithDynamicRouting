@@ -51,6 +51,25 @@ class FileWriter {
 
     }
 
+    static boolean writePktLossResult(String deviceName, String distance, int pktReceiveCount[]) {
+        String filename = "PKT_LOSS" + "_" + deviceName + "_" + distance + "_meters.txt";
+        File pktLossResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(pktLossResults);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
+                int pktLossRatio = Constants.MAX_LOSS_RATIO_PKTS - pktReceiveCount[i];
+                outputStreamWriter.append(String.valueOf(pktLossRatio));
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.close();
+            fileOutputStream.close();
+            return true;
+        } catch (IOException FIOExec) {
+            return false;
+        }
+    }
+
     static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTs) {
         String prefix = "WD_";
         String filename = prefix + "THROUGHPUT_RTT_" + deviceName + "_" + distance + "_meters.txt";
