@@ -36,9 +36,14 @@ class FileWriter {
             try {
                 FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
                 OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-                for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
-                    String str = String.valueOf(RTTs[i]) + " " + String.valueOf(cumulativeRTTs[i]);
-                    outputStreamWriter.append(str);
+                outputStreamWriter.append("RTTs\n");
+                for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
+                    outputStreamWriter.append(String.valueOf(RTTs[i]));
+                    outputStreamWriter.append("\n");
+                }
+                outputStreamWriter.append("\nAccumulated RTTs\n");
+                for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
+                    outputStreamWriter.append(String.valueOf(cumulativeRTTs[i]));
                     outputStreamWriter.append("\n");
                 }
                 outputStreamWriter.close();
