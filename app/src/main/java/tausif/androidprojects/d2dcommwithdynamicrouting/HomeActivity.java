@@ -492,11 +492,11 @@ public class HomeActivity extends AppCompatActivity {
                                                     if (pktReceiveCounted[i])
                                                         expCounter++;
                                                 if (expCounter == Constants.MAX_NO_OF_EXPS) {
+                                                    writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
                                                     pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
                                                     Arrays.fill(pktReceiveCount, 0);
                                                     pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
                                                     Arrays.fill(pktReceiveCounted, false);
-                                                    writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
                                                 }
                                             }
                                         }, 2000);
