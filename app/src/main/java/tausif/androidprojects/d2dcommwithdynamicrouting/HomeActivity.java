@@ -255,6 +255,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         Constants.EXP_NO = 0;
+        pktLossHandler = null;
         pktLossHandler = new Handler();
         startPktLossExp();
     }
@@ -490,8 +491,13 @@ public class HomeActivity extends AppCompatActivity {
                                                 for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++)
                                                     if (pktReceiveCounted[i])
                                                         expCounter++;
-                                                if (expCounter == Constants.MAX_NO_OF_EXPS)
+                                                if (expCounter == Constants.MAX_NO_OF_EXPS) {
+                                                    pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
+                                                    Arrays.fill(pktReceiveCount, 0);
+                                                    pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
+                                                    Arrays.fill(pktReceiveCounted, false);
                                                     writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
+                                                }
                                             }
                                         }, 2000);
                                     }

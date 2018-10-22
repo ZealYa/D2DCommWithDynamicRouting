@@ -5,6 +5,7 @@ import java.net.InetAddress;
 public class Constants {
     static String hostBluetoothName = "";
     static String hostWifiAddress = "";
+    static String hostWifiName = "";
 
     static final String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
 
@@ -30,7 +31,7 @@ public class Constants {
     static final int UDP_THROUGHPUT_RET = 107;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 50;
+    static final int MAX_NO_OF_EXPS = 10;
 
     static final int WIFI_DIRECT_CONNECTION = 1000;
     static final int BLUETOOTH_CONNECTION = 1001;
