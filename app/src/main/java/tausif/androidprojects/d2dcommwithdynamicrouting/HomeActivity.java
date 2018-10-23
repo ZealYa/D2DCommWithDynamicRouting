@@ -147,8 +147,7 @@ public class HomeActivity extends AppCompatActivity {
     public void connectButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
-        if (currentDevice.deviceType == Constants.WIFI_DEVICE)
-            peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
+        peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
     }
 
     public void manageRttTimeBound(int seqNo) {
