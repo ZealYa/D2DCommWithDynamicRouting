@@ -64,12 +64,12 @@ public class HomeActivity extends AppCompatActivity {
 //        BTDiscoverableHandler = new Handler();
 //        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
 //        setUpBluetoothDataTransfer();
-        startDiscovery();
-//        getBTPairedDevices();
-        pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
-        Arrays.fill(pktReceiveCount, 0);
-        pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
-        Arrays.fill(pktReceiveCounted, false);
+//        startDiscovery();
+        getBTPairedDevices();
+//        pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
+//        Arrays.fill(pktReceiveCount, 0);
+//        pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
+//        Arrays.fill(pktReceiveCounted, false);
     }
 
     public void setUpPermissions() {
