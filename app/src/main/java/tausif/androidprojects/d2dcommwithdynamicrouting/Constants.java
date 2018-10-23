@@ -4,11 +4,10 @@ import java.net.InetAddress;
 
 public class Constants {
     static String hostBluetoothName = "";
-    static String hostWifiAddress = "";
-    static String hostWifiName = "";
-
     static final String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
 
+    static String hostWifiName = "";
+    static String hostWifiAddress = "";
     static InetAddress groupOwnerAddress;
     static boolean isGroupOwner;
     static final int WI_FI_DIRECT_UDP_LISTENING_PORT = 9000;
@@ -25,10 +24,11 @@ public class Constants {
     static final int RTT = 101;
     static final int RTT_RET = 102;
     static final int PKT_LOSS = 103;
-    static final int IP_MAC_SYNC_REC = 104;
+    static final int IP_MAC_SYNC = 104;
     static final int IP_MAC_SYNC_RET = 105;
     static final int UDP_THROUGHPUT = 106;
     static final int UDP_THROUGHPUT_RET = 107;
+    static final int FILE_TRANSFER = 108;
 
     static int EXP_NO = 0;
     static final int MAX_NO_OF_EXPS = 10;

@@ -19,7 +19,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -393,7 +392,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void ipMacSync() {
-        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_REC, Constants.hostWifiAddress);
+        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
         udpSender = null;
         udpSender = new WDUDPSender();
         udpSender.createPkt(pkt, Constants.groupOwnerAddress);
@@ -419,7 +418,7 @@ public class HomeActivity extends AppCompatActivity {
     public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
-        if (pktType == Constants.IP_MAC_SYNC_REC) {
+        if (pktType == Constants.IP_MAC_SYNC) {
             String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
             udpSender = null;
             udpSender = new WDUDPSender();
