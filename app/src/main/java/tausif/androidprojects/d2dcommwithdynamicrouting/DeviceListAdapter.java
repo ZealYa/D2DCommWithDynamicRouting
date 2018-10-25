@@ -49,21 +49,11 @@ public class DeviceListAdapter extends BaseAdapter {
             rowView = mInflater.inflate(R.layout.bt_device_list_row, viewGroup, false);
             deviceName = currentDevice.bluetoothDevice.getName();
 
-            Button connect = (Button)rowView.findViewById(R.id.connect_button);
-            connect.setTag(i);
-            if (currentDevice.connected)
-                connect.setText("disconnect");
-            else
-                connect.setText("connect");
-
             Button rtt = (Button)rowView.findViewById(R.id.rtt_button);
             rtt.setTag(i);
 
             Button tcpThroughput = (Button)rowView.findViewById(R.id.tcp_throughput_button);
             tcpThroughput.setTag(i);
-
-            Button disconnect = (Button)rowView.findViewById(R.id.disconnect_button);
-            disconnect.setTag(i);
         }
         else {
             rowView = mInflater.inflate(R.layout.wd_device_list_row, viewGroup, false);
@@ -87,9 +77,6 @@ public class DeviceListAdapter extends BaseAdapter {
 
             Button tcpThroughput = (Button)rowView.findViewById(R.id.tcp_throughput_button);
             tcpThroughput.setTag(i);
-
-            Button disconnect = (Button)rowView.findViewById(R.id.disconnect_button);
-            disconnect.setTag(i);
         }
 
         TextView title = rowView.findViewById(R.id.device_name_textView);

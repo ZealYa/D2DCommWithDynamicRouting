@@ -60,11 +60,11 @@ public class HomeActivity extends AppCompatActivity {
         willUpdateDeviceList = true;
         willRecordRSSI = false;
         setUpPermissions();
-//        BTDiscoverableHandler = new Handler();
-//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+        BTDiscoverableHandler = new Handler();
+        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
 //        setUpBluetoothDataTransfer();
-//        startDiscovery();
-        getBTPairedDevices();
+        startDiscovery();
+//        getBTPairedDevices();
 //        pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
 //        Arrays.fill(pktReceiveCount, 0);
 //        pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
@@ -147,6 +147,7 @@ public class HomeActivity extends AppCompatActivity {
     public void connectButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
+
         peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
     }
 
@@ -291,13 +292,13 @@ public class HomeActivity extends AppCompatActivity {
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
         wifiDevices = cleanUpDeviceList(wifiDevices, Constants.WIFI_DEVICE);
-//        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
+        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
         if (willUpdateDeviceList) {
             this.wifiDevices = wifiDevices;
             this.bluetoothDevices = bluetoothDevices;
             if (combinedDeviceList.size() > 0)
                 combinedDeviceList.clear();
-//            combinedDeviceList.addAll(this.bluetoothDevices);
+            combinedDeviceList.addAll(this.bluetoothDevices);
             combinedDeviceList.addAll(this.wifiDevices);
             runOnUiThread(new Runnable() {
                 @Override
@@ -322,6 +323,7 @@ public class HomeActivity extends AppCompatActivity {
                     long currentTime = Calendar.getInstance().getTimeInMillis();
                     String timestamp = String.valueOf(currentTime);
                     FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
+                    Log.d("finished exp no", String.valueOf(Constants.EXP_NO));
                     Constants.EXP_NO++;
                 }
             }
