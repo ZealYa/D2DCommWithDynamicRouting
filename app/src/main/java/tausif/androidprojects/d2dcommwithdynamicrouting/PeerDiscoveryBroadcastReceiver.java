@@ -14,7 +14,6 @@ import android.util.Log;
 public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
-    private HomeActivity sourceActivity;
     private PeerDiscoveryController peerDiscoveryController;
 
     public void setWifiP2pManager(WifiP2pManager wifiP2pManager) {
@@ -29,17 +28,15 @@ public class PeerDiscoveryBroadcastReceiver extends BroadcastReceiver {
         this.peerDiscoveryController = peerDiscoveryController;
     }
 
-    public void setSourceActivity(HomeActivity sourceActivity) {
-        this.sourceActivity = sourceActivity;
-    }
-
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)){
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
             if (state == WifiP2pManager.WIFI_P2P_STATE_DISABLED)
-                sourceActivity.wifiP2PState(0);
+                peerDiscoveryController.wifiDirectStatusReceived(false);
+            else if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
+                peerDiscoveryController.wifiDirectStatusReceived(true);
         }
         else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             WifiP2pDevice hostDevice = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);

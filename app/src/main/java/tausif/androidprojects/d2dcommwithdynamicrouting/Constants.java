@@ -28,7 +28,6 @@ public class Constants {
     static final int IP_MAC_SYNC_RET = 105;
     static final int UDP_THROUGHPUT = 106;
     static final int UDP_THROUGHPUT_RET = 107;
-    static final int FILE_TRANSFER = 108;
 
     static int EXP_NO = 0;
     static final int MAX_NO_OF_EXPS = 10;

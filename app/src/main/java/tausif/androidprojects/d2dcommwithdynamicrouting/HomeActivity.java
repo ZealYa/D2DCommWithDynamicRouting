@@ -371,12 +371,6 @@ public class HomeActivity extends AppCompatActivity {
         return cleanedList;
     }
 
-    //shows the wifi p2p state
-    public void wifiP2PState(int state) {
-        if (state == 0)
-            showAlert("WiFi direct disabled");
-    }
-
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             showToast("wifi direct connection established");

@@ -35,13 +35,10 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         this.homeActivity = homeActivity;
         peerDiscoveryBroadcastReceiver = new PeerDiscoveryBroadcastReceiver();
         peerDiscoveryBroadcastReceiver.setPeerDiscoveryController(this);
-        peerDiscoveryBroadcastReceiver.setSourceActivity(this.homeActivity);
         intentFilter = new IntentFilter();
         configureWiFiDiscovery();
         configureBluetoothDiscovery();
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
-        wifiDevices = new ArrayList<>();
-        wifiP2pManager.discoverPeers(channel, null);
         timeSlotNo = 0;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.TIME_SLOT_LENGTH *1000);
@@ -56,6 +53,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        wifiDevices = new ArrayList<>();
     }
 
     private void configureBluetoothDiscovery() {
@@ -71,6 +69,11 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
             else
                 Toast.makeText(context, "Bluetooth disabled", Toast.LENGTH_LONG).show();
         }
+    }
+
+    void wifiDirectStatusReceived(boolean wifiDirectEnabled) {
+        if (wifiDirectEnabled)
+            wifiP2pManager.discoverPeers(channel, null);
     }
 
     void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
