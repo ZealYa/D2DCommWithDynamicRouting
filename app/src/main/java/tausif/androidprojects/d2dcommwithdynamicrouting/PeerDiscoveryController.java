@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.widget.Toast;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
     private Context context;
@@ -27,6 +28,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     private ArrayList<Device> wifiDevices;
     private ArrayList<Device> bluetoothDevices;
     private int timeSlotNo;
+    private boolean bluetoothEnabled;
 
     PeerDiscoveryController(Context context, HomeActivity homeActivity) {
         this.context = context;
@@ -35,11 +37,11 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         peerDiscoveryBroadcastReceiver.setPeerDiscoveryController(this);
         peerDiscoveryBroadcastReceiver.setSourceActivity(this.homeActivity);
         intentFilter = new IntentFilter();
-//        configureWiFiDiscovery();
+        configureWiFiDiscovery();
         configureBluetoothDiscovery();
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         wifiDevices = new ArrayList<>();
-//        wifiP2pManager.discoverPeers(channel, null);
+        wifiP2pManager.discoverPeers(channel, null);
         timeSlotNo = 0;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new controlPeerDiscovery(), 0, Constants.TIME_SLOT_LENGTH *1000);
@@ -58,11 +60,20 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
 
     private void configureBluetoothDiscovery() {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Constants.hostBluetoothName = bluetoothAdapter.getName();
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+        if (bluetoothAdapter == null)
+            bluetoothEnabled = false;
+        else{
+            bluetoothEnabled = bluetoothAdapter.isEnabled();
+            if (bluetoothEnabled) {
+                Constants.hostBluetoothName = bluetoothAdapter.getName();
+                intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+            }
+            else
+                Toast.makeText(context, "Bluetooth disabled", Toast.LENGTH_LONG).show();
+        }
     }
 
-    public void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
+    void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
         if (wifiDevices.size()>0)
             wifiDevices.clear();
         for (WifiP2pDevice device: deviceList.getDeviceList()
@@ -72,7 +83,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         }
     }
 
-    public void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
+    void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
         Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
         bluetoothDevices.add(newDevice);
     }
@@ -83,24 +94,27 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
             if (timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
                 // adding up already paired devices
-                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-                if (pairedDevices.size() > 0) {
-                    for (BluetoothDevice pairedDevice: pairedDevices
-                         ) {
-                        Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
-                        bluetoothDevices.add(device);
+                if (bluetoothEnabled) {
+                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                    if (pairedDevices.size() > 0) {
+                        for (BluetoothDevice pairedDevice: pairedDevices
+                                ) {
+                            Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
+                            bluetoothDevices.add(device);
+                        }
                     }
+                    bluetoothAdapter.startDiscovery();
                 }
-                bluetoothAdapter.startDiscovery();
             } else {
-                bluetoothAdapter.cancelDiscovery();
+                if (bluetoothEnabled)
+                    bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             timeSlotNo++;
         }
     }
 
-    public void connectWiFiDirectDevice(Device device) {
+    void connectWiFiDirectDevice(Device device) {
         if (device.deviceType == Constants.WIFI_DEVICE) {
             WifiP2pConfig newConfig = new WifiP2pConfig();
             newConfig.deviceAddress = device.wifiDevice.deviceAddress;
