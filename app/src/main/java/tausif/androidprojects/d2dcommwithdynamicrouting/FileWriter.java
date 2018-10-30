@@ -62,7 +62,7 @@ class FileWriter {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(pktLossResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
+            for (int i = 0; i < Constants.MAX_PKT_LOSS_EXPS; i++) {
                 int pktLossRatio = Constants.MAX_LOSS_RATIO_PKTS - pktReceiveCount[i];
                 outputStreamWriter.append(String.valueOf(pktLossRatio));
                 outputStreamWriter.append("\n");

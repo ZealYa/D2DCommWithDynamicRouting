@@ -52,6 +52,7 @@ public class HomeActivity extends AppCompatActivity {
     long cumulativeRTTs[];
     int pktReceiveCount[];
     boolean pktReceiveCounted[];
+    boolean pktLossExpStarted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,15 +61,16 @@ public class HomeActivity extends AppCompatActivity {
         willUpdateDeviceList = true;
         willRecordRSSI = false;
         setUpPermissions();
-        BTDiscoverableHandler = new Handler();
-        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+//        BTDiscoverableHandler = new Handler();
+//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
 //        setUpBluetoothDataTransfer();
         startDiscovery();
 //        getBTPairedDevices();
-//        pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
-//        Arrays.fill(pktReceiveCount, 0);
-//        pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
-//        Arrays.fill(pktReceiveCounted, false);
+        pktLossExpStarted = false;
+        pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
+        Arrays.fill(pktReceiveCount, 0);
+        pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
+        Arrays.fill(pktReceiveCounted, false);
     }
 
     public void setUpPermissions() {
@@ -163,7 +165,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void managePktLossTimeBound() {
         Constants.EXP_NO++;
-        if (Constants.EXP_NO < Constants.MAX_NO_OF_EXPS) {
+        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
             startPktLossExp();
         }
     }
@@ -248,7 +250,6 @@ public class HomeActivity extends AppCompatActivity {
     public void pktLossButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
-        EditText distanceText = findViewById(R.id.distance_editText);
         if (currentDevice.IPAddress == null) {
             showToast("ip mac not synced");
             return;
@@ -256,6 +257,7 @@ public class HomeActivity extends AppCompatActivity {
         Constants.EXP_NO = 0;
         pktLossHandler = null;
         pktLossHandler = new Handler();
+        showToast("pkt loss experiment started");
         startPktLossExp();
     }
 
@@ -471,6 +473,16 @@ public class HomeActivity extends AppCompatActivity {
                         final int expNo = Integer.parseInt(splited[1]);
                         if (!pktReceiveCounted[expNo]) {
                             if (pktReceiveCount[expNo] == 0) {
+                                if (!pktLossExpStarted) {
+                                    pktLossExpStarted = true;
+                                    final Button rssi = findViewById(R.id.record_rssi_button);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            rssi.setText("pkt loss running");
+                                        }
+                                    });
+                                }
                                 pktReceiveCount[expNo]++;
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -482,14 +494,14 @@ public class HomeActivity extends AppCompatActivity {
                                                 pktReceiveCounted[expNo] = true;
                                                 Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
                                                 int expCounter = 0;
-                                                for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++)
+                                                for (int i=0; i<Constants.MAX_PKT_LOSS_EXPS; i++)
                                                     if (pktReceiveCounted[i])
                                                         expCounter++;
-                                                if (expCounter == Constants.MAX_NO_OF_EXPS) {
+                                                if (expCounter == Constants.MAX_PKT_LOSS_EXPS) {
                                                     writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
-                                                    pktReceiveCount = new int[Constants.MAX_NO_OF_EXPS];
+                                                    pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
                                                     Arrays.fill(pktReceiveCount, 0);
-                                                    pktReceiveCounted = new boolean[Constants.MAX_NO_OF_EXPS];
+                                                    pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
                                                     Arrays.fill(pktReceiveCounted, false);
                                                 }
                                             }
@@ -570,6 +582,14 @@ public class HomeActivity extends AppCompatActivity {
         }
         else if (measurementType == Constants.PKT_LOSS) {
             boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
+            pktLossExpStarted = false;
+            final Button rssi = findViewById(R.id.record_rssi_button);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    rssi.setText("pkt loss stopped");
+                }
+            });
             if (retVal)
                 showToast("pkt loss result written successfully");
             else
