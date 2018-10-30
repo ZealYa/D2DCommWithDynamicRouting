@@ -128,22 +128,22 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void recordRSSI(View view) {
-        EditText distanceText = findViewById(R.id.distance_editText);
-        Button recordRSSI = findViewById(R.id.record_rssi_button);
-        if (textboxIsEmpty(distanceText))
-            distanceText.setError("");
-        else {
-            distance = distanceText.getText().toString().trim();
-            if (willRecordRSSI) {
-                willRecordRSSI = false;
-                recordRSSI.setText("record rssi");
-            }
-            else {
-                Constants.EXP_NO = 0;
-                willRecordRSSI = true;
-                recordRSSI.setText("recording rssi");
-            }
-        }
+//        EditText distanceText = findViewById(R.id.distance_editText);
+//        Button recordRSSI = findViewById(R.id.record_rssi_button);
+//        if (textboxIsEmpty(distanceText))
+//            distanceText.setError("");
+//        else {
+//            distance = distanceText.getText().toString().trim();
+//            if (willRecordRSSI) {
+//                willRecordRSSI = false;
+//                recordRSSI.setText("record rssi");
+//            }
+//            else {
+//                Constants.EXP_NO = 0;
+//                willRecordRSSI = true;
+//                recordRSSI.setText("recording rssi");
+//            }
+//        }
     }
 
     public void connectButton(View view) {
@@ -185,6 +185,8 @@ public class HomeActivity extends AppCompatActivity {
         }
         String pktSizeStr = pktSizeText.getText().toString().trim();
         currentPktSize = Integer.parseInt(pktSizeStr);
+        Button rssi = findViewById(R.id.record_rssi_button);
+        rssi.setText("rtt running");
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.IPAddress == null) {
                 showToast("ip mac not synced");
@@ -575,6 +577,13 @@ public class HomeActivity extends AppCompatActivity {
                 retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType, cumulativeRTTs);
             else
                 retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
+            final Button rssi = findViewById(R.id.record_rssi_button);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    rssi.setText("rtt stopped");
+                }
+            });
             if (retVal)
                 showToast("rtt written successfully");
             else
