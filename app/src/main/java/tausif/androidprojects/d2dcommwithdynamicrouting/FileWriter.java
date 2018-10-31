@@ -76,15 +76,26 @@ class FileWriter {
         }
     }
 
-    static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTs) {
+    static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTs, int pktSizes[], long[] cumulativeRTTs) {
         String prefix = "WD_";
-        String filename = prefix + "THROUGHPUT_RTT_" + deviceName + "_" + distance + "_meters.txt";
+        String filename = prefix + "THRPT_RTT_" + deviceName + "_" + distance + "_meters.txt";
         File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.append("RTTs\n");
             for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
                 outputStreamWriter.append(String.valueOf(RTTs[i]));
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.append("\nPkt sizes\n");
+            for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
+                outputStreamWriter.append(String.valueOf(pktSizes[i]));
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.append("\nAccumulated RTTs\n");
+            for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
+                outputStreamWriter.append(String.valueOf(cumulativeRTTs[i]));
                 outputStreamWriter.append("\n");
             }
             outputStreamWriter.close();

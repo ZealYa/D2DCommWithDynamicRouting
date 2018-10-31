@@ -53,6 +53,7 @@ public class HomeActivity extends AppCompatActivity {
     int currentPktSize;
     long initialStartTime;
     long cumulativeRTTs[];
+    int correspondingPktSize[];
     int pktReceiveCount[];
     boolean pktReceiveCounted[];
     boolean pktLossExpStarted;
@@ -169,6 +170,7 @@ public class HomeActivity extends AppCompatActivity {
         if (!RTTCalculated[seqNo]) {
             currentSeqNo++;
             if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+                currentPktSize += 5;
                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
                 sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
             }
@@ -232,9 +234,11 @@ public class HomeActivity extends AppCompatActivity {
     public void calculateWDRTT(Device currentDevice, int pktSize) {
         rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
         cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
+        correspondingPktSize = new int[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
         rttHandler = new Handler();
         currentSeqNo = 0;
+        correspondingPktSize[currentSeqNo] = pktSize;
         rttCalculatedCount = 0;
         RTTs = new long[1000];
         Arrays.fill(RTTs, 0);
@@ -303,6 +307,8 @@ public class HomeActivity extends AppCompatActivity {
             showToast("ip mac not synced");
             return;
         }
+        currentPktSize = 5;
+        calculateWDRTT(currentDevice, currentPktSize);
     }
 
     public void TCPThroughputButton(View view) {
@@ -482,13 +488,15 @@ public class HomeActivity extends AppCompatActivity {
                         if (seqNo == currentSeqNo) {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
                             rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
+                            correspondingPktSize[seqNo] = pktSize;
+                            currentPktSize = pktSize + 5;
                             cumulativeRTTs[Constants.EXP_NO] = receivingTime - initialStartTime;
                             Constants.EXP_NO++;
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
                             currentSeqNo++;
                             if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
-                                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], pktSize);
+                                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], currentPktSize);
                                 sendWDRTTPkt(rttPkt, srcAddr);
                             } else {
                                 Constants.EXP_NO = 0;
@@ -615,23 +623,34 @@ public class HomeActivity extends AppCompatActivity {
         EditText pktSizeText = findViewById(R.id.pkt_size_editText);
         String pktSize = pktSizeText.getText().toString().trim();
 
+//        if (measurementType == Constants.RTT) {
+//            boolean retVal;
+//            if (deviceType == Constants.WIFI_DEVICE)
+//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType, cumulativeRTTs);
+//            else
+//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
+//            final Button rssi = findViewById(R.id.record_rssi_button);
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    rssi.setText("rtt stopped");
+//                }
+//            });
+//            if (retVal)
+//                showToast("rtt written successfully");
+//            else
+//                showToast("rtt write not successful");
+//        }
         if (measurementType == Constants.RTT) {
             boolean retVal;
             if (deviceType == Constants.WIFI_DEVICE)
-                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType, cumulativeRTTs);
+                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
             else
                 retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
-            final Button rssi = findViewById(R.id.record_rssi_button);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    rssi.setText("rtt stopped");
-                }
-            });
             if (retVal)
-                showToast("rtt written successfully");
+                showToast("thrpt rtt written successfully");
             else
-                showToast("rtt write not successful");
+                showToast("thrpt rtt write not successful");
         }
         else if (measurementType == Constants.PKT_LOSS) {
             boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
