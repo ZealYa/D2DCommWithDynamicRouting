@@ -53,7 +53,6 @@ public class HomeActivity extends AppCompatActivity {
     int pktReceiveCount[];
     boolean pktReceiveCounted[];
     boolean pktLossExpStarted;
-    boolean test;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
