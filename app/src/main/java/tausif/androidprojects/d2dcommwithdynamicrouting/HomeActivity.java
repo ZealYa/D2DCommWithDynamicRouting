@@ -234,16 +234,16 @@ public class HomeActivity extends AppCompatActivity {
     public void calculateWDRTT(Device currentDevice, int pktSize) {
         rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
         cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
-        correspondingPktSize = new int[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
         rttHandler = new Handler();
         currentSeqNo = 0;
-        correspondingPktSize[currentSeqNo] = pktSize;
         rttCalculatedCount = 0;
         RTTs = new long[1000];
         Arrays.fill(RTTs, 0);
         RTTCalculated = new boolean[1000];
         Arrays.fill(RTTCalculated, false);
+        correspondingPktSize = new int[1000];
+        correspondingPktSize[currentSeqNo] = pktSize;
         String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
         sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
     }
@@ -307,7 +307,7 @@ public class HomeActivity extends AppCompatActivity {
             showToast("ip mac not synced");
             return;
         }
-        currentPktSize = 5;
+        currentPktSize = 100;
         calculateWDRTT(currentDevice, currentPktSize);
     }
 
