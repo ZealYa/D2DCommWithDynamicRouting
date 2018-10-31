@@ -59,6 +59,8 @@ public class HomeActivity extends AppCompatActivity {
 
     TransferService transferService;
     Handler handler;
+    long fileTransferStartTime;
+    long fileTransferEndTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +81,7 @@ public class HomeActivity extends AppCompatActivity {
         Arrays.fill(pktReceiveCounted, false);
 
         handler = new Handler();
-        transferService = new TransferService(this);
+        transferService = new TransferService(this, this);
     }
 
     public void setUpPermissions() {
@@ -303,6 +305,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void TCPThroughputButton(View view) {
+        fileTransferStartTime = Calendar.getInstance().getTimeInMillis();
         transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
     }
 
@@ -584,6 +587,15 @@ public class HomeActivity extends AppCompatActivity {
                     }
                 }
             }
+        }
+    }
+
+    public void fileTransferFinished(String filename) {
+        if (filename.equals("test.txt"))
+            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(), "fileResponse.txt");
+        else if (filename.equals("fileResponse.txt")) {
+            fileTransferEndTime = Calendar.getInstance().getTimeInMillis();
+            showToast(String.valueOf(fileTransferEndTime - fileTransferStartTime));
         }
     }
 

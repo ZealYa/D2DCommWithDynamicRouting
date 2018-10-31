@@ -12,7 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-
+import java.util.Calendar;
 
 
 public class FileReceiver implements Runnable{
@@ -20,6 +20,7 @@ public class FileReceiver implements Runnable{
     private final Socket clientSocket;
     private final String TAG = FileReceiver.class.getName();
     private final OnTransferFinishListener onTransferFinishListener;
+    private final int FILE_CHUNK_SIZE = 256;
 
     public FileReceiver(OnTransferFinishListener onTransferFinishListener, Socket clientSocket){
         this.clientSocket = clientSocket;
@@ -33,14 +34,14 @@ public class FileReceiver implements Runnable{
             try {
                 dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 String fileName = null;
-                byte[] buffer = new byte[4096];
+                byte[] buffer = new byte[10096];
                 int contentLength = 0;
                 dataInputStream.readFully(buffer,0,2);
-                contentLength = buffer[0] * 256 + buffer[1];
+                contentLength = buffer[0] * FILE_CHUNK_SIZE + buffer[1];
                 dataInputStream.readFully(buffer,0,contentLength);
                 fileName = new String(buffer,0,contentLength);
                 dataInputStream.readFully(buffer,0,2);
-                contentLength = buffer[0] * 256 + buffer[1];
+                contentLength = buffer[0] * FILE_CHUNK_SIZE + buffer[1];
                 int read = 0;
                 int totalRead = 0;
                 File file = new File(Environment.getExternalStorageDirectory(),fileName);

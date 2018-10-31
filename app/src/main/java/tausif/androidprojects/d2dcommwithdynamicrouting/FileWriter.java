@@ -1,6 +1,7 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.os.Environment;
+import android.widget.EditText;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -112,4 +113,25 @@ class FileWriter {
         } catch (IOException FIOExec) {
         }
     }
+
+//    static void writeTCPThroughput(long transferTime) {
+//        for (Device device:)
+//        String distance;
+//        EditText distance =
+//        String filename = "TCP_THRPT_" + Constants.measuredDeviceName + "_" + "TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
+//        File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+//        try {
+//            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
+//            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+//            for (Device device:bluetoothDevices
+//                    ) {
+//                String rssiString = device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi);
+//                outputStreamWriter.append(rssiString);
+//                outputStreamWriter.append("\n");
+//            }
+//            outputStreamWriter.close();
+//            fileOutputStream.close();
+//        } catch (IOException FIOExec) {
+//        }
+//    }
 }

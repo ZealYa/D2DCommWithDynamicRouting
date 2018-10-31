@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.HomeActivity;
 
 
 public class TransferService implements OnTransferFinishListener {
@@ -19,9 +20,11 @@ public class TransferService implements OnTransferFinishListener {
     private ServerSocket socket;
     private Socket clientSocket;
     private Handler handler;
+    HomeActivity homeActivity;
 
-    public TransferService(Context context){
+    public TransferService(Context context, HomeActivity homeActivity){
         this.context = context;
+        this.homeActivity = homeActivity;
         handler = new Handler();
         executorService = Executors.newFixedThreadPool(MAX_THREAD);
     }
@@ -49,7 +52,7 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"packet send successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"file sent successfully", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -59,7 +62,8 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"received packet " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"received " + name, Toast.LENGTH_SHORT).show();
+                homeActivity.fileTransferFinished(name);
             }
         });
     }
