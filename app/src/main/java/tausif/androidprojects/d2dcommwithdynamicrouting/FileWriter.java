@@ -114,24 +114,18 @@ class FileWriter {
         }
     }
 
-//    static void writeTCPThroughput(long transferTime) {
-//        for (Device device:)
-//        String distance;
-//        EditText distance =
-//        String filename = "TCP_THRPT_" + Constants.measuredDeviceName + "_" + "TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
-//        File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
-//        try {
-//            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
-//            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-//            for (Device device:bluetoothDevices
-//                    ) {
-//                String rssiString = device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi);
-//                outputStreamWriter.append(rssiString);
-//                outputStreamWriter.append("\n");
-//            }
-//            outputStreamWriter.close();
-//            fileOutputStream.close();
-//        } catch (IOException FIOExec) {
-//        }
-//    }
+    static boolean writeTCPThroughput(String deviceName, long transferTime, String distance) {
+        String filename = "TcpThrpt_" + deviceName + "_" + distance + "_meters.txt";
+        File results = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(results);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.write(String.valueOf(transferTime));
+            outputStreamWriter.close();
+            fileOutputStream.close();
+            return true;
+        } catch (IOException FIOExec) {
+            return false;
+        }
+    }
 }

@@ -61,6 +61,7 @@ public class HomeActivity extends AppCompatActivity {
     Handler handler;
     long fileTransferStartTime;
     long fileTransferEndTime;
+    long fileTransferTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -305,6 +306,13 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void TCPThroughputButton(View view) {
+        int tag = (int)view.getTag();
+        currentDevice = combinedDeviceList.get(tag);
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
+            return;
+        }
         fileTransferStartTime = Calendar.getInstance().getTimeInMillis();
         transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
     }
@@ -544,9 +552,9 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         }
-        else if (pktType == Constants.UDP_THROUGHPUT) {
+        else if (pktType == Constants.UDP_THRPT) {
         }
-        else if (pktType == Constants.UDP_THROUGHPUT_RET) {
+        else if (pktType == Constants.UDP_THRPT_RET) {
             for (Device device:combinedDeviceList
                     ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
@@ -595,7 +603,8 @@ public class HomeActivity extends AppCompatActivity {
             transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(), "fileResponse.txt");
         else if (filename.equals("fileResponse.txt")) {
             fileTransferEndTime = Calendar.getInstance().getTimeInMillis();
-            showToast(String.valueOf(fileTransferEndTime - fileTransferStartTime));
+            fileTransferTime = fileTransferEndTime - fileTransferStartTime;
+            writeResult(currentDevice.wifiDevice.deviceName, Constants.TCP_THRPT, Constants.WIFI_DEVICE);
         }
     }
 
@@ -639,7 +648,14 @@ public class HomeActivity extends AppCompatActivity {
             else
                 showToast("pkt loss result writing not successful");
         }
-//        else if (measurementType == Constants.UDP_THROUGHPUT) {
+        else if (measurementType == Constants.TCP_THRPT) {
+            boolean retVal = FileWriter.writeTCPThroughput(deviceName, fileTransferTime, distance);
+            if (retVal)
+                showToast("tcp thrpt result written successfully");
+            else
+                showToast("tcp thrpt result writing not successful");
+        }
+//        else if (measurementType == Constants.UDP_THRPT) {
 //            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );
 //            if (retVal)
 //                showToast("throughput rtt written successfully");
