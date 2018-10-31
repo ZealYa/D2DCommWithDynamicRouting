@@ -32,31 +32,27 @@ public class FileReceiver implements Runnable{
             DataInputStream dataInputStream = null;
             try {
                 dataInputStream = new DataInputStream(clientSocket.getInputStream());
-//                String fileName = null;
-//                byte[] buffer = new byte[4096];
-//                int contentLength = 0;
-//                dataInputStream.readFully(buffer,0,2);
-//                contentLength = buffer[0] * 256 + buffer[1];
-//                dataInputStream.readFully(buffer,0,contentLength);
-//                fileName = new String(buffer,0,contentLength);
-//                dataInputStream.readFully(buffer,0,2);
-//                contentLength = buffer[0] * 256 + buffer[1];
-//                int read = 0;
-//                int totalRead = 0;
-//                File file = new File(Environment.getExternalStorageDirectory(),fileName);
-//                FileOutputStream fileOutputStream = new FileOutputStream(file);
-//                while (totalRead < contentLength && clientSocket.isConnected()){
-//                    read = dataInputStream.read(buffer,0,buffer.length);
-//                    fileOutputStream.write(buffer,0,read);
-//                    totalRead += read;
-//                }
-//                fileOutputStream.close();
-                byte readBytes[] = new byte[1024];
-                InputStream inputStream = clientSocket.getInputStream();
-                int numBytes = inputStream.read(readBytes);
-                String receivedPacket = new String(readBytes);
+                String fileName = null;
+                byte[] buffer = new byte[4096];
+                int contentLength = 0;
+                dataInputStream.readFully(buffer,0,2);
+                contentLength = buffer[0] * 256 + buffer[1];
+                dataInputStream.readFully(buffer,0,contentLength);
+                fileName = new String(buffer,0,contentLength);
+                dataInputStream.readFully(buffer,0,2);
+                contentLength = buffer[0] * 256 + buffer[1];
+                int read = 0;
+                int totalRead = 0;
+                File file = new File(Environment.getExternalStorageDirectory(),fileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                while (totalRead < contentLength && clientSocket.isConnected()){
+                    read = dataInputStream.read(buffer,0,buffer.length);
+                    fileOutputStream.write(buffer,0,read);
+                    totalRead += read;
+                }
+                fileOutputStream.close();
                 if(onTransferFinishListener != null){
-                    onTransferFinishListener.onReceiveSuccess(/*fileName*/receivedPacket);
+                    onTransferFinishListener.onReceiveSuccess(fileName);
                 }
                 Log.e(TAG,"File received successfully");
             }
@@ -71,6 +67,5 @@ public class FileReceiver implements Runnable{
                 }
             }
         }
-
     }
 }

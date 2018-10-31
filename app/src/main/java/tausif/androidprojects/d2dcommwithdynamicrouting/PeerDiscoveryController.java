@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.os.Build;
 import android.widget.Toast;
 
 public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoListener {
@@ -131,5 +132,13 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         Constants.groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
         Constants.isGroupOwner = wifiP2pInfo.isGroupOwner;
         homeActivity.connectionEstablished(Constants.WIFI_DIRECT_CONNECTION, null);
+    }
+
+    void stopPeerDiscovery() {
+        if (wifiP2pManager != null && Build.VERSION.SDK_INT >= 16)
+            wifiP2pManager.stopPeerDiscovery(channel, null);
+        if (bluetoothAdapter.isDiscovering())
+            bluetoothAdapter.cancelDiscovery();
+        context.unregisterReceiver(peerDiscoveryBroadcastReceiver);
     }
 }

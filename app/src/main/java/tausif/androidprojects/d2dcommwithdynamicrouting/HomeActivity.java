@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Set;
+
+import tausif.androidprojects.files.TransferService;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -54,6 +57,9 @@ public class HomeActivity extends AppCompatActivity {
     boolean pktReceiveCounted[];
     boolean pktLossExpStarted;
 
+    TransferService transferService;
+    Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +77,9 @@ public class HomeActivity extends AppCompatActivity {
         Arrays.fill(pktReceiveCount, 0);
         pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
         Arrays.fill(pktReceiveCounted, false);
+
+        handler = new Handler();
+        transferService = new TransferService(this);
     }
 
     public void setUpPermissions() {
@@ -293,6 +302,10 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void TCPThroughputButton(View view) {
+        transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
+    }
+
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
     public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
         wifiDevices = cleanUpDeviceList(wifiDevices, Constants.WIFI_DEVICE);
@@ -378,6 +391,16 @@ public class HomeActivity extends AppCompatActivity {
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             showToast("wifi direct connection established");
+            if (Constants.isGroupOwner)
+                transferService.startServer(8089);
+            else {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
+                    }
+                }, 3000);
+            }
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -638,5 +661,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        peerDiscoveryController.stopPeerDiscovery();
+        transferService.shutdown();
     }
 }
