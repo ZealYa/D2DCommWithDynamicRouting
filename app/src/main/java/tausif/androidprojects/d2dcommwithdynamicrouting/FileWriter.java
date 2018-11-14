@@ -125,13 +125,13 @@ class FileWriter {
         }
     }
 
-    static boolean writeTCPThroughput(String deviceName, long transferTime, String distance) {
-        String filename = "TcpThrpt_" + deviceName + "_" + distance + "_meters.txt";
+    static boolean writeTCPThroughput(String deviceName, double throughput, String distance) {
+        String filename = "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
         File results = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(results);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.write(String.valueOf(transferTime));
+            outputStreamWriter.write(String.valueOf(throughput));
             outputStreamWriter.close();
             fileOutputStream.close();
             return true;

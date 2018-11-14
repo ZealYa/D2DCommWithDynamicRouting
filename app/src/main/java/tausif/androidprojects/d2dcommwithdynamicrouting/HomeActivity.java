@@ -60,8 +60,6 @@ public class HomeActivity extends AppCompatActivity {
 
     TransferService transferService;
     Handler handler;
-    long fileTransferStartTime;
-    long fileTransferEndTime;
     long fileTransferTime;
 
     @Override
@@ -312,14 +310,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void TCPThroughputButton(View view) {
-        int tag = (int)view.getTag();
-        currentDevice = combinedDeviceList.get(tag);
-        EditText distanceText = findViewById(R.id.distance_editText);
-        if (textboxIsEmpty(distanceText)) {
-            distanceText.setError("enter distance");
-            return;
-        }
-        fileTransferStartTime = Calendar.getInstance().getTimeInMillis();
         transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
     }
 
@@ -606,14 +596,18 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void fileTransferFinished(String filename) {
-        if (filename.equals("test.txt"))
-            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(), "fileResponse.txt");
-        else if (filename.equals("fileResponse.txt")) {
-            fileTransferEndTime = Calendar.getInstance().getTimeInMillis();
-            fileTransferTime = fileTransferEndTime - fileTransferStartTime;
-            writeResult(currentDevice.wifiDevice.deviceName, Constants.TCP_THRPT, Constants.WIFI_DEVICE);
-        }
+    public void fileTransferFinished(double throughput) {
+        EditText distanceText = findViewById(R.id.distance_editText);
+        String distance = distanceText.getText().toString().trim();
+
+        EditText deviceNameText = findViewById(R.id.pkt_size_editText);
+        String deviceName = deviceNameText.getText().toString().trim();
+        deviceName = "NWSL " + deviceName;
+        boolean retVal = FileWriter.writeTCPThroughput(deviceName, throughput, distance);
+        if (retVal)
+            showToast("tcp throughput written");
+        else
+            showToast("tcp throughput writing not successful");
     }
 
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
