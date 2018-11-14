@@ -1,7 +1,6 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.os.Environment;
-import android.widget.EditText;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -125,13 +124,17 @@ class FileWriter {
         }
     }
 
-    static boolean writeTCPThroughput(String deviceName, double throughput, String distance) {
+    static boolean writeTCPThroughput(String deviceName, int filesize, long totalTime, double throughput, String distance) {
         String filename = "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
         File results = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(results);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.write(String.valueOf(throughput));
+            outputStreamWriter.append(String.valueOf(filesize));
+            outputStreamWriter.append("\n");
+            outputStreamWriter.append(String.valueOf(totalTime));
+            outputStreamWriter.append("\n");
+            outputStreamWriter.append(String.valueOf(throughput));
             outputStreamWriter.close();
             fileOutputStream.close();
             return true;

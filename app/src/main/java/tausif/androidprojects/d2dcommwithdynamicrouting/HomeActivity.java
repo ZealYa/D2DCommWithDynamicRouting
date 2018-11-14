@@ -596,14 +596,14 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void fileTransferFinished(double throughput) {
+    public void fileTransferFinished(int filesize, long totalTime, double throughput) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
 
         EditText deviceNameText = findViewById(R.id.pkt_size_editText);
         String deviceName = deviceNameText.getText().toString().trim();
         deviceName = "NWSL " + deviceName;
-        boolean retVal = FileWriter.writeTCPThroughput(deviceName, throughput, distance);
+        boolean retVal = FileWriter.writeTCPThroughput(deviceName, filesize, totalTime, throughput, distance);
         if (retVal)
             showToast("tcp throughput written");
         else
@@ -660,13 +660,6 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("pkt loss result written successfully");
             else
                 showToast("pkt loss result writing not successful");
-        }
-        else if (measurementType == Constants.TCP_THRPT) {
-            boolean retVal = FileWriter.writeTCPThroughput(deviceName, fileTransferTime, distance);
-            if (retVal)
-                showToast("tcp thrpt result written successfully");
-            else
-                showToast("tcp thrpt result writing not successful");
         }
 //        else if (measurementType == Constants.UDP_THRPT) {
 //            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );

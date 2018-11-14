@@ -48,7 +48,7 @@ public class FileReceiver implements Runnable{
                 double s = (timeTaken) / 1000.0;
                 double throughput = MB / s;
                 if(onTransferFinishListener != null){
-                    onTransferFinishListener.onReceiveSuccess(throughput);
+                    onTransferFinishListener.onReceiveSuccess(totalRead, timeTaken, throughput);
                 }
                 Log.e("file received",String.valueOf(timeTaken)+" milliseconds");
                 Log.d("file received",String.valueOf(totalRead)+" bytes");

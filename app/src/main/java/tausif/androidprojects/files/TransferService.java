@@ -58,12 +58,12 @@ public class TransferService implements OnTransferFinishListener {
     }
 
     @Override
-    public void onReceiveSuccess(final double throughput) {
+    public void onReceiveSuccess(final int filesize, final long totalTime, final double throughput) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(context,"file received", Toast.LENGTH_SHORT).show();
-                homeActivity.fileTransferFinished(throughput);
+                homeActivity.fileTransferFinished(filesize, totalTime, throughput);
             }
         });
     }
