@@ -33,10 +33,15 @@ public class Constants {
     static int EXP_NO = 0;
     static final int MAX_NO_OF_EXPS = 50;
     static final int MAX_PKT_LOSS_EXPS = 20;
+    private static final int THROUGHPUT_FILE_LENGTH = 1000;
 
     static final int WIFI_DIRECT_CONNECTION = 1000;
     static final int BLUETOOTH_CONNECTION = 1001;
 
     static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 2000;
     static final int REQUEST_CODE_LOCATION = 2001;
+
+    public static int getThroughputFileLength() {
+        return THROUGHPUT_FILE_LENGTH;
+    }
 }

@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.Constants;
 
 
 public class FileSender implements Runnable{
@@ -34,21 +35,32 @@ public class FileSender implements Runnable{
     public void run() {
         File file = new File(path,name);
         try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            byte[] buffer = new byte[10096];
-            int read = 0;
-            buffer[0] = (byte) (name.length() / FILE_CHUNK_SIZE);
-            buffer[1] = (byte) (name.length() % FILE_CHUNK_SIZE);
-            System.arraycopy(name.getBytes(),0,buffer,2,name.length());
+//            FileInputStream fileInputStream = new FileInputStream(file);
+//            byte[] buffer = new byte[10096];
+//            int read = 0;
+//            buffer[0] = (byte) (name.length() / FILE_CHUNK_SIZE);
+//            buffer[1] = (byte) (name.length() % FILE_CHUNK_SIZE);
+//            System.arraycopy(name.getBytes(),0,buffer,2,name.length());
             OutputStream outputStream = clientSocket.getOutputStream();
-            outputStream.write(buffer,0,name.length()+2);
-            outputStream.flush();
-            buffer[0] = (byte) (file.length() / FILE_CHUNK_SIZE);
-            buffer[1] = (byte) (file.length() % FILE_CHUNK_SIZE);
-            outputStream.write(buffer,0,2);
-            outputStream.flush();
-            while( (read = fileInputStream.read(buffer,0,buffer.length)) > 0){
-                outputStream.write(buffer,0,read);
+//            outputStream.write(buffer,0,name.length()+2);
+//            outputStream.flush();
+//            buffer[0] = (byte) (file.length() / FILE_CHUNK_SIZE);
+//            buffer[1] = (byte) (file.length() % FILE_CHUNK_SIZE);
+//            outputStream.write(buffer,0,2);
+//            outputStream.flush();
+//            while( (read = fileInputStream.read(buffer,0,buffer.length)) > 0){
+//                outputStream.write(buffer,0,read);
+//                outputStream.flush();
+//            }
+            String data = "this is a test file transfer";
+            while (data.length() < 800) {
+                data = data.concat(data);
+            }
+            byte[] buffer = data.getBytes();
+            int totalWrite = 0;
+            while (totalWrite < Constants.getThroughputFileLength()) {
+                outputStream.write(buffer, 0, buffer.length);
+                totalWrite += buffer.length;
                 outputStream.flush();
             }
             if(onTransferFinishListener != null){

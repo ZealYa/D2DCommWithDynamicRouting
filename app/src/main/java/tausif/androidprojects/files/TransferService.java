@@ -62,8 +62,8 @@ public class TransferService implements OnTransferFinishListener {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"received " + name, Toast.LENGTH_SHORT).show();
-                homeActivity.fileTransferFinished(name);
+//                Toast.makeText(context,"received " + name, Toast.LENGTH_SHORT).show();
+//                homeActivity.fileTransferFinished(name);
             }
         });
     }
