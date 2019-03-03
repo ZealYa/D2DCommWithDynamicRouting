@@ -21,6 +21,7 @@ public class Constants {
     static final int TIME_SLOT_LENGTH = 10;    // in seconds
     static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
+    static final int RSSI = 100;
     static final int RTT = 101;
     static final int RTT_RET = 102;
     static final int PKT_LOSS = 103;

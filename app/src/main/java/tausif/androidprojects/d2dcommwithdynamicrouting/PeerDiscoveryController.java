@@ -38,7 +38,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         peerDiscoveryBroadcastReceiver.setPeerDiscoveryController(this);
         intentFilter = new IntentFilter();
         configureWiFiDiscovery();
-//        configureBluetoothDiscovery();
+        configureBluetoothDiscovery();
         context.registerReceiver(peerDiscoveryBroadcastReceiver, intentFilter);
         timeSlotNo = 0;
         Timer timer = new Timer();
@@ -82,14 +82,20 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
             wifiDevices.clear();
         for (WifiP2pDevice device: deviceList.getDeviceList()
              ) {
-            Device newDevice = new Device(Constants.WIFI_DEVICE, device, null, 0, false);
-            wifiDevices.add(newDevice);
+            String deviceName = device.deviceName;
+            if (deviceName!=null && deviceName.contains("NWSL")) {
+                Device newDevice = new Device(Constants.WIFI_DEVICE, device, null, 0, false);
+                wifiDevices.add(newDevice);
+            }
         }
     }
 
     void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
-        Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
-        bluetoothDevices.add(newDevice);
+        String deviceName = device.getName();
+        if (deviceName!=null && deviceName.contains("NWSL")) {
+            Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
+            bluetoothDevices.add(newDevice);
+        }
     }
 
     private class controlPeerDiscovery extends TimerTask {
@@ -97,21 +103,12 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         public void run() {
             if (timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
-                // adding up already paired devices
-//                if (bluetoothEnabled) {
-//                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-//                    if (pairedDevices.size() > 0) {
-//                        for (BluetoothDevice pairedDevice: pairedDevices
-//                                ) {
-//                            Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
-//                            bluetoothDevices.add(device);
-//                        }
-//                    }
-//                    bluetoothAdapter.startDiscovery();
-//                }
+                if (bluetoothEnabled) {
+                    bluetoothAdapter.startDiscovery();
+                }
             } else {
-//                if (bluetoothEnabled)
-//                    bluetoothAdapter.cancelDiscovery();
+                if (bluetoothEnabled)
+                    bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             timeSlotNo++;

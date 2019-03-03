@@ -106,8 +106,8 @@ class FileWriter {
     }
 
 
-    static void writeRSSIResult(String distance, String timestamp, ArrayList<Device> bluetoothDevices) {
-        String filename = "RSSI_" + timestamp + "_" + distance + "_meters.txt";
+    static void writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
+        String filename = "RSSI_" + "_" + distance + "_meters.txt";
         File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);

@@ -40,7 +40,6 @@ public class HomeActivity extends AppCompatActivity {
     BTConnectedSocketManager btConnectedSocketManager;
     Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
-    boolean willRecordRSSI;
     int currentSeqNo;
     long RTTs[];
     long rttToWrite[];
@@ -48,7 +47,6 @@ public class HomeActivity extends AppCompatActivity {
     int rttCalculatedCount;
     Handler rttHandler;
     Handler pktLossHandler;
-    String distance;
     Device currentDevice;
     int currentPktSize;
     long initialStartTime;
@@ -57,31 +55,40 @@ public class HomeActivity extends AppCompatActivity {
     int pktReceiveCount[];
     boolean pktReceiveCounted[];
     boolean pktLossExpStarted;
-
     TransferService transferService;
     Handler handler;
-    long fileTransferTime;
+    boolean rssiRecorded;
+    ArrayList<Device> rssiDevices;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        initData();
+        initOperations();
+    }
+
+    public void initData() {
         willUpdateDeviceList = true;
-        willRecordRSSI = false;
-        setUpPermissions();
-//        BTDiscoverableHandler = new Handler();
-//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
-//        setUpBluetoothDataTransfer();
-        startDiscovery();
-//        getBTPairedDevices();
         pktLossExpStarted = false;
         pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
         Arrays.fill(pktReceiveCount, 0);
         pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
         Arrays.fill(pktReceiveCounted, false);
+        rssiRecorded = false;
+        rssiDevices = new ArrayList<>();
+        Constants.EXP_NO = 0;
+        configureDeviceListView();
+    }
 
+    public void initOperations() {
+        setUpPermissions();
+        BTDiscoverableHandler = new Handler();
+        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
         handler = new Handler();
         transferService = new TransferService(this, this);
+        setUpBluetoothDataTransfer();
     }
 
     public void setUpPermissions() {
@@ -108,8 +115,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
-    public void startDiscovery(){
-        configureDeviceListView();
+    public void startDiscovery(View view){
         peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
@@ -138,29 +144,39 @@ public class HomeActivity extends AppCompatActivity {
         deviceListAdapter.notifyDataSetChanged();
     }
 
-    public void recordRSSI(View view) {
-//        EditText distanceText = findViewById(R.id.distance_editText);
-//        Button recordRSSI = findViewById(R.id.record_rssi_button);
-//        if (textboxIsEmpty(distanceText))
-//            distanceText.setError("");
-//        else {
-//            distance = distanceText.getText().toString().trim();
-//            if (willRecordRSSI) {
-//                willRecordRSSI = false;
-//                recordRSSI.setText("record rssi");
-//            }
-//            else {
-//                Constants.EXP_NO = 0;
-//                willRecordRSSI = true;
-//                recordRSSI.setText("recording rssi");
-//            }
-//        }
+    //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
+    public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
+        if (willUpdateDeviceList) {
+            this.wifiDevices = wifiDevices;
+            this.bluetoothDevices = bluetoothDevices;
+            if (combinedDeviceList.size() > 0)
+                combinedDeviceList.clear();
+            combinedDeviceList.addAll(this.bluetoothDevices);
+            combinedDeviceList.addAll(this.wifiDevices);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    deviceListAdapter.notifyDataSetChanged();
+                }
+            });
+            if (!rssiRecorded) {
+                if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                    showToast("rssi recorded");
+                    Constants.EXP_NO = 0;
+                    rssiRecorded = true;
+                    writeResult(null, Constants.RSSI, Constants.BLUETOOTH_DEVICE);
+                }
+                else {
+                    rssiDevices.addAll(this.bluetoothDevices);
+                    Constants.EXP_NO++;
+                }
+            }
+        }
     }
 
     public void connectButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
-
         peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
     }
 
@@ -197,7 +213,7 @@ public class HomeActivity extends AppCompatActivity {
         }
         String pktSizeStr = pktSizeText.getText().toString().trim();
         currentPktSize = Integer.parseInt(pktSizeStr);
-        Button rssi = findViewById(R.id.record_rssi_button);
+        Button rssi = findViewById(R.id.start_discovery_button);
         rssi.setText("rtt running");
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.IPAddress == null) {
@@ -313,87 +329,7 @@ public class HomeActivity extends AppCompatActivity {
         transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
     }
 
-    //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
-    public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
-        wifiDevices = cleanUpDeviceList(wifiDevices, Constants.WIFI_DEVICE);
-        bluetoothDevices = cleanUpDeviceList(bluetoothDevices, Constants.BLUETOOTH_DEVICE);
-        if (willUpdateDeviceList) {
-            this.wifiDevices = wifiDevices;
-            this.bluetoothDevices = bluetoothDevices;
-            if (combinedDeviceList.size() > 0)
-                combinedDeviceList.clear();
-            combinedDeviceList.addAll(this.bluetoothDevices);
-            combinedDeviceList.addAll(this.wifiDevices);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    deviceListAdapter.notifyDataSetChanged();
-                }
-            });
-            if (willRecordRSSI) {
-                if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
-                    showToast("rssi recorded");
-                    willRecordRSSI = false;
-                    final Button recordRSSI = findViewById(R.id.record_rssi_button);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            recordRSSI.setText("record rssi");
-                        }
-                    });
-                    Constants.EXP_NO = 0;
-                }
-                else {
-                    long currentTime = Calendar.getInstance().getTimeInMillis();
-                    String timestamp = String.valueOf(currentTime);
-                    FileWriter.writeRSSIResult(distance, timestamp, bluetoothDevices);
-                    Log.d("finished exp no", String.valueOf(Constants.EXP_NO));
-                    Constants.EXP_NO++;
-                }
-            }
-        }
-    }
 
-    public ArrayList<Device> cleanUpDeviceList(ArrayList<Device> devices, int deviceType) {
-        ArrayList<Device> cleanedList = new ArrayList<>();
-        if (deviceType == Constants.WIFI_DEVICE) {
-            for (Device newDevice: devices
-                 ) {
-                String deviceName = newDevice.wifiDevice.deviceName;
-                if (deviceName!=null && newDevice.wifiDevice.deviceName.contains("NWSL")) {
-                    boolean newDeviceFlag = true;
-                    for (Device oldDevice: cleanedList
-                            ) {
-                        if (oldDevice.wifiDevice.deviceAddress.equals(newDevice.wifiDevice.deviceAddress)) {
-                            newDeviceFlag = false;
-                            break;
-                        }
-                    }
-                    if (newDeviceFlag)
-                        cleanedList.add(newDevice);
-                }
-            }
-        }
-        else {
-            for (Device newDevice: devices
-                    ) {
-                String deviceName = newDevice.bluetoothDevice.getName();
-                if (deviceName!=null && deviceName.contains("NWSL")) {
-                    boolean newDeviceFlag = true;
-                    for (Device oldDevice: cleanedList
-                            ) {
-                        if (oldDevice.bluetoothDevice.getAddress().equals(newDevice.bluetoothDevice.getAddress())) {
-                            newDeviceFlag = false;
-                            break;
-                        }
-                    }
-                    if (newDeviceFlag)
-                        cleanedList.add(newDevice);
-                }
-            }
-        }
-        return cleanedList;
-    }
 
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
@@ -509,7 +445,7 @@ public class HomeActivity extends AppCompatActivity {
                             if (pktReceiveCount[expNo] == 0) {
                                 if (!pktLossExpStarted) {
                                     pktLossExpStarted = true;
-                                    final Button rssi = findViewById(R.id.record_rssi_button);
+                                    final Button rssi = findViewById(R.id.start_discovery_button);
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
@@ -614,8 +550,9 @@ public class HomeActivity extends AppCompatActivity {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
 
-        EditText pktSizeText = findViewById(R.id.pkt_size_editText);
-        String pktSize = pktSizeText.getText().toString().trim();
+        if (measurementType == Constants.RSSI) {
+            FileWriter.writeRSSIResult(distance, rssiDevices);
+        }
 
 //        if (measurementType == Constants.RTT) {
 //            boolean retVal;
@@ -635,21 +572,21 @@ public class HomeActivity extends AppCompatActivity {
 //            else
 //                showToast("rtt write not successful");
 //        }
-        if (measurementType == Constants.RTT) {
-            boolean retVal;
-            if (deviceType == Constants.WIFI_DEVICE)
-                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
-            else
-                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
-            if (retVal)
-                showToast("thrpt rtt written successfully");
-            else
-                showToast("thrpt rtt write not successful");
-        }
+//        if (measurementType == Constants.RTT) {
+//            boolean retVal;
+//            if (deviceType == Constants.WIFI_DEVICE)
+//                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
+//            else
+//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
+//            if (retVal)
+//                showToast("thrpt rtt written successfully");
+//            else
+//                showToast("thrpt rtt write not successful");
+//        }
         else if (measurementType == Constants.PKT_LOSS) {
             boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
             pktLossExpStarted = false;
-            final Button rssi = findViewById(R.id.record_rssi_button);
+            final Button rssi = findViewById(R.id.start_discovery_button);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
