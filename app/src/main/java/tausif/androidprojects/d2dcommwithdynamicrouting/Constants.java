@@ -18,7 +18,7 @@ public class Constants {
     static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    static final int TIME_SLOT_LENGTH = 10;    // in seconds
+    static final int TIME_SLOT_LENGTH = 5;    // in seconds
     static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
     static final int RSSI = 100;
@@ -32,7 +32,7 @@ public class Constants {
     static final int TCP_THRPT = 108;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 50;
+    static final int MAX_NO_OF_EXPS = 5;
     static final int MAX_PKT_LOSS_EXPS = 20;
 
     private static final int THROUGHPUT_FILE_LENGTH = 5000000;
