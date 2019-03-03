@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,6 +98,17 @@ public class HomeActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
+        File resultFolder = new File(Environment.getExternalStorageDirectory() + "/D2D_Experiment_Results");
+        if (resultFolder.exists())
+            showToast("result folder exists");
+        else {
+            showToast("creating result folder");
+            boolean folderCreated = resultFolder.mkdir();
+            if (folderCreated)
+                showToast("result folder created successfully");
+            else
+                showToast("could not create result folder");
+        }
     }
 
     private Runnable makeBluetoothDiscoverable = new Runnable() {
