@@ -98,7 +98,7 @@ public class HomeActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
-        File resultFolder = new File(Environment.getExternalStorageDirectory() + "/D2D_Experiment_Results");
+        File resultFolder = new File(Environment.getExternalStorageDirectory() + "/" + Constants.RESULT_FOLDER_NAME);
         if (resultFolder.exists())
             showToast("result folder exists");
         else {
@@ -561,9 +561,13 @@ public class HomeActivity extends AppCompatActivity {
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
-
+        boolean writeSuccess;
         if (measurementType == Constants.RSSI) {
-            FileWriter.writeRSSIResult(distance, rssiDevices);
+            writeSuccess = FileWriter.writeRSSIResult(distance, rssiDevices);
+            if (writeSuccess)
+                showToast("RSSI result written successfully");
+            else
+                showToast("RSSI result write failed");
         }
 
 //        if (measurementType == Constants.RTT) {
@@ -619,14 +623,7 @@ public class HomeActivity extends AppCompatActivity {
 //        }
     }
 
-    //function to show an alert message
-    public void showAlert(final String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message);
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
+//    function to show a long Toast message
     public void showToast(final String message) {
         runOnUiThread(new Runnable() {
             @Override
@@ -636,7 +633,7 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    //function to check empty text field
+//    function to check empty text field
     public boolean textboxIsEmpty(EditText editText) {
         return editText.getText().toString().trim().length() == 0;
     }

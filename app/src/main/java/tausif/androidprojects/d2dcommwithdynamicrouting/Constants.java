@@ -43,6 +43,8 @@ public class Constants {
     static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 2000;
     static final int REQUEST_CODE_LOCATION = 2001;
 
+    static final String RESULT_FOLDER_NAME = "D2D_Experiment_Results";
+
     public static int getThroughputFileLength() {
         return THROUGHPUT_FILE_LENGTH;
     }

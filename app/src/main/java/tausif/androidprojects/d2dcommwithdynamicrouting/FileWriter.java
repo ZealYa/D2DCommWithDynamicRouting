@@ -106,9 +106,11 @@ class FileWriter {
     }
 
 
-    static void writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
+    static boolean writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
         String filename = "RSSI_" + "_" + distance + "_meters.txt";
-        File RSSIResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File RSSIResults = new File(path);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
@@ -120,7 +122,9 @@ class FileWriter {
             }
             outputStreamWriter.close();
             fileOutputStream.close();
+            return true;
         } catch (IOException FIOExec) {
+            return false;
         }
     }
 
