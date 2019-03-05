@@ -9,14 +9,39 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 class FileWriter {
-    static boolean writeRTTResult(String deviceName, String pktSize, String distance, long[] RTTs, int deviceType, long[] cumulativeRTTs) {
+
+    static boolean writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
+        String filename = "RSSI_" + "_" + distance + "_meters.txt";
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File RSSIResults = new File(path);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            for (Device device:bluetoothDevices
+            ) {
+                String rssiString = device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi);
+                outputStreamWriter.append(rssiString);
+                outputStreamWriter.append("\n");
+            }
+            outputStreamWriter.close();
+            fileOutputStream.close();
+            return true;
+        } catch (IOException FIOExec) {
+            return false;
+        }
+    }
+
+    static boolean writeRTTResult(String deviceName, String distance, long[] RTTs, int deviceType, long[] cumulativeRTTs) {
         String prefix;
         if (deviceType == Constants.BLUETOOTH_DEVICE)
             prefix = "BT_";
         else
             prefix = "WD_";
-        String filename = prefix + "RTT_" + deviceName + "_" + pktSize + "_" + distance + "_meters.txt";
-        File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        String filename = prefix + "RTT_" + deviceName + "_" + distance + "_meters.txt";
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File RTTResults = new File(path);
         if (deviceType == Constants.BLUETOOTH_DEVICE) {
             try {
                 FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
@@ -95,29 +120,6 @@ class FileWriter {
             outputStreamWriter.append("\nAccumulated RTTs\n");
             for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
                 outputStreamWriter.append(String.valueOf(cumulativeRTTs[i]));
-                outputStreamWriter.append("\n");
-            }
-            outputStreamWriter.close();
-            fileOutputStream.close();
-            return true;
-        } catch (IOException FIOExec) {
-            return false;
-        }
-    }
-
-
-    static boolean writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
-        String filename = "RSSI_" + "_" + distance + "_meters.txt";
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
-        path = path + "/" + filename;
-        File RSSIResults = new File(path);
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(RSSIResults);
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            for (Device device:bluetoothDevices
-                 ) {
-                String rssiString = device.bluetoothDevice.getName() + " " + String.valueOf(device.rssi);
-                outputStreamWriter.append(rssiString);
                 outputStreamWriter.append("\n");
             }
             outputStreamWriter.close();

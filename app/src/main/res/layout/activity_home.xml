@@ -23,15 +23,6 @@
             android:hint="distance"
             android:background="@android:color/holo_green_dark"/>
 
-        <EditText
-            android:id="@+id/pkt_size_editText"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="50dp"
-            android:inputType="numberDecimal"
-            android:hint="packet size"
-            android:background="@android:color/holo_red_dark"/>
-
         <Button
             android:layout_width="0dp"
             android:layout_height="match_parent"

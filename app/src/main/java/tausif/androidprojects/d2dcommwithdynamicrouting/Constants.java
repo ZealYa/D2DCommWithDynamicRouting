@@ -15,6 +15,7 @@ public class Constants {
     static final int BLUETOOTH_DEVICE = 0;
     static final int WIFI_DEVICE = 1;
 
+    static final int RTT_PKT_SIZE = 500;     //in bytes
     static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     static final int MAX_LOSS_RATIO_PKTS = 100;
 

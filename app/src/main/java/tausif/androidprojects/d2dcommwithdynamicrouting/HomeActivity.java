@@ -208,24 +208,15 @@ public class HomeActivity extends AppCompatActivity {
             distanceText.setError("enter distance");
             return;
         }
-        EditText pktSizeText = findViewById(R.id.pkt_size_editText);
-        if (textboxIsEmpty(pktSizeText)) {
-            pktSizeText.setError("enter packet size");
-            return;
-        }
-        String pktSizeStr = pktSizeText.getText().toString().trim();
-        currentPktSize = Integer.parseInt(pktSizeStr);
-        Button rssi = findViewById(R.id.start_discovery_button);
-        rssi.setText("rtt running");
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.IPAddress == null) {
                 showToast("ip mac not synced");
                 return;
             }
-            calculateWDRTT(currentDevice, currentPktSize);
+            calculateWDRTT(currentDevice, Constants.RTT_PKT_SIZE);
         }
         else {
-            calculateBTRTT(currentDevice, currentPktSize);
+            calculateBTRTT(currentDevice, Constants.RTT_PKT_SIZE);
         }
     }
 
@@ -538,14 +529,14 @@ public class HomeActivity extends AppCompatActivity {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
 
-        EditText deviceNameText = findViewById(R.id.pkt_size_editText);
-        String deviceName = deviceNameText.getText().toString().trim();
-        deviceName = "NWSL " + deviceName;
-        boolean retVal = FileWriter.writeTCPThroughput(deviceName, filesize, totalTime, throughput, distance);
-        if (retVal)
-            showToast("tcp throughput written");
-        else
-            showToast("tcp throughput writing not successful");
+//        EditText deviceNameText = findViewById(R.id.pkt_size_editText);
+//        String deviceName = deviceNameText.getText().toString().trim();
+//        deviceName = "NWSL " + deviceName;
+//        boolean retVal = FileWriter.writeTCPThroughput(deviceName, filesize, totalTime, throughput, distance);
+//        if (retVal)
+//            showToast("tcp throughput written");
+//        else
+//            showToast("tcp throughput writing not successful");
     }
 
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
@@ -558,6 +549,10 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("RSSI result written successfully");
             else
                 showToast("RSSI result write failed");
+        }
+        else if (measurementType == Constants.RTT) {
+            if (deviceType == Constants.BLUETOOTH_DEVICE)
+                writeSuccess = FileWriter.writeRTTResult(deviceName, distance, RTTs, deviceType, cumulativeRTTs);
         }
 
 //        if (measurementType == Constants.RTT) {
