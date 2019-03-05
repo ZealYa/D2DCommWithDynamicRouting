@@ -71,7 +71,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void initData() {
-        willUpdateDeviceList = true;
+        willUpdateDeviceList = false;
         pktLossExpStarted = false;
         pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
         Arrays.fill(pktReceiveCount, 0);
@@ -128,6 +128,7 @@ public class HomeActivity extends AppCompatActivity {
 
     //configures the bluetooth and wifi discovery options and starts the background process for discovery
     public void startDiscovery(View view){
+        willUpdateDeviceList = true;
         peerDiscoveryController = new PeerDiscoveryController(this, this);
     }
 
@@ -137,23 +138,6 @@ public class HomeActivity extends AppCompatActivity {
         combinedDeviceList = new ArrayList<>();
         deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
         deviceListView.setAdapter(deviceListAdapter);
-    }
-
-    public void getBTPairedDevices() {
-        configureDeviceListView();
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Constants.hostBluetoothName = bluetoothAdapter.getName();
-        bluetoothDevices = new ArrayList<>();
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice pairedDevice: pairedDevices
-                    ) {
-                Device device = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
-                bluetoothDevices.add(device);
-            }
-        }
-        combinedDeviceList.addAll(bluetoothDevices);
-        deviceListAdapter.notifyDataSetChanged();
     }
 
     //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
@@ -186,7 +170,13 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void connectButton(View view) {
+    public void connectBTButton(View view) {
+        int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice.bluetoothDevice.createBond();
+    }
+
+    public void connectWDButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
         peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));

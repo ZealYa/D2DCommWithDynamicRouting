@@ -49,6 +49,9 @@ public class DeviceListAdapter extends BaseAdapter {
             rowView = mInflater.inflate(R.layout.bt_device_list_row, viewGroup, false);
             deviceName = currentDevice.bluetoothDevice.getName();
 
+            Button connect = (Button)rowView.findViewById(R.id.connect_bt_button);
+            connect.setTag(i);
+
             Button rtt = (Button)rowView.findViewById(R.id.rtt_button);
             rtt.setTag(i);
 

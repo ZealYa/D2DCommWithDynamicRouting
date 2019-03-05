@@ -42,7 +42,7 @@
             android:id="@+id/connect_button"
             android:background="#a4c639"
             android:layout_margin="5dp"
-            android:onClick="connectButton"/>
+            android:onClick="connectWDButton"/>
 
         <Button
             android:layout_width="0dp"

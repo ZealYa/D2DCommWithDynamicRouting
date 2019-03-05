@@ -93,8 +93,18 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     void bluetoothDeviceDiscovered(BluetoothDevice device, int rssi) {
         String deviceName = device.getName();
         if (deviceName!=null && deviceName.contains("NWSL")) {
-            Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
-            bluetoothDevices.add(newDevice);
+            boolean deviceAdded = false;
+            for (Device priorDevice: bluetoothDevices
+                 ) {
+                if (priorDevice.bluetoothDevice.getAddress().equals(device.getAddress())) {
+                    deviceAdded = true;
+                    break;
+                }
+            }
+            if (!deviceAdded) {
+                Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, device, rssi, false);
+                bluetoothDevices.add(newDevice);
+            }
         }
     }
 
@@ -104,6 +114,15 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
             if (timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
                 if (bluetoothEnabled) {
+                    bluetoothDevices = new ArrayList<>();
+                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                    if (pairedDevices.size() > 0) {
+                        for (BluetoothDevice pairedDevice: pairedDevices
+                             ) {
+                            Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
+                            bluetoothDevices.add(newDevice);
+                        }
+                    }
                     bluetoothAdapter.startDiscovery();
                 }
             } else {
