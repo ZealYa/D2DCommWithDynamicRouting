@@ -170,13 +170,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void managePktLossTimeBound() {
-        Constants.EXP_NO++;
-        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
-            startPktLossExp();
-        }
-    }
-
     public void connectBTButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
@@ -354,6 +347,13 @@ public class HomeActivity extends AppCompatActivity {
         }, 5000);
     }
 
+    public void managePktLossTimeBound() {
+        Constants.EXP_NO++;
+        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
+            startPktLossExp();
+        }
+    }
+
     public void UDPThroughputButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
@@ -439,13 +439,6 @@ public class HomeActivity extends AppCompatActivity {
                             if (pktReceiveCount[expNo] == 0) {
                                 if (!pktLossExpStarted) {
                                     pktLossExpStarted = true;
-                                    final Button rssi = findViewById(R.id.start_discovery_button);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            rssi.setText("pkt loss running");
-                                        }
-                                    });
                                 }
                                 pktReceiveCount[expNo]++;
                                 runOnUiThread(new Runnable() {
@@ -564,16 +557,9 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("RTT result write failed");
         }
         else if (measurementType == Constants.PKT_LOSS) {
-            boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
+            writeSuccess = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
             pktLossExpStarted = false;
-            final Button rssi = findViewById(R.id.start_discovery_button);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    rssi.setText("pkt loss stopped");
-                }
-            });
-            if (retVal)
+            if (writeSuccess)
                 showToast("pkt loss result written successfully");
             else
                 showToast("pkt loss result writing not successful");

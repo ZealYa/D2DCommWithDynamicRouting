@@ -83,7 +83,9 @@ class FileWriter {
 
     static boolean writePktLossResult(String deviceName, String distance, int pktReceiveCount[]) {
         String filename = "PktLoss" + "_" + deviceName + "_" + "TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
-        File pktLossResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File pktLossResults = new File(path);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(pktLossResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
