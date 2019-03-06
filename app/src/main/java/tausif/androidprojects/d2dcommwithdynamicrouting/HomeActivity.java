@@ -170,6 +170,13 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void managePktLossTimeBound() {
+        Constants.EXP_NO++;
+        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
+            startPktLossExp();
+        }
+    }
+
     public void connectBTButton(View view) {
         int tag = (int)view.getTag();
         Device currentDevice = combinedDeviceList.get(tag);
@@ -182,21 +189,52 @@ public class HomeActivity extends AppCompatActivity {
         peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
     }
 
-    public void manageRttTimeBound(int seqNo) {
-        if (!RTTCalculated[seqNo]) {
-            currentSeqNo++;
-            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
-                currentPktSize += 5;
-                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
-                sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+    public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
+        if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
+            showToast("wifi direct connection established");
+            if (Constants.isGroupOwner)
+                transferService.startServer(8089);
+            else {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
+                    }
+                }, 3000);
             }
+            WDUDPListener udpListener = new WDUDPListener(this);
+            udpListener.start();
+            if (!Constants.isGroupOwner)
+                ipMacSync();
+        }
+        else {
+            showToast("bluetooth connection established");
+            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+            btConnectedSocketManager.start();
         }
     }
 
-    public void managePktLossTimeBound() {
-        Constants.EXP_NO++;
-        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
-            startPktLossExp();
+    public void ipMacSync() {
+        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        udpSender.createPkt(pkt, Constants.groupOwnerAddress);
+        udpSender.setRunLoop(false);
+        udpSender.start();
+    }
+
+    public void matchIPToMac(InetAddress ipAddr, String macAddr) {
+        for (Device device:combinedDeviceList
+        ) {
+            if (device.deviceType == Constants.WIFI_DEVICE) {
+                if (device.wifiDevice.deviceAddress.equals(macAddr)){
+                    device.IPAddress = ipAddr;
+                    device.lossRatioPktsReceived = 0;
+                    willUpdateDeviceList = false;
+                    showToast("ip mac synced");
+                    break;
+                }
+            }
         }
     }
 
@@ -213,9 +251,12 @@ public class HomeActivity extends AppCompatActivity {
                 showToast("ip mac not synced");
                 return;
             }
+            willUpdateDeviceList = false;
+            currentPktSize = Constants.RTT_PKT_SIZE;
             calculateWDRTT(currentDevice, Constants.RTT_PKT_SIZE);
         }
         else {
+            willUpdateDeviceList = false;
             calculateBTRTT(currentDevice, Constants.RTT_PKT_SIZE);
         }
     }
@@ -272,6 +313,17 @@ public class HomeActivity extends AppCompatActivity {
         }, 1000);
     }
 
+    public void manageRttTimeBound(int seqNo) {
+        if (!RTTCalculated[seqNo]) {
+            currentSeqNo++;
+            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+//                currentPktSize += 5;
+                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
+                sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+            }
+        }
+    }
+
     public void pktLossButton(View view) {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
@@ -322,57 +374,6 @@ public class HomeActivity extends AppCompatActivity {
         transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
     }
 
-
-
-    public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
-        if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
-            showToast("wifi direct connection established");
-            if (Constants.isGroupOwner)
-                transferService.startServer(8089);
-            else {
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
-                    }
-                }, 3000);
-            }
-            WDUDPListener udpListener = new WDUDPListener(this);
-            udpListener.start();
-            if (!Constants.isGroupOwner)
-                ipMacSync();
-        }
-        else {
-            showToast("bluetooth connection established");
-            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
-            btConnectedSocketManager.start();
-        }
-    }
-
-    public void ipMacSync() {
-        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
-        udpSender = null;
-        udpSender = new WDUDPSender();
-        udpSender.createPkt(pkt, Constants.groupOwnerAddress);
-        udpSender.setRunLoop(false);
-        udpSender.start();
-    }
-
-    public void matchIPToMac(InetAddress ipAddr, String macAddr) {
-        for (Device device:combinedDeviceList
-                ) {
-            if (device.deviceType == Constants.WIFI_DEVICE) {
-                if (device.wifiDevice.deviceAddress.equals(macAddr)){
-                    device.IPAddress = ipAddr;
-                    device.lossRatioPktsReceived = 0;
-                    willUpdateDeviceList = false;
-                    showToast("ip mac synced");
-                    break;
-                }
-            }
-        }
-    }
-
     public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
         String splited[] = receivedPkt.split("#");
         int pktType = Integer.parseInt(splited[0]);
@@ -408,7 +409,7 @@ public class HomeActivity extends AppCompatActivity {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
                             rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
                             correspondingPktSize[seqNo] = pktSize;
-                            currentPktSize = pktSize + 5;
+//                            currentPktSize = pktSize + 5;
                             cumulativeRTTs[Constants.EXP_NO] = receivingTime - initialStartTime;
                             Constants.EXP_NO++;
                             RTTCalculated[seqNo] = true;
@@ -514,6 +515,7 @@ public class HomeActivity extends AppCompatActivity {
                     RTTs[Constants.EXP_NO] = receivingTime - RTTs[Constants.EXP_NO];
                     Constants.EXP_NO++;
                     if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                        willUpdateDeviceList = true;
                         writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
                         Constants.EXP_NO = 0;
                     }
@@ -542,7 +544,7 @@ public class HomeActivity extends AppCompatActivity {
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
-        boolean writeSuccess;
+        boolean writeSuccess = false;
         if (measurementType == Constants.RSSI) {
             writeSuccess = FileWriter.writeRSSIResult(distance, rssiDevices);
             if (writeSuccess)
@@ -553,37 +555,14 @@ public class HomeActivity extends AppCompatActivity {
         else if (measurementType == Constants.RTT) {
             if (deviceType == Constants.BLUETOOTH_DEVICE)
                 writeSuccess = FileWriter.writeRTTResult(deviceName, distance, RTTs, deviceType, cumulativeRTTs);
+            else {
+                writeSuccess = FileWriter.writeRTTResult(deviceName, distance, rttToWrite, deviceType, cumulativeRTTs);
+            }
+            if (writeSuccess)
+                showToast("RTT result written successfully");
+            else
+                showToast("RTT result write failed");
         }
-
-//        if (measurementType == Constants.RTT) {
-//            boolean retVal;
-//            if (deviceType == Constants.WIFI_DEVICE)
-//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, rttToWrite, deviceType, cumulativeRTTs);
-//            else
-//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
-//            final Button rssi = findViewById(R.id.record_rssi_button);
-//            runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    rssi.setText("rtt stopped");
-//                }
-//            });
-//            if (retVal)
-//                showToast("rtt written successfully");
-//            else
-//                showToast("rtt write not successful");
-//        }
-//        if (measurementType == Constants.RTT) {
-//            boolean retVal;
-//            if (deviceType == Constants.WIFI_DEVICE)
-//                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
-//            else
-//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
-//            if (retVal)
-//                showToast("thrpt rtt written successfully");
-//            else
-//                showToast("thrpt rtt write not successful");
-//        }
         else if (measurementType == Constants.PKT_LOSS) {
             boolean retVal = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
             pktLossExpStarted = false;
@@ -599,6 +578,17 @@ public class HomeActivity extends AppCompatActivity {
             else
                 showToast("pkt loss result writing not successful");
         }
+//                if (measurementType == Constants.RTT) {
+//            boolean retVal;
+//            if (deviceType == Constants.WIFI_DEVICE)
+//                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
+//            else
+//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
+//            if (retVal)
+//                showToast("thrpt rtt written successfully");
+//            else
+//                showToast("thrpt rtt write not successful");
+//        }
 //        else if (measurementType == Constants.UDP_THRPT) {
 //            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );
 //            if (retVal)
