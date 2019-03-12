@@ -7,11 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 class FileWriter {
 
     static boolean writeRSSIResult(String distance, ArrayList<Device> bluetoothDevices) {
-        String filename = "RSSI_" + "_" + distance + "_meters.txt";
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+        String filename = "RSSI_" + String.valueOf(currentTime) + "_" + distance + "_meters.txt";
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
         path = path + "/" + filename;
         File RSSIResults = new File(path);

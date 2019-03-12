@@ -54,9 +54,6 @@ public class DeviceListAdapter extends BaseAdapter {
 
             Button rtt = (Button)rowView.findViewById(R.id.rtt_button);
             rtt.setTag(i);
-
-            Button tcpThroughput = (Button)rowView.findViewById(R.id.tcp_throughput_button);
-            tcpThroughput.setTag(i);
         }
         else {
             rowView = mInflater.inflate(R.layout.wd_device_list_row, viewGroup, false);
