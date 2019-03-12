@@ -250,11 +250,11 @@ public class HomeActivity extends AppCompatActivity {
         }
         else {
             willUpdateDeviceList = false;
-            calculateBTRTT(currentDevice, Constants.RTT_PKT_SIZE);
+            calculateBTRTT();
         }
     }
 
-    public void calculateBTRTT(Device currentDevice, int pktSize) {
+    public void calculateBTRTT() {
         cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
         Constants.EXP_NO = 0;
         RTTs = new long[Constants.MAX_NO_OF_EXPS];
@@ -266,10 +266,9 @@ public class HomeActivity extends AppCompatActivity {
         if (connectedSocket!=null) {
             btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
             btConnectedSocketManager.start();
+            String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), Constants.RTT_PKT_SIZE);
+            RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
         }
-        btConnectedSocketManager.setDevice(currentDevice);
-        String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), pktSize);
-        RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
     }
 
     public void calculateWDRTT(Device currentDevice, int pktSize) {
@@ -494,9 +493,7 @@ public class HomeActivity extends AppCompatActivity {
         if (pktType == Constants.RTT) {
             for (Device device: combinedDeviceList) {
                 if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
-                    int pktSize = Integer.parseInt(splited[3]);
-                    btConnectedSocketManager.setDevice(device);
-                    String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT_RET, Constants.hostBluetoothName, splited[1], pktSize);
+                    String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT_RET, Constants.hostBluetoothName, splited[1], Constants.RTT_PKT_SIZE);
                     btConnectedSocketManager.sendPkt(packet);
                     break;
                 }
@@ -513,7 +510,8 @@ public class HomeActivity extends AppCompatActivity {
                         Constants.EXP_NO = 0;
                     }
                     else {
-                        calculateBTRTT(device, Integer.parseInt(splited[3]));
+                        String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, splited[1], Constants.RTT_PKT_SIZE);
+                        RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
                     }
                 }
             }

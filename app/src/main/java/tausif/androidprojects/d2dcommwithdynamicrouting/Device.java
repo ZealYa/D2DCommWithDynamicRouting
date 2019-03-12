@@ -14,7 +14,6 @@ class Device {
     boolean connected;
     InetAddress IPAddress;
 
-
     Device(int deviceType, WifiP2pDevice wifiDevice, BluetoothDevice bluetoothDevice, int rssi, boolean connected) {
         this.deviceType = deviceType;
         this.wifiDevice = wifiDevice;

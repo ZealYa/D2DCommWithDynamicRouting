@@ -10,7 +10,6 @@ import java.util.Calendar;
 public class BTConnectedSocketManager extends Thread {
     private final BluetoothSocket socket;
     private final InputStream inputStream;
-    private Device device;
     private HomeActivity homeActivity;
 
     BTConnectedSocketManager(BluetoothSocket socket, HomeActivity homeActivity) {
@@ -23,10 +22,6 @@ public class BTConnectedSocketManager extends Thread {
             Log.e("input stream error", "Error occurred when creating input stream", e);
         }
         inputStream = tmpIn;
-    }
-
-    public void setDevice(Device device) {
-        this.device = device;
     }
 
     long sendPkt(String packet) {

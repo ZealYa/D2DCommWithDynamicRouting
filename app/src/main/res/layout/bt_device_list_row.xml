@@ -54,16 +54,6 @@
             android:layout_margin="5dp"
             android:onClick="rttButton"/>
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="throughput"
-            android:id="@+id/tcp_throughput_button"
-            android:background="#a4c639"
-            android:layout_margin="5dp"
-            android:onClick="TCPThroughputButton"/>
-
     </LinearLayout>
 
 </LinearLayout>
