@@ -33,8 +33,8 @@ public class Constants {
     static final int TCP_THRPT = 108;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 4;
-    static final int MAX_PKT_LOSS_EXPS = 4;
+    static final int MAX_NO_OF_EXPS = 25;
+    static final int MAX_PKT_LOSS_EXPS = 25;
 
     private static final int THROUGHPUT_FILE_LENGTH = 5000000;
 
