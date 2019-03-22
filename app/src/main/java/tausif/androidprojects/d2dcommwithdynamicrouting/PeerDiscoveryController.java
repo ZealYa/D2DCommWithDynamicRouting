@@ -73,8 +73,8 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     }
 
     void wifiDirectStatusReceived(boolean wifiDirectEnabled) {
-        if (wifiDirectEnabled)
-            wifiP2pManager.discoverPeers(channel, null);
+//        if (wifiDirectEnabled)
+//            wifiP2pManager.discoverPeers(channel, null);
     }
 
     void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
