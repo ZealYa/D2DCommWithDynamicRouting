@@ -2,7 +2,6 @@ package tausif.androidprojects.d2dcommwithdynamicrouting;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,12 +9,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -25,7 +22,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Set;
 
 import tausif.androidprojects.files.TransferService;
 
@@ -100,14 +96,14 @@ public class HomeActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
         File resultFolder = new File(Environment.getExternalStorageDirectory() + "/" + Constants.RESULT_FOLDER_NAME);
         if (resultFolder.exists())
-            showToast("result folder exists");
+            showToast("result folder exists", 1);
         else {
-            showToast("creating result folder");
+            showToast("creating result folder", 1);
             boolean folderCreated = resultFolder.mkdir();
             if (folderCreated)
-                showToast("result folder created successfully");
+                showToast("result folder created successfully", 1);
             else
-                showToast("could not create result folder");
+                showToast("could not create result folder", 1);
         }
     }
 
@@ -157,7 +153,7 @@ public class HomeActivity extends AppCompatActivity {
             });
             if (!rssiRecorded) {
                 if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
-                    showToast("rssi recorded");
+                    showToast("rssi recorded", 1);
                     Constants.EXP_NO = 0;
                     rssiRecorded = true;
                     writeResult(null, Constants.RSSI, Constants.BLUETOOTH_DEVICE);
@@ -184,7 +180,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
-            showToast("wifi direct connection established");
+            showToast("wifi direct connection established", 1);
             if (Constants.isGroupOwner)
                 transferService.startServer(8089);
             else {
@@ -201,7 +197,7 @@ public class HomeActivity extends AppCompatActivity {
                 ipMacSync();
         }
         else {
-            showToast("bluetooth connection established");
+            showToast("bluetooth connection established", 1);
             btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
             btConnectedSocketManager.start();
         }
@@ -224,7 +220,7 @@ public class HomeActivity extends AppCompatActivity {
                     device.IPAddress = ipAddr;
                     device.lossRatioPktsReceived = 0;
                     willUpdateDeviceList = false;
-                    showToast("ip mac synced");
+                    showToast("ip mac synced", 1);
                     break;
                 }
             }
@@ -241,7 +237,7 @@ public class HomeActivity extends AppCompatActivity {
         }
         if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
             if (currentDevice.IPAddress == null) {
-                showToast("ip mac not synced");
+                showToast("ip mac not synced", 1);
                 return;
             }
             willUpdateDeviceList = false;
@@ -320,13 +316,13 @@ public class HomeActivity extends AppCompatActivity {
         int tag = (int)view.getTag();
         currentDevice = combinedDeviceList.get(tag);
         if (currentDevice.IPAddress == null) {
-            showToast("ip mac not synced");
+            showToast("ip mac not synced", 1);
             return;
         }
         Constants.EXP_NO = 0;
         pktLossHandler = null;
         pktLossHandler = new Handler();
-        showToast("pkt loss experiment started");
+        showToast("pkt loss experiment started", 1);
         startPktLossExp();
     }
 
@@ -362,7 +358,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         if (currentDevice.IPAddress == null) {
-            showToast("ip mac not synced");
+            showToast("ip mac not synced", 1);
             return;
         }
         currentPktSize = 100;
@@ -449,6 +445,7 @@ public class HomeActivity extends AppCompatActivity {
                                             public void run() {
                                                 pktReceiveCounted[expNo] = true;
                                                 Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
+                                                showToast("completed pkt loss exp no "+String.valueOf(expNo), 0);
                                                 int expCounter = 0;
                                                 for (int i=0; i<Constants.MAX_PKT_LOSS_EXPS; i++)
                                                     if (pktReceiveCounted[i])
@@ -459,6 +456,7 @@ public class HomeActivity extends AppCompatActivity {
                                                     Arrays.fill(pktReceiveCount, 0);
                                                     pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
                                                     Arrays.fill(pktReceiveCounted, false);
+                                                    pktLossExpStarted = false;
                                                 }
                                             }
                                         }, 2000);
@@ -539,9 +537,9 @@ public class HomeActivity extends AppCompatActivity {
         if (measurementType == Constants.RSSI) {
             writeSuccess = FileWriter.writeRSSIResult(distance, rssiDevices);
             if (writeSuccess)
-                showToast("RSSI result written successfully");
+                showToast("RSSI result written successfully", 1);
             else
-                showToast("RSSI result write failed");
+                showToast("RSSI result write failed", 1);
         }
         else if (measurementType == Constants.RTT) {
             if (deviceType == Constants.BLUETOOTH_DEVICE)
@@ -550,17 +548,17 @@ public class HomeActivity extends AppCompatActivity {
                 writeSuccess = FileWriter.writeRTTResult(deviceName, distance, rttToWrite, deviceType, cumulativeRTTs);
             }
             if (writeSuccess)
-                showToast("RTT result written successfully");
+                showToast("RTT result written successfully", 1);
             else
-                showToast("RTT result write failed");
+                showToast("RTT result write failed", 1);
         }
         else if (measurementType == Constants.PKT_LOSS) {
             writeSuccess = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
             pktLossExpStarted = false;
             if (writeSuccess)
-                showToast("pkt loss result written successfully");
+                showToast("pkt loss result written successfully", 1);
             else
-                showToast("pkt loss result writing not successful");
+                showToast("pkt loss result writing not successful", 1);
         }
 //                if (measurementType == Constants.RTT) {
 //            boolean retVal;
@@ -583,11 +581,11 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 //    function to show a long Toast message
-    public void showToast(final String message) {
+    public void showToast(final String message, final int length) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), message, length).show();
             }
         });
     }
