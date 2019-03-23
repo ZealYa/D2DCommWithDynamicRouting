@@ -73,8 +73,8 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     }
 
     void wifiDirectStatusReceived(boolean wifiDirectEnabled) {
-//        if (wifiDirectEnabled)
-//            wifiP2pManager.discoverPeers(channel, null);
+        if (wifiDirectEnabled)
+            wifiP2pManager.discoverPeers(channel, null);
     }
 
     void wifiDeviceDiscovered(WifiP2pDeviceList deviceList) {
@@ -113,21 +113,21 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
         public void run() {
             if (timeSlotNo %2==0){
                 bluetoothDevices = new ArrayList<>();
-                if (bluetoothEnabled) {
-                    bluetoothDevices = new ArrayList<>();
-                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-                    if (pairedDevices.size() > 0) {
-                        for (BluetoothDevice pairedDevice: pairedDevices
-                             ) {
-                            Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
-                            bluetoothDevices.add(newDevice);
-                        }
-                    }
-                    bluetoothAdapter.startDiscovery();
-                }
+//                if (bluetoothEnabled) {
+//                    bluetoothDevices = new ArrayList<>();
+//                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+//                    if (pairedDevices.size() > 0) {
+//                        for (BluetoothDevice pairedDevice: pairedDevices
+//                             ) {
+//                            Device newDevice = new Device(Constants.BLUETOOTH_DEVICE, null, pairedDevice, 0, true);
+//                            bluetoothDevices.add(newDevice);
+//                        }
+//                    }
+//                    bluetoothAdapter.startDiscovery();
+//                }
             } else {
-                if (bluetoothEnabled)
-                    bluetoothAdapter.cancelDiscovery();
+//                if (bluetoothEnabled)
+//                    bluetoothAdapter.cancelDiscovery();
                 homeActivity.discoveryFinished(wifiDevices, bluetoothDevices);
             }
             timeSlotNo++;
@@ -151,7 +151,7 @@ public class PeerDiscoveryController implements WifiP2pManager.ConnectionInfoLis
     }
 
     void stopPeerDiscovery() {
-        if (wifiP2pManager != null && Build.VERSION.SDK_INT >= 16)
+        if (wifiP2pManager != null)
             wifiP2pManager.stopPeerDiscovery(channel, null);
         if (bluetoothAdapter.isDiscovering())
             bluetoothAdapter.cancelDiscovery();
