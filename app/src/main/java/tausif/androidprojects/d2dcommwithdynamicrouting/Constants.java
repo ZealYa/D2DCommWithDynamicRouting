@@ -19,7 +19,7 @@ public class Constants {
     static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
     static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    static final int TIME_SLOT_LENGTH = 5;    // in seconds
+    static final int TIME_SLOT_LENGTH = 10;    // in seconds
     static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
 
     static final int RSSI = 100;
