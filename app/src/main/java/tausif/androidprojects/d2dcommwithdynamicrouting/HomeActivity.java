@@ -339,7 +339,7 @@ public class HomeActivity extends AppCompatActivity {
             public void run() {
                 managePktLossTimeBound();
             }
-        }, 5000);
+        }, 250);
     }
 
     public void managePktLossTimeBound() {
@@ -424,6 +424,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         else if (pktType == Constants.PKT_LOSS) {
+            Log.d("loss pkt", receivedPkt);
             for (final Device device:combinedDeviceList
                  ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
