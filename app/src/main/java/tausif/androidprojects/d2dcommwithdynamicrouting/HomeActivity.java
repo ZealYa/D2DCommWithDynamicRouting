@@ -1,538 +1,605 @@
 package tausif.androidprojects.d2dcommwithdynamicrouting;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.Calendar;
 
 import tausif.androidprojects.files.TransferService;
 
-public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
+public class HomeActivity extends AppCompatActivity {
 
-    private static final int PICKFILE_REQUEST_CODE = 323;
-    WifiP2pManager wifiP2pManager;
-    WifiP2pManager.Channel channel;
-    BroadcastReceiver broadcastReceiver;
-    IntentFilter intentFilter;
+    ArrayList<Device> combinedDeviceList;
     ArrayList<Device> wifiDevices;
     ArrayList<Device> bluetoothDevices;
     ListView deviceListView;
     DeviceListAdapter deviceListAdapter;
-    int DEVICE_TYPE_WIFI = 0;
-    int DEVICE_TYPE_BLUETOOTH =1;
-    int CURRENT_DEVICE_TYPE = -1;
-    int TYPE_SERVER = 0;
-    int TYPE_CLIENT = 1;
-    int currentSelection = 0;   //holds the position for current selected device, initially the first device is selected
-    private TransferService transferService;
-    private Handler handler;
-    private Handler peerDiscoveryHandler;
-    BluetoothAdapter bluetoothAdapter;
-    String NAME = "server";
-    String MY_UUID = "e439084f-b7f1-460c-8a3f-d4cc883413e2";
-    ConnectedThread connectedThread;
-    BluetoothServerThread serverThread;
-    String textToSend = "";
-    int timeSlotCount;
-    boolean bluetoothEnabled;
+    PeerDiscoveryController peerDiscoveryController;
+    WDUDPSender udpSender;
+    BTConnectedSocketManager btConnectedSocketManager;
+    Handler BTDiscoverableHandler;
+    boolean willUpdateDeviceList;
+    int currentSeqNo;
+    long RTTs[];
+    long rttToWrite[];
+    boolean RTTCalculated[];
+    int rttCalculatedCount;
+    Handler rttHandler;
+    Handler pktLossHandler;
+    Device currentDevice;
+    int currentPktSize;
+    long initialStartTime;
+    long cumulativeRTTs[];
+    int correspondingPktSize[];
+    int pktReceiveCount[];
+    boolean pktReceiveCounted[];
+    boolean pktLossExpStarted;
+    TransferService transferService;
+    Handler handler;
+    boolean rssiRecorded;
+    ArrayList<Device> rssiDevices;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        initData();
+        initOperations();
+    }
+
+    public void initData() {
+        willUpdateDeviceList = false;
+        pktLossExpStarted = false;
+        pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
+        Arrays.fill(pktReceiveCount, 0);
+        pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
+        Arrays.fill(pktReceiveCounted, false);
+        rssiRecorded = false;
+        rssiDevices = new ArrayList<>();
+        Constants.EXP_NO = 0;
+        configureDeviceListView();
+    }
+
+    public void initOperations() {
+        setUpPermissions();
+        BTDiscoverableHandler = new Handler();
+        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
         handler = new Handler();
-        peerDiscoveryHandler = new Handler();
-        transferService = new TransferService(this);
-        findViewById(R.id.send_with_wifi_button).setOnClickListener(this);
-        hasStorageWriteAccess();
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
+        transferService = new TransferService(this, this);
+        setUpBluetoothDataTransfer();
     }
 
-    public void startDiscoveryButton(View view){
-        timeSlotCount = 0;
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothEnabled = true;
-        if (bluetoothAdapter == null) {
-            showAlert("Device does not support bluetooth");
-            bluetoothEnabled = false;
+    public void setUpPermissions() {
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
-        if (!bluetoothAdapter.isEnabled()){
-            showAlert("BlueTooth disabled");
-            bluetoothEnabled = false;
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, Constants.REQUEST_CODE_LOCATION);
+        File resultFolder = new File(Environment.getExternalStorageDirectory() + "/" + Constants.RESULT_FOLDER_NAME);
+        if (resultFolder.exists())
+            showToast("result folder exists", 1);
+        else {
+            showToast("creating result folder", 1);
+            boolean folderCreated = resultFolder.mkdir();
+            if (folderCreated)
+                showToast("result folder created successfully", 1);
+            else
+                showToast("could not create result folder", 1);
         }
-
-        peerDiscoveryHandler.post(runPeerDiscovery);
     }
 
-    private Runnable runPeerDiscovery = new Runnable() {
+    private Runnable makeBluetoothDiscoverable = new Runnable() {
         @Override
         public void run() {
-            if (timeSlotCount%2==0){
-                //start discovery
-                bluetoothDevices = new ArrayList<>();
-                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-                if (pairedDevices.size() > 0) {
-                    // There are paired devices. Get the name and address of each paired device.
-                    for (BluetoothDevice device : pairedDevices) {
-                        Device bluetoothDevice = new Device(device.getName(), device.getAddress(), 0, device);
-                        bluetoothDevices.add(bluetoothDevice);
-                    }
-                }
-                bluetoothAdapter.startDiscovery();
-            }
-            else {
-                //cancel discovery
-                bluetoothAdapter.cancelDiscovery();
-            }
-            peerDiscoveryHandler.postDelayed(this, 30000);
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.BT_DISCOVERABLE_LENGTH);
+            startActivity(intent);
+            BTDiscoverableHandler.postDelayed(this, Constants.BT_DISCOVERABLE_LENGTH*1000);
         }
     };
 
-    private boolean hasStorageWriteAccess() {
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1415);
-            return false;
-        }
-        return true;
+    private void setUpBluetoothDataTransfer() {
+        BTConnectionListener btConnectionListener = new BTConnectionListener(this);
+        btConnectionListener.start();
     }
 
+    //configures the bluetooth and wifi discovery options and starts the background process for discovery
+    public void startDiscovery(View view){
+        willUpdateDeviceList = true;
+        peerDiscoveryController = new PeerDiscoveryController(this, this);
+    }
+
+    //setting up the device list view adapter and item click events
+    public void configureDeviceListView(){
+        deviceListView = findViewById(R.id.device_listView);
+        combinedDeviceList = new ArrayList<>();
+        deviceListAdapter = new DeviceListAdapter(this, combinedDeviceList);
+        deviceListView.setAdapter(deviceListAdapter);
+    }
+
+    //callback method from peer discovery controller after finishing a cycle of wifi and bluetooth discovery
+    public void discoveryFinished(ArrayList<Device> wifiDevices, ArrayList<Device> bluetoothDevices) {
+        if (willUpdateDeviceList) {
+            this.wifiDevices = wifiDevices;
+            this.bluetoothDevices = bluetoothDevices;
+            if (combinedDeviceList.size() > 0)
+                combinedDeviceList.clear();
+            combinedDeviceList.addAll(this.bluetoothDevices);
+            combinedDeviceList.addAll(this.wifiDevices);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    deviceListAdapter.notifyDataSetChanged();
+                }
+            });
+            if (!rssiRecorded) {
+                if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                    showToast("rssi recorded", 1);
+                    Constants.EXP_NO = 0;
+                    rssiRecorded = true;
+                    writeResult(null, Constants.RSSI, Constants.BLUETOOTH_DEVICE);
+                }
+                else {
+                    rssiDevices.addAll(this.bluetoothDevices);
+                    Constants.EXP_NO++;
+                }
+            }
+        }
+    }
+
+    public void connectBTButton(View view) {
+        int tag = (int)view.getTag();
+        Device currentDevice = combinedDeviceList.get(tag);
+        currentDevice.bluetoothDevice.createBond();
+    }
+
+    public void connectWDButton(View view) {
+        int tag = (int)view.getTag();
+        currentDevice = combinedDeviceList.get(tag);
+        peerDiscoveryController.connectWiFiDirectDevice(combinedDeviceList.get(tag));
+    }
+
+    public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
+        if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
+            showToast("wifi direct connection established", 1);
+            if (Constants.isGroupOwner)
+                transferService.startServer(8089);
+            else {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
+                    }
+                }, 3000);
+            }
+            WDUDPListener udpListener = new WDUDPListener(this);
+            udpListener.start();
+            if (!Constants.isGroupOwner)
+                ipMacSync();
+        }
+        else {
+            showToast("bluetooth connection established", 1);
+            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+            btConnectedSocketManager.start();
+        }
+    }
+
+    public void ipMacSync() {
+        String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC, Constants.hostWifiAddress);
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        udpSender.createPkt(pkt, Constants.groupOwnerAddress);
+        udpSender.setRunLoop(false);
+        udpSender.start();
+    }
+
+    public void matchIPToMac(InetAddress ipAddr, String macAddr) {
+        for (Device device:combinedDeviceList
+        ) {
+            if (device.deviceType == Constants.WIFI_DEVICE) {
+                if (device.wifiDevice.deviceAddress.equals(macAddr)){
+                    device.IPAddress = ipAddr;
+                    device.lossRatioPktsReceived = 0;
+                    willUpdateDeviceList = false;
+                    showToast("ip mac synced", 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void rttButton(View view) {
+        int tag = (int)view.getTag();
+        currentDevice = combinedDeviceList.get(tag);
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
+            return;
+        }
+        if (currentDevice.deviceType == Constants.WIFI_DEVICE) {
+            if (currentDevice.IPAddress == null) {
+                showToast("ip mac not synced", 1);
+                return;
+            }
+            willUpdateDeviceList = false;
+            currentPktSize = Constants.RTT_PKT_SIZE;
+            calculateWDRTT(currentDevice, Constants.RTT_PKT_SIZE);
+        }
+        else {
+            willUpdateDeviceList = false;
+            calculateBTRTT();
+        }
+    }
+
+    public void calculateBTRTT() {
+        cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
+        Constants.EXP_NO = 0;
+        RTTs = new long[Constants.MAX_NO_OF_EXPS];
+        Arrays.fill(RTTs, 0);
+        BTSocketConnector socketConnector = new BTSocketConnector();
+        socketConnector.setDevice(currentDevice);
+        BluetoothSocket connectedSocket = socketConnector.createSocket();
+        btConnectedSocketManager = null;
+        if (connectedSocket!=null) {
+            btConnectedSocketManager = new BTConnectedSocketManager(connectedSocket, this);
+            btConnectedSocketManager.start();
+            String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, currentDevice.bluetoothDevice.getName(), Constants.RTT_PKT_SIZE);
+            RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
+        }
+    }
+
+    public void calculateWDRTT(Device currentDevice, int pktSize) {
+        rttToWrite = new long[Constants.MAX_NO_OF_EXPS];
+        cumulativeRTTs = new long[Constants.MAX_NO_OF_EXPS];
+        Constants.EXP_NO = 0;
+        rttHandler = new Handler();
+        currentSeqNo = 0;
+        rttCalculatedCount = 0;
+        RTTs = new long[1000];
+        Arrays.fill(RTTs, 0);
+        RTTCalculated = new boolean[1000];
+        Arrays.fill(RTTCalculated, false);
+        correspondingPktSize = new int[1000];
+        correspondingPktSize[currentSeqNo] = pktSize;
+        String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
+        sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+    }
+
+    public void sendWDRTTPkt(String pkt, InetAddress destinationIP) {
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        udpSender.setRunLoop(false);
+        udpSender.createPkt(pkt, destinationIP);
+        RTTs[currentSeqNo] = Calendar.getInstance().getTimeInMillis();
+        if (currentSeqNo == 0)
+            initialStartTime = RTTs[currentSeqNo];
+        udpSender.start();
+        rttHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                manageRttTimeBound(currentSeqNo);
+            }
+        }, 1000);
+    }
+
+    public void manageRttTimeBound(int seqNo) {
+        if (!RTTCalculated[seqNo]) {
+            currentSeqNo++;
+            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+//                currentPktSize += 5;
+                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
+                sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
+            }
+        }
+    }
+
+    public void pktLossButton(View view) {
+        int tag = (int)view.getTag();
+        currentDevice = combinedDeviceList.get(tag);
+        if (currentDevice.IPAddress == null) {
+            showToast("ip mac not synced", 1);
+            return;
+        }
+        Constants.EXP_NO = 0;
+        pktLossHandler = null;
+        pktLossHandler = new Handler();
+        showToast("pkt loss experiment started", 1);
+        startPktLossExp();
+    }
+
+    public void startPktLossExp() {
+        udpSender = null;
+        udpSender = new WDUDPSender();
+        String lossRatioPkt = PacketManager.createLossRatioPacket(Constants.PKT_LOSS, Constants.EXP_NO, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
+        udpSender.createPkt(lossRatioPkt, currentDevice.IPAddress);
+        udpSender.setRunLoop(true);
+        udpSender.setNoOfPktsToSend(Constants.MAX_LOSS_RATIO_PKTS);
+        udpSender.start();
+        pktLossHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                managePktLossTimeBound();
+            }
+        }, 250);
+    }
+
+    public void managePktLossTimeBound() {
+        Constants.EXP_NO++;
+        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
+            startPktLossExp();
+        }
+    }
+
+    public void UDPThroughputButton(View view) {
+        int tag = (int)view.getTag();
+        currentDevice = combinedDeviceList.get(tag);
+        EditText distanceText = findViewById(R.id.distance_editText);
+        if (textboxIsEmpty(distanceText)) {
+            distanceText.setError("enter distance");
+            return;
+        }
+        if (currentDevice.IPAddress == null) {
+            showToast("ip mac not synced", 1);
+            return;
+        }
+        currentPktSize = 100;
+        calculateWDRTT(currentDevice, currentPktSize);
+    }
+
+    public void TCPThroughputButton(View view) {
+        transferService.sendFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath(), "test.txt");
+    }
+
+    public void processReceivedWiFiPkt(InetAddress srcAddr, long receivingTime, String receivedPkt) {
+        String splited[] = receivedPkt.split("#");
+        int pktType = Integer.parseInt(splited[0]);
+        if (pktType == Constants.IP_MAC_SYNC) {
+            String pkt = PacketManager.createIpMacSyncPkt(Constants.IP_MAC_SYNC_RET, Constants.hostWifiAddress);
+            udpSender = null;
+            udpSender = new WDUDPSender();
+            udpSender.createPkt(pkt, srcAddr);
+            udpSender.setRunLoop(false);
+            udpSender.start();
+            matchIPToMac(srcAddr, splited[1]);
+        }
+        else if (pktType == Constants.IP_MAC_SYNC_RET)
+            matchIPToMac(srcAddr, splited[1]);
+        else if (pktType == Constants.RTT) {
+            int pktSize = Integer.parseInt(splited[4]);
+            int seqNo = Integer.parseInt(splited[1]);
+            String pkt = PacketManager.createWDRTTPacket(Constants.RTT_RET, seqNo, Constants.hostWifiAddress, splited[2], pktSize);
+            udpSender = null;
+            udpSender = new WDUDPSender();
+            udpSender.createPkt(pkt, srcAddr);
+            udpSender.setRunLoop(false);
+            udpSender.start();
+        }
+        else if (pktType == Constants.RTT_RET) {
+            for (Device device:combinedDeviceList
+                 ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[2])) {
+                        int seqNo = Integer.parseInt(splited[1]);
+                        int pktSize = Integer.parseInt(splited[4]);
+                        if (seqNo == currentSeqNo) {
+                            RTTs[seqNo] = receivingTime - RTTs[seqNo];
+                            rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
+                            correspondingPktSize[seqNo] = pktSize;
+//                            currentPktSize = pktSize + 5;
+                            cumulativeRTTs[Constants.EXP_NO] = receivingTime - initialStartTime;
+                            Constants.EXP_NO++;
+                            RTTCalculated[seqNo] = true;
+                            rttCalculatedCount++;
+                            currentSeqNo++;
+                            if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
+                                String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], currentPktSize);
+                                sendWDRTTPkt(rttPkt, srcAddr);
+                            } else {
+                                Constants.EXP_NO = 0;
+                                writeResult(device.wifiDevice.deviceName, Constants.RTT, Constants.WIFI_DEVICE);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else if (pktType == Constants.PKT_LOSS) {
+            Log.d("loss pkt", receivedPkt);
+            for (final Device device:combinedDeviceList
+                 ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[2])) {
+                        currentDevice = device;
+                        final int expNo = Integer.parseInt(splited[1]);
+                        if (!pktReceiveCounted[expNo]) {
+                            if (pktReceiveCount[expNo] == 0) {
+                                if (!pktLossExpStarted) {
+                                    pktLossExpStarted = true;
+                                }
+                                pktReceiveCount[expNo]++;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Handler handler = new Handler();
+                                        handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                pktReceiveCounted[expNo] = true;
+                                                Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
+                                                showToast("completed pkt loss exp no "+String.valueOf(expNo), 0);
+                                                int expCounter = 0;
+                                                for (int i=0; i<Constants.MAX_PKT_LOSS_EXPS; i++)
+                                                    if (pktReceiveCounted[i])
+                                                        expCounter++;
+                                                if (expCounter == Constants.MAX_PKT_LOSS_EXPS) {
+                                                    writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
+                                                    pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
+                                                    Arrays.fill(pktReceiveCount, 0);
+                                                    pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
+                                                    Arrays.fill(pktReceiveCounted, false);
+                                                    pktLossExpStarted = false;
+                                                }
+                                            }
+                                        }, 2000);
+                                    }
+                                });
+                            }
+                            else
+                                pktReceiveCount[expNo]++;
+                        }
+                    }
+                }
+            }
+        }
+        else if (pktType == Constants.UDP_THRPT) {
+        }
+        else if (pktType == Constants.UDP_THRPT_RET) {
+            for (Device device:combinedDeviceList
+                    ) {
+                if (device.deviceType == Constants.WIFI_DEVICE) {
+                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public void processReceivedBTPkt(byte[] readBuffer, long receivingTime) {
+        final String receivedPkt = new String(readBuffer);
+        String splited[] = receivedPkt.split("#");
+        int pktType = Integer.parseInt(splited[0]);
+        if (pktType == Constants.RTT) {
+            for (Device device: combinedDeviceList) {
+                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
+                    String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT_RET, Constants.hostBluetoothName, splited[1], Constants.RTT_PKT_SIZE);
+                    btConnectedSocketManager.sendPkt(packet);
+                    break;
+                }
+            }
+        }
+        else if (pktType == Constants.RTT_RET) {
+            for (final Device device: combinedDeviceList) {
+                if (device.deviceType == Constants.BLUETOOTH_DEVICE && device.bluetoothDevice.getName().equals(splited[1])) {
+                    RTTs[Constants.EXP_NO] = receivingTime - RTTs[Constants.EXP_NO];
+                    Constants.EXP_NO++;
+                    if (Constants.EXP_NO == Constants.MAX_NO_OF_EXPS) {
+                        willUpdateDeviceList = true;
+                        writeResult(device.bluetoothDevice.getName(), Constants.RTT, Constants.BLUETOOTH_DEVICE);
+                        Constants.EXP_NO = 0;
+                    }
+                    else {
+                        String packet = PacketManager.createBluetoothRTTPacket(Constants.RTT, Constants.hostBluetoothName, splited[1], Constants.RTT_PKT_SIZE);
+                        RTTs[Constants.EXP_NO] = btConnectedSocketManager.sendPkt(packet);
+                    }
+                }
+            }
+        }
+    }
+
+    public void fileTransferFinished(int filesize, long totalTime, double throughput) {
+        EditText distanceText = findViewById(R.id.distance_editText);
+        String distance = distanceText.getText().toString().trim();
+
+//        EditText deviceNameText = findViewById(R.id.pkt_size_editText);
+//        String deviceName = deviceNameText.getText().toString().trim();
+//        deviceName = "NWSL " + deviceName;
+//        boolean retVal = FileWriter.writeTCPThroughput(deviceName, filesize, totalTime, throughput, distance);
+//        if (retVal)
+//            showToast("tcp throughput written");
+//        else
+//            showToast("tcp throughput writing not successful");
+    }
+
+    public void  writeResult(String deviceName, int measurementType, int deviceType) {
+        EditText distanceText = findViewById(R.id.distance_editText);
+        String distance = distanceText.getText().toString().trim();
+        boolean writeSuccess = false;
+        if (measurementType == Constants.RSSI) {
+            writeSuccess = FileWriter.writeRSSIResult(distance, rssiDevices);
+            if (writeSuccess)
+                showToast("RSSI result written successfully", 1);
+            else
+                showToast("RSSI result write failed", 1);
+        }
+        else if (measurementType == Constants.RTT) {
+            if (deviceType == Constants.BLUETOOTH_DEVICE)
+                writeSuccess = FileWriter.writeRTTResult(deviceName, distance, RTTs, deviceType, cumulativeRTTs);
+            else {
+                writeSuccess = FileWriter.writeRTTResult(deviceName, distance, rttToWrite, deviceType, cumulativeRTTs);
+            }
+            if (writeSuccess)
+                showToast("RTT result written successfully", 1);
+            else
+                showToast("RTT result write failed", 1);
+        }
+        else if (measurementType == Constants.PKT_LOSS) {
+            writeSuccess = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
+            pktLossExpStarted = false;
+            if (writeSuccess)
+                showToast("pkt loss result written successfully", 1);
+            else
+                showToast("pkt loss result writing not successful", 1);
+        }
+//                if (measurementType == Constants.RTT) {
+//            boolean retVal;
+//            if (deviceType == Constants.WIFI_DEVICE)
+//                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
+//            else
+//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
+//            if (retVal)
+//                showToast("thrpt rtt written successfully");
+//            else
+//                showToast("thrpt rtt write not successful");
+//        }
+//        else if (measurementType == Constants.UDP_THRPT) {
+//            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );
+//            if (retVal)
+//                showToast("throughput rtt written successfully");
+//            else
+//                showToast("throughput rtt write not successful");
+//        }
+    }
+
+//    function to show a long Toast message
+    public void showToast(final String message, final int length) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, length).show();
+            }
+        });
+    }
+
+//    function to check empty text field
+    public boolean textboxIsEmpty(EditText editText) {
+        return editText.getText().toString().trim().length() == 0;
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(broadcastReceiver != null){
-            unregisterReceiver(broadcastReceiver);
-        }
+        peerDiscoveryController.stopPeerDiscovery();
         transferService.shutdown();
-        if(wifiP2pManager != null && Build.VERSION.SDK_INT >= 16) {
-            wifiP2pManager.stopPeerDiscovery(channel, null);
-        }
-        unregisterReceiver(mReceiver);
-    }
-
-    //function to show an alert message
-    public void showAlert(String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message);
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-    public void showReceivedData(byte[] receivedData){
-        final String receivedString = new String(receivedData);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAlert(receivedString);
-            }
-        });
-    }
-
-    //send over bluetooth and send over wifi button action
-    public void sendButtonPressed(View view) {
-        EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-        textToSend = inputTextBox.getText().toString();
-        if (textToSend.length()==0){
-            inputTextBox.setError("enter any text");
-        }
-        if (view.getId() == R.id.send_with_bluetooth_button) {
-            Device bluetoothDevice = bluetoothDevices.get(currentSelection);
-            BluetoothClientThread clientThread = new BluetoothClientThread(bluetoothDevice.bluetoothDevice);
-            clientThread.start();
-        }
-    }
-
-    public void configureDeviceListView(int deviceType){
-        deviceListView = (ListView)findViewById(R.id.device_listView);
-        if (deviceType == DEVICE_TYPE_WIFI)
-            deviceListAdapter = new DeviceListAdapter(this, wifiDevices);
-        else
-            deviceListAdapter = new DeviceListAdapter(this, bluetoothDevices);
-        CURRENT_DEVICE_TYPE = deviceType;
-        deviceListView.setAdapter(deviceListAdapter);
-        deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                showSelectedDevice(i);
-            }
-        });
-    }
-
-    //discovers wifi direct enabled devices nearby
-    public void WifiDeviceDiscovery(View view) {
-        wifiDevices = new ArrayList<>();
-        configureDeviceListView(DEVICE_TYPE_WIFI);
-        wifiP2pManager = (WifiP2pManager)getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = wifiP2pManager.initialize(this, getMainLooper(), null);
-        broadcastReceiver = new WifiDirectBroadcastReceiver(wifiP2pManager, channel, this);
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        registerReceiver(broadcastReceiver, intentFilter);
-        wifiP2pManager.discoverPeers(channel, null);
-        Toast.makeText(this,"Discovering peer",Toast.LENGTH_SHORT).show();
-    }
-
-    //shows the current selected device in green color. only one device can be selected at a time. selected = 1 means selected, selected = 0 means otherwise
-    public void showSelectedDevice(int position) {
-        if (CURRENT_DEVICE_TYPE == -1)
-            return;
-        if (CURRENT_DEVICE_TYPE == DEVICE_TYPE_WIFI) {
-            Device currentDevice = wifiDevices.get(currentSelection);
-            currentDevice.selected = 0;
-            wifiDevices.set(currentSelection,currentDevice);
-
-            Device newSelectedDevice = wifiDevices.get(position);
-            newSelectedDevice.selected = 1;
-            wifiDevices.set(position, newSelectedDevice);
-            currentSelection = position;
-            deviceListAdapter.notifyDataSetChanged();
-
-            //connect device
-            WifiP2pConfig config = new WifiP2pConfig();
-            config.deviceAddress = newSelectedDevice.deviceAddress;
-            wifiP2pManager.connect(channel, config, new WifiP2pManager.ActionListener() {
-                @Override
-                public void onSuccess() {
-
-                }
-
-                @Override
-                public void onFailure(int i) {
-
-                }
-            });
-        }
-        else {
-            Device currentDevice = bluetoothDevices.get(currentSelection);
-            currentDevice.selected = 0;
-            bluetoothDevices.set(currentSelection,currentDevice);
-
-            Device newSelectedDevice = bluetoothDevices.get(position);
-            newSelectedDevice.selected = 1;
-            bluetoothDevices.set(position, newSelectedDevice);
-            currentSelection = position;
-            deviceListAdapter.notifyDataSetChanged();
-        }
-    }
-
-    //shows the wifi p2p state
-    public void wifiP2PState(int state) {
-        if (state == 0)
-            showAlert("WiFi p2p disabled");
-    }
-
-    //callback method from wifi direct broadcast receiver
-    public void deviceDiscovery(WifiP2pDeviceList discoveredDevices) {
-        for (WifiP2pDevice item : discoveredDevices.getDeviceList()
-                ) {
-            int flag = 0;
-            for (Device previousDevice: wifiDevices
-                    ) {
-                if (previousDevice.deviceAddress.equalsIgnoreCase(item.deviceAddress))
-                {
-                    flag = 1;
-                    break;
-                }
-            }
-            if (flag == 0) {
-                Device device = new Device(item.deviceName, item.deviceAddress, 0, null);
-                wifiDevices.add(device);
-            }
-        }
-        deviceListAdapter.notifyDataSetChanged();
-    }
-
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Device bluetoothDevice = new Device(device.getName(), device.getAddress(), 0, device);
-                int flag = 0;
-                for (Device item:bluetoothDevices
-                        ) {
-                    if (item.deviceAddress.equalsIgnoreCase(bluetoothDevice.deviceAddress)){
-                        flag = 1;
-                        break;
-                    }
-                }
-                if (flag == 0){
-                    bluetoothDevices.add(bluetoothDevice);
-                }
-            }
-        }
-    };
-
-    public void manageConnectedBluetoothSocket(BluetoothSocket socket, int type){
-        if (type == TYPE_SERVER) {
-            connectedThread = new ConnectedThread(socket);
-            connectedThread.start();
-        }
-        else if (type == TYPE_CLIENT) {
-            connectedThread = new ConnectedThread(socket);
-            connectedThread.write(textToSend.getBytes());
-        }
-    }
-
-    //bluetooth server thread
-    private class BluetoothServerThread extends Thread {
-        private final BluetoothServerSocket mmServerSocket;
-
-        public BluetoothServerThread() {
-            // Use a temporary object that is later assigned to mmServerSocket
-            // because mmServerSocket is final.
-            BluetoothServerSocket tmp = null;
-            try {
-                // MY_UUID is the app's UUID string, also used by the client code.
-                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, UUID.fromString(MY_UUID));
-            } catch (IOException e) {
-            }
-            mmServerSocket = tmp;
-        }
-
-        public void run() {
-            BluetoothSocket socket = null;
-            // Keep listening until exception occurs or a socket is returned.
-            while (true) {
-                try {
-                    socket = mmServerSocket.accept();
-                } catch (IOException e) {
-                    break;
-                }
-
-                if (socket != null) {
-                    try {
-                        // A connection was accepted. Perform work associated with
-                        // the connection in a separate thread.
-                        manageConnectedBluetoothSocket(socket, TYPE_SERVER);
-                        mmServerSocket.close();
-                        break;
-                    } catch (IOException e) {
-
-                    }
-                }
-            }
-        }
-
-        // Closes the connect socket and causes the thread to finish.
-        public void cancel() {
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) {
-            }
-        }
-    }
-    //end of bluetooth server thread
-
-    //bluetooth client thread
-    private class BluetoothClientThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
-
-        public BluetoothClientThread(BluetoothDevice device) {
-            // Use a temporary object that is later assigned to mmSocket
-            // because mmSocket is final.
-            BluetoothSocket tmp = null;
-            mmDevice = device;
-
-            try {
-                // Get a BluetoothSocket to connect with the given BluetoothDevice.
-                // MY_UUID is the app's UUID string, also used in the server code.
-                tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-            } catch (IOException e) {
-            }
-            mmSocket = tmp;
-        }
-
-        public void run() {
-            // Cancel discovery because it otherwise slows down the connection.
-            bluetoothAdapter.cancelDiscovery();
-
-            try {
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
-                mmSocket.connect();
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and return.
-                try {
-                    mmSocket.close();
-                } catch (IOException closeException) {
-                }
-                return;
-            }
-
-            // The connection attempt succeeded. Perform work associated with
-            // the connection in a separate thread.
-            manageConnectedBluetoothSocket(mmSocket, TYPE_CLIENT);
-        }
-
-        // Closes the client socket and causes the thread to finish.
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-            }
-        }
-    }
-    //end of bluetooth client thread
-
-    //bluetooth data send/receive thread
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-        private byte[] mmBuffer; // mmBuffer store for the stream
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            // Get the input and output streams; using temp objects because
-            // member streams are final.
-            try {
-                tmpIn = socket.getInputStream();
-            } catch (IOException e) {
-                Log.e("input stream error", "Error occurred when creating input stream", e);
-            }
-            try {
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                Log.e("output stream error", "Error occurred when creating output stream", e);
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
-        public void run() {
-            mmBuffer = new byte[1024];
-            int numBytes; // bytes returned from read()
-
-            // Keep listening to the InputStream until an exception occurs.
-            while (true) {
-                try {
-                    // Read from the InputStream.
-                    numBytes = mmInStream.read(mmBuffer);
-                    showReceivedData(mmBuffer);
-                } catch (IOException e) {
-                    Log.d("disconnection error", "Input stream was disconnected", e);
-                    break;
-                }
-            }
-        }
-
-        // Call this from the main activity to send data to the remote device.
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) {
-                Log.e("sending error", "Error occurred when sending data", e);
-            }
-        }
-
-        // Call this method from the main activity to shut down the connection.
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e("socket closing error", "Could not close the connect socket", e);
-            }
-        }
-    }
-
-    public void onWifiP2PDeviceConnected(final WifiP2pInfo wifiInfo) {
-        if(wifiInfo.isGroupOwner){
-            transferService.startServer(8089);
-        }
-        else{
-            //wait 2 seconds for server
-            Toast.makeText(this,"Waiting for server ", Toast.LENGTH_SHORT).show();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    transferService.establishConnection(wifiInfo.groupOwnerAddress.getHostAddress(),8089);
-                }
-            },3000);
-
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        if(view.getId() == R.id.send_with_wifi_button){
-//            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//            intent.setType("*/*");
-//            startActivityForResult(intent, PICKFILE_REQUEST_CODE);
-            //sending hard code file
-            EditText inputTextBox = (EditText)findViewById(R.id.input_editText);
-            textToSend = inputTextBox.getText().toString();
-            String filename = textToSend + ".txt";
-            File fileToSend = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
-            try {
-                FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
-                fileOutputStream.write(textToSend.getBytes());
-                fileOutputStream.close();
-            } catch (IOException e) {
-            }
-            transferService.sendFile(Environment.getExternalStorageDirectory().getAbsolutePath(),filename);
-            Toast.makeText(this,"Sending file...",Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == PICKFILE_REQUEST_CODE && resultCode == RESULT_OK){
-            Log.e("file path",data.getDataString());
-        }
-        if (resultCode == RESULT_CANCELED)
-            showAlert("Bluetooth can not be enabled");
-        super.onActivityResult(requestCode, resultCode, data);
     }
 }

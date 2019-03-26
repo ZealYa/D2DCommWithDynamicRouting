@@ -1,25 +1,23 @@
 package tausif.androidprojects.files;
 
-import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
+import java.util.Calendar;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.Constants;
 
 
 public class FileReceiver implements Runnable{
 
     private final Socket clientSocket;
-    private final String TAG = FileReceiver.class.getName();
     private final OnTransferFinishListener onTransferFinishListener;
+    int filesize = Constants.getThroughputFileLength();
 
     public FileReceiver(OnTransferFinishListener onTransferFinishListener, Socket clientSocket){
         this.clientSocket = clientSocket;
@@ -32,29 +30,29 @@ public class FileReceiver implements Runnable{
             DataInputStream dataInputStream = null;
             try {
                 dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                String fileName = null;
-                byte[] buffer = new byte[4096];
-                int contentLength = 0;
-                dataInputStream.readFully(buffer,0,2);
-                contentLength = buffer[0] * 256 + buffer[1];
-                dataInputStream.readFully(buffer,0,contentLength);
-                fileName = new String(buffer,0,contentLength);
-                dataInputStream.readFully(buffer,0,2);
-                contentLength = buffer[0] * 256 + buffer[1];
-                int read = 0;
+                byte[] buffer = new byte[20];
                 int totalRead = 0;
+                String fileName = "fileTransfer.txt";
                 File file = new File(Environment.getExternalStorageDirectory(),fileName);
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                while (totalRead < contentLength && clientSocket.isConnected()){
-                    read = dataInputStream.read(buffer,0,buffer.length);
-                    fileOutputStream.write(buffer,0,read);
-                    totalRead += read;
+                FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+                long startTime = Calendar.getInstance().getTimeInMillis();
+                while (totalRead < filesize && clientSocket.isConnected()) {
+                    int currentread = dataInputStream.read(buffer);
+                    totalRead+= currentread;
+                    fileOutputStream.write(buffer);
                 }
                 fileOutputStream.close();
+                long endTime = Calendar.getInstance().getTimeInMillis();
+                long timeTaken = endTime - startTime;
+                double MB = (double)totalRead / 1000000.0;
+                double s = (timeTaken) / 1000.0;
+                double throughput = MB / s;
                 if(onTransferFinishListener != null){
-                    onTransferFinishListener.onReceiveSuccess(fileName);
+                    onTransferFinishListener.onReceiveSuccess(totalRead, timeTaken, throughput);
                 }
-                Log.e(TAG,"File received successfully");
+                Log.e("file received",String.valueOf(timeTaken)+" milliseconds");
+                Log.d("file received",String.valueOf(totalRead)+" bytes");
+                Log.d("throughput", String.valueOf(throughput));
             }
             catch (EOFException ex){
                 ex.printStackTrace();
@@ -67,6 +65,5 @@ public class FileReceiver implements Runnable{
                 }
             }
         }
-
     }
 }

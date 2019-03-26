@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.HomeActivity;
 
 
 public class TransferService implements OnTransferFinishListener {
@@ -19,9 +20,11 @@ public class TransferService implements OnTransferFinishListener {
     private ServerSocket socket;
     private Socket clientSocket;
     private Handler handler;
+    HomeActivity homeActivity;
 
-    public TransferService(Context context){
+    public TransferService(Context context, HomeActivity homeActivity){
         this.context = context;
+        this.homeActivity = homeActivity;
         handler = new Handler();
         executorService = Executors.newFixedThreadPool(MAX_THREAD);
     }
@@ -45,21 +48,22 @@ public class TransferService implements OnTransferFinishListener {
     }
 
     @Override
-    public void onSendSuccess(final String name) {
+    public void onSendSuccess() {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"File send successfully " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"file sent", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
-    public void onReceiveSuccess(final String name) {
+    public void onReceiveSuccess(final int filesize, final long totalTime, final double throughput) {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context,"File received successfully " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"file received", Toast.LENGTH_SHORT).show();
+                homeActivity.fileTransferFinished(filesize, totalTime, throughput);
             }
         });
     }
@@ -80,7 +84,7 @@ public class TransferService implements OnTransferFinishListener {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"Connected with server " + serverIP, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,"Connected with server" + serverIP, Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -89,7 +93,7 @@ public class TransferService implements OnTransferFinishListener {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"Failed to connect with server " + serverIP, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,"Failed to connect with server" + serverIP, Toast.LENGTH_SHORT).show();
                     }
                 });
 

@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.Constants;
 
 
 public class FileSender implements Runnable{
@@ -18,11 +19,10 @@ public class FileSender implements Runnable{
     private final String path;
     private final String name;
     private final Socket clientSocket;
-    private final String TAG = FileSender.class.getName();
     private final OnTransferFinishListener onTransferFinishListener;
 
 
-    public FileSender(OnTransferFinishListener onTransferFinishListener,Socket clientSocket, String path, String name){
+    FileSender(OnTransferFinishListener onTransferFinishListener,Socket clientSocket, String path, String name){
         this.path = path;
         this.name = name;
         this.clientSocket = clientSocket;
@@ -31,31 +31,22 @@ public class FileSender implements Runnable{
 
     @Override
     public void run() {
-        File file = new File(path,name);
         try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            byte[] buffer = new byte[4096];
-            int read = 0;
-            buffer[0] = (byte) (name.length() / 256);
-            buffer[1] = (byte) (name.length() % 256);
-            System.arraycopy(name.getBytes(),0,buffer,2,name.length());
             OutputStream outputStream = clientSocket.getOutputStream();
-            outputStream.write(buffer,0,name.length()+2);
-            outputStream.flush();
-            buffer[0] = (byte) (file.length() / 256);
-            buffer[1] = (byte) (file.length() % 256);
-            outputStream.write(buffer,0,2);
-            outputStream.flush();
-            while( (read = fileInputStream.read(buffer,0,buffer.length)) > 0){
-                outputStream.write(buffer,0,read);
+            String data = "this is a test file transfer";
+            while (data.length() < 800) {
+                data = data.concat(data);
+            }
+            byte[] buffer = data.getBytes();
+            int totalWrite = 0;
+            while (totalWrite < Constants.getThroughputFileLength()) {
+                outputStream.write(buffer, 0, buffer.length);
+                totalWrite += buffer.length;
                 outputStream.flush();
             }
             if(onTransferFinishListener != null){
-                onTransferFinishListener.onSendSuccess(name);
+                onTransferFinishListener.onSendSuccess();
             }
-//            Toast.makeText(context,"File send successfully " + name, Toast.LENGTH_SHORT).show();
-
-            Log.e(TAG,"Send file successfully");
         } catch (Exception e) {
             e.printStackTrace();
             if(onTransferFinishListener != null){
