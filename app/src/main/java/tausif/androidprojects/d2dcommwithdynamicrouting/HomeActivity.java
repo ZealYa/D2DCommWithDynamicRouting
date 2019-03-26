@@ -49,6 +49,7 @@ public class HomeActivity extends AppCompatActivity {
     long initialStartTime;
     long cumulativeRTTs[];
     int correspondingPktSize[];
+    boolean measuringThroughput;
     int pktReceiveCount[];
     boolean pktReceiveCounted[];
     boolean pktLossExpStarted;
@@ -77,6 +78,7 @@ public class HomeActivity extends AppCompatActivity {
         rssiDevices = new ArrayList<>();
         Constants.EXP_NO = 0;
         configureDeviceListView();
+        measuringThroughput = false;
     }
 
     public void initOperations() {
@@ -242,6 +244,7 @@ public class HomeActivity extends AppCompatActivity {
             }
             willUpdateDeviceList = false;
             currentPktSize = Constants.RTT_PKT_SIZE;
+            measuringThroughput = false;
             calculateWDRTT(currentDevice, Constants.RTT_PKT_SIZE);
         }
         else {
@@ -279,7 +282,7 @@ public class HomeActivity extends AppCompatActivity {
         RTTCalculated = new boolean[1000];
         Arrays.fill(RTTCalculated, false);
         correspondingPktSize = new int[1000];
-        correspondingPktSize[currentSeqNo] = pktSize;
+        correspondingPktSize[Constants.EXP_NO] = pktSize;
         String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
         sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
     }
@@ -305,7 +308,6 @@ public class HomeActivity extends AppCompatActivity {
         if (!RTTCalculated[seqNo]) {
             currentSeqNo++;
             if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
-//                currentPktSize += 5;
                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, currentPktSize);
                 sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
             }
@@ -361,7 +363,9 @@ public class HomeActivity extends AppCompatActivity {
             showToast("ip mac not synced", 1);
             return;
         }
+        willUpdateDeviceList = false;
         currentPktSize = 100;
+        measuringThroughput = true;
         calculateWDRTT(currentDevice, currentPktSize);
     }
 
@@ -403,13 +407,14 @@ public class HomeActivity extends AppCompatActivity {
                         if (seqNo == currentSeqNo) {
                             RTTs[seqNo] = receivingTime - RTTs[seqNo];
                             rttToWrite[Constants.EXP_NO] = RTTs[seqNo];
-                            correspondingPktSize[seqNo] = pktSize;
-//                            currentPktSize = pktSize + 5;
+                            correspondingPktSize[Constants.EXP_NO] = pktSize;
                             cumulativeRTTs[Constants.EXP_NO] = receivingTime - initialStartTime;
                             Constants.EXP_NO++;
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
                             currentSeqNo++;
+                            if (measuringThroughput)
+                                currentPktSize += 25;
                             if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
                                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], currentPktSize);
                                 sendWDRTTPkt(rttPkt, srcAddr);
@@ -467,18 +472,6 @@ public class HomeActivity extends AppCompatActivity {
                             else
                                 pktReceiveCount[expNo]++;
                         }
-                    }
-                }
-            }
-        }
-        else if (pktType == Constants.UDP_THRPT) {
-        }
-        else if (pktType == Constants.UDP_THRPT_RET) {
-            for (Device device:combinedDeviceList
-                    ) {
-                if (device.deviceType == Constants.WIFI_DEVICE) {
-                    if (device.wifiDevice.deviceAddress.equals(splited[1])) {
-                        break;
                     }
                 }
             }
@@ -546,7 +539,10 @@ public class HomeActivity extends AppCompatActivity {
             if (deviceType == Constants.BLUETOOTH_DEVICE)
                 writeSuccess = FileWriter.writeRTTResult(deviceName, distance, RTTs, deviceType, cumulativeRTTs);
             else {
-                writeSuccess = FileWriter.writeRTTResult(deviceName, distance, rttToWrite, deviceType, cumulativeRTTs);
+                if (measuringThroughput)
+                    writeSuccess = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
+                else
+                    writeSuccess = FileWriter.writeRTTResult(deviceName, distance, rttToWrite, deviceType, cumulativeRTTs);
             }
             if (writeSuccess)
                 showToast("RTT result written successfully", 1);
@@ -561,24 +557,6 @@ public class HomeActivity extends AppCompatActivity {
             else
                 showToast("pkt loss result writing not successful", 1);
         }
-//                if (measurementType == Constants.RTT) {
-//            boolean retVal;
-//            if (deviceType == Constants.WIFI_DEVICE)
-//                retVal = FileWriter.writeThroughputRTTs(deviceName, distance, rttToWrite, correspondingPktSize, cumulativeRTTs);
-//            else
-//                retVal = FileWriter.writeRTTResult(deviceName, pktSize, distance, RTTs, deviceType, cumulativeRTTs);
-//            if (retVal)
-//                showToast("thrpt rtt written successfully");
-//            else
-//                showToast("thrpt rtt write not successful");
-//        }
-//        else if (measurementType == Constants.UDP_THRPT) {
-//            boolean retVal = FileWriter.writeThroughputRTTs(deviceName, distance, udpThroughputRTTs, );
-//            if (retVal)
-//                showToast("throughput rtt written successfully");
-//            else
-//                showToast("throughput rtt write not successful");
-//        }
     }
 
 //    function to show a long Toast message

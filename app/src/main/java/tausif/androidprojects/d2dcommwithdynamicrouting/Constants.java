@@ -28,8 +28,6 @@ public class Constants {
     static final int PKT_LOSS = 103;
     static final int IP_MAC_SYNC = 104;
     static final int IP_MAC_SYNC_RET = 105;
-    static final int UDP_THRPT = 106;
-    static final int UDP_THRPT_RET = 107;
     static final int TCP_THRPT = 108;
 
     static int EXP_NO = 0;
