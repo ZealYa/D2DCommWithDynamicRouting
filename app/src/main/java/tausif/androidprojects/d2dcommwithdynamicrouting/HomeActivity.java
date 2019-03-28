@@ -68,7 +68,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public int generateRandom() {
-        int randInt = 0;
+        int randInt;
         Random random = new Random();
         randInt = random.nextInt(Constants.RAND_MAX - Constants.RAND_MIN) + Constants.RAND_MIN;
         return randInt;
@@ -528,7 +528,7 @@ public class HomeActivity extends AppCompatActivity {
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
-        boolean writeSuccess = false;
+        boolean writeSuccess;
         if (measurementType == Constants.RSSI) {
             writeSuccess = FileWriter.writeRSSIResult(distance, rssiDevices);
             if (writeSuccess)
