@@ -15,17 +15,20 @@ public class Constants {
     static final int BLUETOOTH_DEVICE = 0;
     static final int WIFI_DEVICE = 1;
 
-    static final int RTT_PKT_SIZE = 500;     //in bytes
-    static final int LOSS_RATIO_PKT_SIZE = 50;   //in bytes
+    static final int RTT_PKT_SIZE = 500;                //in bytes
+    static final int LOSS_RATIO_PKT_SIZE = 50;          //in bytes
     static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    static final int TIME_SLOT_LENGTH = 5;    // in seconds
-    static final int BT_DISCOVERABLE_LENGTH = 1800;  //in seconds
+    static final int TIME_SLOT_LENGTH = 10;              //in seconds
+    static final int BT_DISCOVERABLE_LENGTH = 1800;     //in seconds
+    static final int PKT_LOSS_TIMER_LENGTH = 3000;      //in milliseconds
+    static final int RTT_TIMER_LENGTH = 1000;           //in milliseconds
 
     static final int RSSI = 100;
     static final int RTT = 101;
     static final int RTT_RET = 102;
     static final int PKT_LOSS = 103;
+    static final int PKT_LOSS_RET = 109;
     static final int IP_MAC_SYNC = 104;
     static final int IP_MAC_SYNC_RET = 105;
     static final int TCP_THRPT = 108;

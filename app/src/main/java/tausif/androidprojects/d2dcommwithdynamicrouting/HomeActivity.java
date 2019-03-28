@@ -43,7 +43,6 @@ public class HomeActivity extends AppCompatActivity {
     boolean RTTCalculated[];
     int rttCalculatedCount;
     Handler rttHandler;
-    Handler pktLossHandler;
     Device currentDevice;
     int currentPktSize;
     long initialStartTime;
@@ -51,12 +50,12 @@ public class HomeActivity extends AppCompatActivity {
     int correspondingPktSize[];
     boolean measuringThroughput;
     int pktReceiveCount[];
-    boolean pktReceiveCounted[];
-    boolean pktLossExpStarted;
     TransferService transferService;
     Handler handler;
     boolean rssiRecorded;
     ArrayList<Device> rssiDevices;
+    boolean isFirstLossRatioPkt;
+    int currentPktLossExp;
 
 
     @Override
@@ -69,16 +68,15 @@ public class HomeActivity extends AppCompatActivity {
 
     public void initData() {
         willUpdateDeviceList = false;
-        pktLossExpStarted = false;
         pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
         Arrays.fill(pktReceiveCount, 0);
-        pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
-        Arrays.fill(pktReceiveCounted, false);
         rssiRecorded = false;
         rssiDevices = new ArrayList<>();
         Constants.EXP_NO = 0;
         configureDeviceListView();
         measuringThroughput = false;
+        isFirstLossRatioPkt = true;
+        currentPktLossExp = 0;
     }
 
     public void initOperations() {
@@ -183,16 +181,16 @@ public class HomeActivity extends AppCompatActivity {
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             showToast("wifi direct connection established", 1);
-            if (Constants.isGroupOwner)
-                transferService.startServer(8089);
-            else {
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
-                    }
-                }, 3000);
-            }
+//            if (Constants.isGroupOwner)
+//                transferService.startServer(8089);
+//            else {
+//                handler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
+//                    }
+//                }, 3000);
+//            }
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -301,7 +299,7 @@ public class HomeActivity extends AppCompatActivity {
             public void run() {
                 manageRttTimeBound(currentSeqNo);
             }
-        }, 1000);
+        }, Constants.RTT_TIMER_LENGTH);
     }
 
     public void manageRttTimeBound(int seqNo) {
@@ -322,9 +320,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         Constants.EXP_NO = 0;
-        pktLossHandler = null;
-        pktLossHandler = new Handler();
-        showToast("pkt loss experiment started", 1);
+        showToast("pkt loss experiment started", 0);
         startPktLossExp();
     }
 
@@ -336,18 +332,22 @@ public class HomeActivity extends AppCompatActivity {
         udpSender.setRunLoop(true);
         udpSender.setNoOfPktsToSend(Constants.MAX_LOSS_RATIO_PKTS);
         udpSender.start();
-        pktLossHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                managePktLossTimeBound();
-            }
-        }, 250);
     }
 
-    public void managePktLossTimeBound() {
-        Constants.EXP_NO++;
-        if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS) {
-            startPktLossExp();
+    public void pktLossExpTimer() {
+        Log.d("pkt receive count", String.valueOf(pktReceiveCount[currentPktLossExp]));
+        currentPktLossExp++;
+        if (currentPktLossExp < Constants.MAX_PKT_LOSS_EXPS) {
+            isFirstLossRatioPkt = true;
+            String pktLossRet = PacketManager.createLossRatioPacket(Constants.PKT_LOSS_RET, currentPktLossExp, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress);
+            udpSender = null;
+            udpSender = new WDUDPSender();
+            udpSender.createPkt(pktLossRet, currentDevice.IPAddress);
+            udpSender.setRunLoop(false);
+            udpSender.start();
+        }
+        else {
+            writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
         }
     }
 
@@ -429,52 +429,40 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         else if (pktType == Constants.PKT_LOSS) {
-            Log.d("loss pkt", receivedPkt);
             for (final Device device:combinedDeviceList
                  ) {
                 if (device.deviceType == Constants.WIFI_DEVICE) {
                     if (device.wifiDevice.deviceAddress.equals(splited[2])) {
                         currentDevice = device;
                         final int expNo = Integer.parseInt(splited[1]);
-                        if (!pktReceiveCounted[expNo]) {
-                            if (pktReceiveCount[expNo] == 0) {
-                                if (!pktLossExpStarted) {
-                                    pktLossExpStarted = true;
-                                }
-                                pktReceiveCount[expNo]++;
+                        if (expNo == currentPktLossExp) {
+                            if (isFirstLossRatioPkt) {
+                                isFirstLossRatioPkt = false;
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Handler handler = new Handler();
-                                        handler.postDelayed(new Runnable() {
+                                        Handler pktLossTimerHandler = new Handler();
+                                        pktLossTimerHandler.postDelayed(new Runnable() {
                                             @Override
                                             public void run() {
-                                                pktReceiveCounted[expNo] = true;
-                                                Log.d(String.valueOf(expNo), String.valueOf(pktReceiveCount[expNo]));
-                                                showToast("completed pkt loss exp no "+String.valueOf(expNo), 0);
-                                                int expCounter = 0;
-                                                for (int i=0; i<Constants.MAX_PKT_LOSS_EXPS; i++)
-                                                    if (pktReceiveCounted[i])
-                                                        expCounter++;
-                                                if (expCounter == Constants.MAX_PKT_LOSS_EXPS) {
-                                                    writeResult(currentDevice.wifiDevice.deviceName, Constants.PKT_LOSS, Constants.WIFI_DEVICE);
-                                                    pktReceiveCount = new int[Constants.MAX_PKT_LOSS_EXPS];
-                                                    Arrays.fill(pktReceiveCount, 0);
-                                                    pktReceiveCounted = new boolean[Constants.MAX_PKT_LOSS_EXPS];
-                                                    Arrays.fill(pktReceiveCounted, false);
-                                                    pktLossExpStarted = false;
-                                                }
+                                                pktLossExpTimer();
                                             }
-                                        }, 2000);
+                                        }, Constants.PKT_LOSS_TIMER_LENGTH);
                                     }
                                 });
                             }
-                            else
-                                pktReceiveCount[expNo]++;
+                            pktReceiveCount[currentPktLossExp]++;
                         }
                     }
                 }
             }
+        }
+        else if (pktType == Constants.PKT_LOSS_RET) {
+            int expNo = Integer.parseInt(splited[1]);
+            showToast("finished pkt loss exp " + String.valueOf(expNo-1), 0);
+            Constants.EXP_NO = expNo;
+            if (Constants.EXP_NO < Constants.MAX_PKT_LOSS_EXPS)
+                startPktLossExp();
         }
     }
 
@@ -551,7 +539,6 @@ public class HomeActivity extends AppCompatActivity {
         }
         else if (measurementType == Constants.PKT_LOSS) {
             writeSuccess = FileWriter.writePktLossResult(deviceName, distance, pktReceiveCount);
-            pktLossExpStarted = false;
             if (writeSuccess)
                 showToast("pkt loss result written successfully", 1);
             else
