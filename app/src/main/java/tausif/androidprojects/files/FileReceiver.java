@@ -30,7 +30,7 @@ public class FileReceiver implements Runnable{
             DataInputStream dataInputStream = null;
             try {
                 dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                byte[] buffer = new byte[20];
+                byte[] buffer = new byte[800];
                 int totalRead = 0;
                 long timeStamp = Calendar.getInstance().getTimeInMillis();
                 String fileName = "TransferredFile_" + String.valueOf(timeStamp) + ".txt";
@@ -47,7 +47,7 @@ public class FileReceiver implements Runnable{
                 long timeTaken = endTime - startTime;
                 double MB = (double)totalRead / 1000000.0;
                 double s = (timeTaken) / 1000.0;
-                double throughput = MB / s;
+                double throughput = (MB / s) * 8;   //converting Mega bits per seconds
                 if(onTransferFinishListener != null){
                     onTransferFinishListener.onReceiveSuccess(totalRead, timeTaken, throughput);
                 }

@@ -124,12 +124,13 @@ class FileWriter {
     }
 
     static boolean writeTCPThroughput(String deviceName, String distance, int deviceType, int filesize, long totalTime, double throughput) {
+        long timeStamp = Calendar.getInstance().getTimeInMillis();
         String prefix = "";
         if (deviceType == Constants.WIFI_DEVICE)
             prefix = "WD_";
         else
             prefix = "BT_";
-        String filename = prefix + "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
+        String filename = prefix + "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters_" + String.valueOf(timeStamp) + ".txt";
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
         path = path + "/" + filename;
         File results = new File(path);
