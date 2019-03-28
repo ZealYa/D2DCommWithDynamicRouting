@@ -32,7 +32,8 @@ public class FileReceiver implements Runnable{
                 dataInputStream = new DataInputStream(clientSocket.getInputStream());
                 byte[] buffer = new byte[20];
                 int totalRead = 0;
-                String fileName = "fileTransfer.txt";
+                long timeStamp = Calendar.getInstance().getTimeInMillis();
+                String fileName = "TransferredFile_" + String.valueOf(timeStamp) + ".txt";
                 File file = new File(Environment.getExternalStorageDirectory(),fileName);
                 FileOutputStream fileOutputStream = new FileOutputStream(file, true);
                 long startTime = Calendar.getInstance().getTimeInMillis();
@@ -50,9 +51,6 @@ public class FileReceiver implements Runnable{
                 if(onTransferFinishListener != null){
                     onTransferFinishListener.onReceiveSuccess(totalRead, timeTaken, throughput);
                 }
-                Log.e("file received",String.valueOf(timeTaken)+" milliseconds");
-                Log.d("file received",String.valueOf(totalRead)+" bytes");
-                Log.d("throughput", String.valueOf(throughput));
             }
             catch (EOFException ex){
                 ex.printStackTrace();

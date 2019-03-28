@@ -123,17 +123,23 @@ class FileWriter {
         }
     }
 
-    static boolean writeTCPThroughput(String deviceName, int filesize, long totalTime, double throughput, String distance) {
-        String filename = "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
-        File results = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+    static boolean writeTCPThroughput(String deviceName, String distance, int deviceType, int filesize, long totalTime, double throughput) {
+        String prefix = "";
+        if (deviceType == Constants.WIFI_DEVICE)
+            prefix = "WD_";
+        else
+            prefix = "BT_";
+        String filename = prefix + "TcpThrpt_" + deviceName + "_TO_" + Constants.hostWifiName + "_" + distance + "_meters.txt";
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File results = new File(path);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(results);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.append(String.valueOf(filesize));
-            outputStreamWriter.append("\n");
-            outputStreamWriter.append(String.valueOf(totalTime));
-            outputStreamWriter.append("\n");
-            outputStreamWriter.append(String.valueOf(throughput));
+            String str = "FileSize TotalTime Throughput\n";
+            outputStreamWriter.append(str);
+            str = String.valueOf(filesize) + " " + String.valueOf(totalTime) + " " + String.valueOf(throughput) + "\n";
+            outputStreamWriter.append(str);
             outputStreamWriter.close();
             fileOutputStream.close();
             return true;

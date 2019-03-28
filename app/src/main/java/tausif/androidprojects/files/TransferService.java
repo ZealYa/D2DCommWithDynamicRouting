@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import tausif.androidprojects.d2dcommwithdynamicrouting.Constants;
 import tausif.androidprojects.d2dcommwithdynamicrouting.HomeActivity;
 
 
@@ -63,7 +64,7 @@ public class TransferService implements OnTransferFinishListener {
             @Override
             public void run() {
                 Toast.makeText(context,"file received", Toast.LENGTH_SHORT).show();
-                homeActivity.fileTransferFinished(filesize, totalTime, throughput);
+                homeActivity.fileTransferFinished(filesize, totalTime, throughput, Constants.getWifiDevice());
             }
         });
     }

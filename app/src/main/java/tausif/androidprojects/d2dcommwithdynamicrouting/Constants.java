@@ -13,6 +13,11 @@ public class Constants {
     static final int WI_FI_DIRECT_UDP_LISTENING_PORT = 9000;
 
     static final int BLUETOOTH_DEVICE = 0;
+
+    public static int getWifiDevice() {
+        return WIFI_DEVICE;
+    }
+
     static final int WIFI_DEVICE = 1;
 
     static final int RTT_PKT_SIZE = 500;                //in bytes
@@ -31,7 +36,6 @@ public class Constants {
     static final int PKT_LOSS_RET = 109;
     static final int IP_MAC_SYNC = 104;
     static final int IP_MAC_SYNC_RET = 105;
-    static final int TCP_THRPT = 108;
 
     static int EXP_NO = 0;
     static final int MAX_NO_OF_EXPS = 100;

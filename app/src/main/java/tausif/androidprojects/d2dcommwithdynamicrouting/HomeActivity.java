@@ -189,16 +189,16 @@ public class HomeActivity extends AppCompatActivity {
     public void connectionEstablished(int connectionType, BluetoothSocket connectedSocket) {
         if (connectionType == Constants.WIFI_DIRECT_CONNECTION) {
             showToast("wifi direct connection established", 1);
-//            if (Constants.isGroupOwner)
-//                transferService.startServer(8089);
-//            else {
-//                handler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
-//                    }
-//                }, 3000);
-//            }
+            if (Constants.isGroupOwner)
+                transferService.startServer(8089);
+            else {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        transferService.establishConnection(Constants.groupOwnerAddress.getHostAddress(), 8089);
+                    }
+                }, 3000);
+            }
             WDUDPListener udpListener = new WDUDPListener(this);
             udpListener.start();
             if (!Constants.isGroupOwner)
@@ -511,18 +511,18 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void fileTransferFinished(int filesize, long totalTime, double throughput) {
+    public void fileTransferFinished(int filesize, long totalTime, double throughput, int deviceType) {
         EditText distanceText = findViewById(R.id.distance_editText);
         String distance = distanceText.getText().toString().trim();
 
-//        EditText deviceNameText = findViewById(R.id.pkt_size_editText);
-//        String deviceName = deviceNameText.getText().toString().trim();
-//        deviceName = "NWSL " + deviceName;
-//        boolean retVal = FileWriter.writeTCPThroughput(deviceName, filesize, totalTime, throughput, distance);
-//        if (retVal)
-//            showToast("tcp throughput written");
-//        else
-//            showToast("tcp throughput writing not successful");
+        EditText deviceNameText = findViewById(R.id.device_name_editText);
+        String deviceName = deviceNameText.getText().toString().trim();
+        deviceName = "NWSL " + deviceName;
+        boolean retVal = FileWriter.writeTCPThroughput(deviceName, distance, deviceType, filesize, totalTime, throughput);
+        if (retVal)
+            showToast("tcp throughput written", 1);
+        else
+            showToast("tcp throughput writing not successful", 0);
     }
 
     public void  writeResult(String deviceName, int measurementType, int deviceType) {
