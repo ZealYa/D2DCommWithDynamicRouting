@@ -19,7 +19,7 @@ public class Constants {
     static final int LOSS_RATIO_PKT_SIZE = 50;          //in bytes
     static final int MAX_LOSS_RATIO_PKTS = 100;
 
-    static final int TIME_SLOT_LENGTH = 10;              //in seconds
+    static final int TIME_SLOT_LENGTH = 10;             //in seconds
     static final int BT_DISCOVERABLE_LENGTH = 1800;     //in seconds
     static final int PKT_LOSS_TIMER_LENGTH = 3000;      //in milliseconds
     static final int RTT_TIMER_LENGTH = 1000;           //in milliseconds
@@ -34,10 +34,13 @@ public class Constants {
     static final int TCP_THRPT = 108;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 25;
+    static final int MAX_NO_OF_EXPS = 100;
     static final int MAX_PKT_LOSS_EXPS = 25;
 
     private static final int THROUGHPUT_FILE_LENGTH = 5000000;
+
+    static final int RAND_MAX = 500;
+    static final int RAND_MIN = 50;
 
     static final int WIFI_DIRECT_CONNECTION = 1000;
     static final int BLUETOOTH_CONNECTION = 1001;

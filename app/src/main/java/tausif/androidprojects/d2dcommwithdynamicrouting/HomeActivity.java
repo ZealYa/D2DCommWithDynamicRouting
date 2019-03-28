@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Random;
 
 import tausif.androidprojects.files.TransferService;
 
@@ -64,6 +65,13 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         initData();
         initOperations();
+    }
+
+    public int generateRandom() {
+        int randInt = 0;
+        Random random = new Random();
+        randInt = random.nextInt(Constants.RAND_MAX - Constants.RAND_MIN) + Constants.RAND_MIN;
+        return randInt;
     }
 
     public void initData() {
@@ -275,11 +283,11 @@ public class HomeActivity extends AppCompatActivity {
         rttHandler = new Handler();
         currentSeqNo = 0;
         rttCalculatedCount = 0;
-        RTTs = new long[1000];
+        RTTs = new long[Constants.MAX_NO_OF_EXPS * 20];
         Arrays.fill(RTTs, 0);
-        RTTCalculated = new boolean[1000];
+        RTTCalculated = new boolean[Constants.MAX_NO_OF_EXPS * 20];
         Arrays.fill(RTTCalculated, false);
-        correspondingPktSize = new int[1000];
+        correspondingPktSize = new int[Constants.MAX_NO_OF_EXPS * 20];
         correspondingPktSize[Constants.EXP_NO] = pktSize;
         String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, currentDevice.wifiDevice.deviceAddress, pktSize);
         sendWDRTTPkt(rttPkt, currentDevice.IPAddress);
@@ -364,7 +372,7 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
         willUpdateDeviceList = false;
-        currentPktSize = 100;
+        currentPktSize = generateRandom();
         measuringThroughput = true;
         calculateWDRTT(currentDevice, currentPktSize);
     }
@@ -413,8 +421,13 @@ public class HomeActivity extends AppCompatActivity {
                             RTTCalculated[seqNo] = true;
                             rttCalculatedCount++;
                             currentSeqNo++;
-                            if (measuringThroughput)
-                                currentPktSize += 25;
+                            if (measuringThroughput) {
+                                int newPktSize = currentPktSize;
+                                while (newPktSize == currentPktSize) {
+                                    newPktSize = generateRandom();
+                                }
+                                currentPktSize = newPktSize;
+                            }
                             if (rttCalculatedCount < Constants.MAX_NO_OF_EXPS && currentSeqNo < 1000) {
                                 String rttPkt = PacketManager.createWDRTTPacket(Constants.RTT, currentSeqNo, Constants.hostWifiAddress, splited[2], currentPktSize);
                                 sendWDRTTPkt(rttPkt, srcAddr);

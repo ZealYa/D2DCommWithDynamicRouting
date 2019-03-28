@@ -63,14 +63,10 @@ class FileWriter {
             try {
                 FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
                 OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-                outputStreamWriter.append("RTTs\n");
+                outputStreamWriter.append("RTT AccRTT\n");
                 for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
-                    outputStreamWriter.append(String.valueOf(RTTs[i]));
-                    outputStreamWriter.append("\n");
-                }
-                outputStreamWriter.append("\nAccumulated RTTs\n");
-                for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
-                    outputStreamWriter.append(String.valueOf(cumulativeRTTs[i]));
+                    String str = String.valueOf(RTTs[i]) + " " + String.valueOf(cumulativeRTTs[i]);
+                    outputStreamWriter.append(str);
                     outputStreamWriter.append("\n");
                 }
                 outputStreamWriter.close();
@@ -107,23 +103,16 @@ class FileWriter {
     static boolean writeThroughputRTTs(String deviceName, String distance, long[] RTTs, int pktSizes[], long[] cumulativeRTTs) {
         String prefix = "WD_";
         String filename = prefix + "THRPT_RTT_" + deviceName + "_" + distance + "_meters.txt";
-        File RTTResults = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), filename);
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
+        path = path + "/" + filename;
+        File RTTResults = new File(path);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(RTTResults);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.append("RTTs\n");
+            outputStreamWriter.append("RTT PktSize AccRTT\n");
             for (int i = 0; i < Constants.MAX_NO_OF_EXPS; i++) {
-                outputStreamWriter.append(String.valueOf(RTTs[i]));
-                outputStreamWriter.append("\n");
-            }
-            outputStreamWriter.append("\nPkt sizes\n");
-            for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
-                outputStreamWriter.append(String.valueOf(pktSizes[i]));
-                outputStreamWriter.append("\n");
-            }
-            outputStreamWriter.append("\nAccumulated RTTs\n");
-            for (int i=0; i<Constants.MAX_NO_OF_EXPS; i++) {
-                outputStreamWriter.append(String.valueOf(cumulativeRTTs[i]));
+                String str = String.valueOf(RTTs[i]) + " " + String.valueOf(pktSizes[i]) + " " + String.valueOf(cumulativeRTTs[i]);
+                outputStreamWriter.append(str);
                 outputStreamWriter.append("\n");
             }
             outputStreamWriter.close();
