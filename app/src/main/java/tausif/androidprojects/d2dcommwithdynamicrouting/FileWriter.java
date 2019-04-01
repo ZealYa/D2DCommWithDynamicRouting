@@ -35,12 +35,13 @@ class FileWriter {
     }
 
     static boolean writeRTTResult(String deviceName, String distance, long[] RTTs, int deviceType, long[] cumulativeRTTs) {
+        long currentTime = Calendar.getInstance().getTimeInMillis();
         String prefix;
         if (deviceType == Constants.BLUETOOTH_DEVICE)
             prefix = "BT_";
         else
             prefix = "WD_";
-        String filename = prefix + "RTT_" + deviceName + "_" + distance + "_meters.txt";
+        String filename = prefix + "RTT_" + deviceName + "_" + distance + "_meters_" + String.valueOf(currentTime) + ".txt";
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Constants.RESULT_FOLDER_NAME;
         path = path + "/" + filename;
         File RTTResults = new File(path);

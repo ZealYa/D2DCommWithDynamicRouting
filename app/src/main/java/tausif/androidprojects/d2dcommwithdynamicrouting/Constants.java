@@ -38,7 +38,7 @@ public class Constants {
     static final int IP_MAC_SYNC_RET = 105;
 
     static int EXP_NO = 0;
-    static final int MAX_NO_OF_EXPS = 50;
+    static final int MAX_NO_OF_EXPS = 25;
     static final int MAX_PKT_LOSS_EXPS = 25;
 
     private static final int THROUGHPUT_FILE_LENGTH = 10000000;
