@@ -36,7 +36,6 @@ public class HomeActivity extends AppCompatActivity {
     PeerDiscoveryController peerDiscoveryController;
     WDUDPSender udpSender;
     BTConnectedSocketManager btConnectedSocketManager;
-    Handler BTDiscoverableHandler;
     boolean willUpdateDeviceList;
     int currentSeqNo;
     long RTTs[];
@@ -89,8 +88,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void initOperations() {
         setUpPermissions();
-//        BTDiscoverableHandler = new Handler();
-//        BTDiscoverableHandler.post(makeBluetoothDiscoverable);
+        makeBluetoothDiscoverable();
         handler = new Handler();
         transferService = new TransferService(this, this);
         setUpBluetoothDataTransfer();
@@ -115,15 +113,11 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    private Runnable makeBluetoothDiscoverable = new Runnable() {
-        @Override
-        public void run() {
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.BT_DISCOVERABLE_LENGTH);
-            startActivity(intent);
-            BTDiscoverableHandler.postDelayed(this, Constants.BT_DISCOVERABLE_LENGTH*1000);
-        }
-    };
+    private void makeBluetoothDiscoverable() {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, Constants.BT_DISCOVERABLE_LENGTH);
+        startActivity(intent);
+    }
 
     private void setUpBluetoothDataTransfer() {
         BTConnectionListener btConnectionListener = new BTConnectionListener(this);

@@ -25,7 +25,7 @@ public class Constants {
     static final int MAX_LOSS_RATIO_PKTS = 100;
 
     static final int TIME_SLOT_LENGTH = 5;             //in seconds
-    static final int BT_DISCOVERABLE_LENGTH = 1800;     //in seconds
+    static final int BT_DISCOVERABLE_LENGTH = 3600;     //in seconds, value can be in the range from 0 to 3600 seconds, 0 means device will remain visible always
     static final int PKT_LOSS_TIMER_LENGTH = 3000;      //in milliseconds
     static final int RTT_TIMER_LENGTH = 1000;           //in milliseconds
 
