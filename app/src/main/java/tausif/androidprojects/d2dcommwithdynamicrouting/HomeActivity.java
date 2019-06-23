@@ -88,7 +88,7 @@ public class HomeActivity extends AppCompatActivity {
 
     public void initOperations() {
         setUpPermissions();
-        makeBluetoothDiscoverable();
+//        makeBluetoothDiscoverable();
         handler = new Handler();
         transferService = new TransferService(this, this);
         setUpBluetoothDataTransfer();
